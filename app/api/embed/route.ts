@@ -12,17 +12,18 @@ export async function GET(request: Request) {
   const BOT_ID = '${botId}';
   
   const scriptTag = document.currentScript;
+  const getAttr = (name) => scriptTag?.getAttribute(name) || scriptTag?.getAttribute('data-' + name) || scriptTag?.getAttribute(name.toLowerCase()) || scriptTag?.getAttribute('data-' + name.toLowerCase());
   const config = {
-    welcomeMessage: scriptTag?.getAttribute('welcomeMessage') || '👋 Hey... ask questions here!',
-    welcomeGif: scriptTag?.getAttribute('welcomeGif') || '',
-    showWelcomeMessage: scriptTag?.getAttribute('showWelcomeMessage') !== 'false',
-    buttonColor: scriptTag?.getAttribute('data-button-color') || scriptTag?.getAttribute('buttonColor') || '#4f46e5',
-    buttonSize: parseFloat(scriptTag?.getAttribute('buttonSize') || '1'),
-    position: scriptTag?.getAttribute('position') || 'bottom-right',
-    openDelay: parseInt(scriptTag?.getAttribute('openDelay') || '5000'),
-    autoOpen: scriptTag?.getAttribute('open') === 'true',
-    language: scriptTag?.getAttribute('language') || 'en',
-    placeholder: scriptTag?.getAttribute('placeholder') || 'Type your message...',
+    welcomeMessage: getAttr('welcome-message') || getAttr('welcomeMessage') || '👋 Hey... ask questions here!',
+    welcomeGif: getAttr('welcome-gif') || getAttr('welcomeGif') || '',
+    showWelcomeMessage: (getAttr('show-welcome-message') || getAttr('showWelcomeMessage') || 'true') !== 'false',
+    buttonColor: getAttr('button-color') || getAttr('buttonColor') || '#4f46e5',
+    buttonSize: parseFloat(getAttr('button-size') || getAttr('buttonSize') || '1'),
+    position: getAttr('position') || 'bottom-right',
+    openDelay: parseInt(getAttr('open-delay') || getAttr('openDelay') || '5000'),
+    autoOpen: (getAttr('open') || 'false') === 'true',
+    language: getAttr('language') || 'en',
+    placeholder: getAttr('placeholder') || 'Type your message...',
   };
 
   const iframeId = 'nyenglish-chat-iframe';
@@ -76,7 +77,7 @@ export async function GET(request: Request) {
   const init = () => {
     const iframe = document.createElement('iframe');
     iframe.id = iframeId;
-    iframe.src = CHAT_APP_URL + '/embed/chat?language=' + encodeURIComponent(config.language) + '&placeholder=' + encodeURIComponent(config.placeholder);
+    iframe.src = CHAT_APP_URL + '/embed/chat?lang=' + encodeURIComponent(config.language) + '&placeholder=' + encodeURIComponent(config.placeholder);
     iframe.style.cssText = 'display:none;opacity:0;position:fixed;border:none;z-index:2147483647;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);transition:opacity 200ms,transform 200ms;transform:translateY(10px);';
     
     const mq = window.matchMedia('(max-width: 475px)');

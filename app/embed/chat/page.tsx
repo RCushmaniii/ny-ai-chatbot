@@ -5,10 +5,67 @@ import { useSearchParams } from "next/navigation";
 import { nanoid } from "nanoid";
 import ReactMarkdown from "react-markdown";
 
+// Translations
+const translations = {
+  en: {
+    title: "NY English Teacher",
+    welcome: "Welcome! 👋",
+    subtitle: "How can I help you today?",
+    quickQuestions: "Quick questions:",
+    placeholder: "Type your message...",
+    error: "Sorry, I encountered an error. Please try again.",
+    close: "Close chat",
+    suggestedQuestions: [
+      "What are the prices for classes?",
+      "What services do you offer?",
+      "How do I book a session?"
+    ]
+  },
+  es: {
+    title: "NY English Teacher",
+    welcome: "¡Bienvenido! 👋",
+    subtitle: "¿Cómo puedo ayudarte hoy?",
+    quickQuestions: "Preguntas rápidas:",
+    placeholder: "Escribe tu mensaje...",
+    error: "Lo siento, ocurrió un error. Por favor, inténtalo de nuevo.",
+    close: "Cerrar chat",
+    suggestedQuestions: [
+      "¿Cuáles son los precios de las clases?",
+      "¿Qué servicios ofreces?",
+      "¿Cómo reservo una sesión?"
+    ]
+  }
+};
+
 function EmbedChatContent() {
   const searchParams = useSearchParams();
   const [embedSettings, setEmbedSettings] = useState<any>(null);
   const [isLoadingSettings, setIsLoadingSettings] = useState(true);
+  
+  // Detect language from parent page URL or query param
+  const [language, setLanguage] = useState<'en' | 'es'>('en');
+  
+  useEffect(() => {
+    // Try to get language from query param first
+    const langParam = searchParams.get('lang');
+    if (langParam === 'es' || langParam === 'en') {
+      setLanguage(langParam);
+      return;
+    }
+    
+    // Try to detect from parent page URL
+    try {
+      const parentUrl = document.referrer || window.location.href;
+      if (parentUrl.includes('/es/')) {
+        setLanguage('es');
+      } else {
+        setLanguage('en');
+      }
+    } catch (e) {
+      // Default to English if detection fails
+      setLanguage('en');
+    }
+  }, [searchParams]);
   
   // Fetch embed settings from admin
   useEffect(() => {
@@ -24,13 +81,13 @@ function EmbedChatContent() {
       });
   }, []);
   
-  const placeholder = embedSettings?.placeholder || "Type your message...";
+  // Get translations for current language
+  const t = translations[language];
+  
+  // Use language-specific defaults, don't let embedSettings override language
+  const placeholder = t.placeholder;
   const botIcon = embedSettings?.botIcon || "🎓";
-  const suggestedQuestions = embedSettings?.suggestedQuestions || [
-    "What are the prices for classes?",
-    "What services do you offer?",
-    "How do I book a session?"
-  ];
+  const suggestedQuestions = t.suggestedQuestions;
   
   const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([]);
   const [input, setInput] = useState("");
@@ -77,7 +134,7 @@ function EmbedChatContent() {
       console.error("Error:", error);
       setMessages(prev => [...prev, { 
         role: "assistant", 
-        content: "Sorry, I encountered an error. Please try again." 
+        content: t.error
       }]);
     } finally {
       setIsLoading(false);
@@ -92,12 +149,12 @@ function EmbedChatContent() {
           <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-2xl">
             {botIcon}
           </div>
-          <h1 className="text-lg font-semibold text-gray-900">NY English Teacher</h1>
+          <h1 className="text-lg font-semibold text-gray-900">{t.title}</h1>
         </div>
         <button
           onClick={handleClose}
           className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-700"
-          aria-label="Close chat"
+          aria-label={t.close}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -121,11 +178,11 @@ function EmbedChatContent() {
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full space-y-4 px-4">
             <div className="text-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-2">Welcome! 👋</h2>
-              <p className="text-gray-600">How can I help you today?</p>
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">{t.welcome}</h2>
+              <p className="text-gray-600">{t.subtitle}</p>
             </div>
             <div className="w-full max-w-md space-y-2">
-              <p className="text-sm font-medium text-gray-700 mb-3">Quick questions:</p>
+              <p className="text-sm font-medium text-gray-700 mb-3">{t.quickQuestions}</p>
               {suggestedQuestions.map((question: string, idx: number) => (
                 <button
                   key={idx}
