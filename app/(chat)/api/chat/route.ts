@@ -7,6 +7,8 @@ import {
   stepCountIs,
   streamText,
 } from "ai";
+import { validateMessage, checkRateLimit, getClientIdentifier } from "@/lib/security/validation";
+import { setCorsHeaders, handleCorsPreflightRequest } from "@/lib/security/cors";
 import { unstable_cache as cache } from "next/cache";
 import { after } from "next/server";
 import {
@@ -55,6 +57,12 @@ import { type PostRequestBody, postRequestBodySchema } from "./schema";
 
 export const maxDuration = 60;
 
+// Handle CORS preflight
+export async function OPTIONS(request: Request) {
+  const origin = request.headers.get("origin");
+  return handleCorsPreflightRequest(origin);
+}
+
 let globalStreamContext: ResumableStreamContext | null = null;
 
 const getTokenlensCatalog = cache(
@@ -94,13 +102,35 @@ export function getStreamContext() {
 }
 
 export async function POST(request: Request) {
+  // Apply CORS
+  const origin = request.headers.get("origin");
+  
   let requestBody: PostRequestBody;
 
   try {
     const json = await request.json();
     requestBody = postRequestBodySchema.parse(json);
   } catch (_) {
-    return new ChatSDKError("bad_request:api").toResponse();
+    const errorResponse = new ChatSDKError("bad_request:api").toResponse();
+    return setCorsHeaders(errorResponse, origin);
+  }
+
+  // Rate limiting check
+  const clientId = getClientIdentifier(request);
+  const rateLimitResult = checkRateLimit(clientId);
+  
+  if (!rateLimitResult.allowed) {
+    const errorResponse = new Response(
+      JSON.stringify({ error: rateLimitResult.error }),
+      { 
+        status: 429,
+        headers: {
+          "Content-Type": "application/json",
+          "Retry-After": String(rateLimitResult.retryAfter || 60)
+        }
+      }
+    );
+    return setCorsHeaders(errorResponse, origin);
   }
 
   try {
@@ -119,7 +149,20 @@ export async function POST(request: Request) {
     const session = await auth();
 
     if (!session?.user) {
-      return new ChatSDKError("unauthorized:chat").toResponse();
+      const errorResponse = new ChatSDKError("unauthorized:chat").toResponse();
+      return setCorsHeaders(errorResponse, origin);
+    }
+
+    // Validate message content
+    const messageText = getTextFromMessage(message);
+    const validation = validateMessage(messageText);
+    
+    if (!validation.valid) {
+      const errorResponse = new Response(
+        JSON.stringify({ error: validation.error }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+      return setCorsHeaders(errorResponse, origin);
     }
 
     const userType: UserType = session.user.type;
@@ -359,12 +402,13 @@ ${uniqueUrls.map(url => `- ${url}`).join("\n")}
     //   );
     // }
 
-    return new Response(stream.pipeThrough(new JsonToSseTransformStream()));
+    const response = new Response(stream.pipeThrough(new JsonToSseTransformStream()));
+    return setCorsHeaders(response, origin);
   } catch (error) {
     const vercelId = request.headers.get("x-vercel-id");
 
     if (error instanceof ChatSDKError) {
-      return error.toResponse();
+      return setCorsHeaders(error.toResponse(), origin);
     }
 
     // Check for Vercel AI Gateway credit card error
@@ -374,11 +418,11 @@ ${uniqueUrls.map(url => `- ${url}`).join("\n")}
         "AI Gateway requires a valid credit card on file to service requests"
       )
     ) {
-      return new ChatSDKError("bad_request:activate_gateway").toResponse();
+      return setCorsHeaders(new ChatSDKError("bad_request:activate_gateway").toResponse(), origin);
     }
 
     console.error("Unhandled error in chat API:", error, { vercelId });
-    return new ChatSDKError("offline:chat").toResponse();
+    return setCorsHeaders(new ChatSDKError("offline:chat").toResponse(), origin);
   }
 }
 
