@@ -1,16 +1,19 @@
-<h1 align="center">NY English Teacher AI Chatbot</h1>
+<h1 align="center">NY AI Chatbot</h1>
 
 <p align="center">
-    An intelligent, bilingual (English/Spanish) AI chatbot with RAG (Retrieval Augmented Generation) capabilities for New York English Teacher business. Built for white-label deployment.
+    <strong>Production-ready, bilingual (English/Spanish) AI chatbot</strong> with RAG capabilities for <a href="https://www.nyenglishteacher.com">New York English Teacher</a>. Single-tenant, secure, optimized for professional English coaching services.
+</p>
+
+<p align="center">
+  <strong>Sister Project:</strong> <a href="https://github.com/RCushmaniii/ai-chatbot-saas">AI Chatbot SaaS</a> - Multi-tenant platform version
 </p>
 
 <p align="center">
   <a href="#features"><strong>Features</strong></a> ·
   <a href="#admin-dashboard"><strong>Admin Dashboard</strong></a> ·
   <a href="#tech-stack"><strong>Tech Stack</strong></a> ·
-  <a href="#rag-knowledge-base"><strong>RAG & Knowledge Base</strong></a> ·
-  <a href="#running-locally"><strong>Running Locally</strong></a> ·
-  <a href="#white-label-deployment"><strong>White-Label Guide</strong></a>
+  <a href="#deployment"><strong>Deployment</strong></a> ·
+  <a href="#production-checklist"><strong>Production Checklist</strong></a>
 </p>
 <br/>
 
