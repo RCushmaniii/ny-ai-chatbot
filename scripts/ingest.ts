@@ -36,6 +36,7 @@ interface Chunk {
     title: string;
     description: string;
     source: string;
+    language: string;
     scraped_at: string;
     chunk_index: number;
   };
@@ -72,7 +73,7 @@ async function fetchSitemapUrls(): Promise<string[]> {
       }
     }
 
-    console.log(`✅ Found ${urls.length} English URLs in sitemap`);
+    console.log(`✅ Found ${urls.length} URLs in sitemap (English + Spanish)`);
     return urls.length > 0 ? urls : getFallbackUrls();
   } catch (error) {
     console.warn("⚠️  Failed to parse sitemap, using fallback URLs");
@@ -140,6 +141,7 @@ function splitIntoChunks(page: PageData): Chunk[] {
         title,
         description,
         source: "website",
+        language, // Add language to metadata
         scraped_at: new Date().toISOString(),
         chunk_index: chunkIndex,
       },
