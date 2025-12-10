@@ -291,10 +291,11 @@ ${uniqueUrls.map(url => `- ${url}`).join("\n")}
     let finalMergedUsage: AppUsage | undefined;
 
     const stream = createUIMessageStream({
-      execute: ({ writer: dataStream }) => {
+      execute: async ({ writer: dataStream }) => {
+        const systemPromptText = await systemPrompt({ selectedChatModel, requestHints });
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
-          system: `${systemPrompt({ selectedChatModel, requestHints })}${knowledgeContext}`,
+          system: `${systemPromptText}${knowledgeContext}`,
           messages: convertToModelMessages(uiMessages),
           stopWhen: stepCountIs(5),
           experimental_activeTools:
