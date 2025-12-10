@@ -15,12 +15,20 @@ export const maxDuration = 60; // 60 seconds max
 
 export async function GET(request: Request) {
   try {
-    // Verify this is a legitimate cron request
+    // Verify this is a legitimate cron request from Vercel
+    // Vercel automatically adds the Authorization header with the cron secret
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
     
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Only check auth if CRON_SECRET is set
+    if (cronSecret) {
+      if (!authHeader || authHeader !== `Bearer ${cronSecret}`) {
+        console.warn('⚠️  Unauthorized cron request - missing or invalid auth header');
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    } else {
+      // No CRON_SECRET set - allow requests (useful for testing)
+      console.log('⚠️  CRON_SECRET not set - allowing unauthenticated requests');
     }
 
     console.log('🕐 Running daily usage report cron job...');
