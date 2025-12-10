@@ -26,7 +26,6 @@ import type { ChatModel } from "@/lib/ai/models";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { myProvider } from "@/lib/ai/providers";
 import { createDocument } from "@/lib/ai/tools/create-document";
-import { getWeather } from "@/lib/ai/tools/get-weather";
 import {
   searchKnowledgeDirect,
   searchKnowledgeTool,
@@ -169,7 +168,7 @@ export async function POST(request: Request) {
       differenceInHours: 24,
     });
 
-    // Use guest entitlements for anonymous users
+    // Use guest entitlements for anonymous users (daily limit)
     const userType: UserType = session?.user?.type || "guest";
     if (messageCount > entitlementsByUserType[userType].maxMessagesPerDay) {
       return new ChatSDKError("rate_limit:chat").toResponse();
@@ -185,6 +184,42 @@ export async function POST(request: Request) {
       }
       // Only fetch messages if chat already exists
       messagesFromDb = await getMessagesByChatId({ id });
+      
+      // Check session-based rate limit (20 messages per session) for non-admin users
+      if (!session?.user) {
+        const { RATE_LIMITS, RATE_LIMIT_MESSAGES } = await import("@/lib/config/rate-limits");
+        const sessionMessages = messagesFromDb.length;
+        
+        if (sessionMessages >= RATE_LIMITS.messagesPerSession) {
+          // Detect language for appropriate message
+          let limitMessage = RATE_LIMIT_MESSAGES.en.sessionLimit;
+          try {
+            const { detectLanguage } = await import("@/lib/utils/language-detector");
+            const messageText = getTextFromMessage(message) ?? "";
+            const lang = detectLanguage(messageText);
+            limitMessage = RATE_LIMIT_MESSAGES[lang].sessionLimit;
+          } catch (error) {
+            console.error('Language detection failed for rate limit message:', error);
+          }
+          
+          const errorResponse = new Response(
+            JSON.stringify({ 
+              error: "rate_limit_exceeded",
+              message: limitMessage,
+              limit: RATE_LIMITS.messagesPerSession,
+              current: sessionMessages
+            }),
+            { 
+              status: 429,
+              headers: { 
+                "Content-Type": "application/json",
+                "Retry-After": "3600" // 1 hour
+              }
+            }
+          );
+          return setCorsHeaders(errorResponse, origin);
+        }
+      }
     } else {
       const title = await generateTitleFromUserMessage({
         message,
@@ -303,7 +338,6 @@ ${uniqueUrls.map(url => `- ${url}`).join("\n")}
               ? []
               : [
                   "searchKnowledge",
-                  "getWeather",
                   "createDocument",
                   "updateDocument",
                   "requestSuggestions",
@@ -311,7 +345,6 @@ ${uniqueUrls.map(url => `- ${url}`).join("\n")}
           experimental_transform: smoothStream({ chunking: "word" }),
           tools: {
             searchKnowledge: searchKnowledgeTool,
-            getWeather,
             // Document tools only available for authenticated users
             ...(session ? {
               createDocument: createDocument({ session, dataStream }),
