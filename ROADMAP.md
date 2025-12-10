@@ -154,8 +154,16 @@
 
 #### 🤖 AI Enhancements
 
-- [ ] Multi-model support (Claude, Gemini)
-- [ ] Implement AI Gateway for rate limiting
+- [ ] **Vercel AI Gateway Integration** (when traffic scales)
+  - Unified API for multiple AI providers
+  - Automatic rate limiting and caching
+  - Cost optimization through response caching
+  - Centralized API key management
+  - Analytics and monitoring
+  - Fallback to alternative models on errors
+  - **Trigger:** When hitting rate limits or need multi-model support
+- [ ] Multi-model support (Claude, Gemini, Llama)
+- [ ] Model orchestration and routing
 - [ ] Add conversation memory improvements
 - [ ] Implement follow-up question suggestions
 - [ ] Add voice input/output

@@ -100,7 +100,7 @@ About the origin of user's request:
 - country: ${requestHints.country}
 `;
 
-export const systemPrompt = ({
+export const systemPrompt = async ({
   selectedChatModel,
   requestHints,
 }: {
@@ -108,12 +108,26 @@ export const systemPrompt = ({
   requestHints: RequestHints;
 }) => {
   const requestPrompt = getRequestPromptFromHints(requestHints);
-
-  if (selectedChatModel === "chat-model-reasoning") {
-    return `${regularPrompt}\n\n${requestPrompt}`;
+  
+  // Try to get custom system instructions from admin settings
+  let basePrompt = regularPrompt;
+  try {
+    const { getGlobalBotSettings } = await import("@/lib/db/queries");
+    const settings = await getGlobalBotSettings();
+    
+    // Use custom system instructions if available, otherwise fall back to default
+    if (settings?.customInstructions && settings.customInstructions.trim().length > 0) {
+      basePrompt = settings.customInstructions;
+    }
+  } catch (error) {
+    console.warn("Failed to load bot settings, using default prompt:", error);
   }
 
-  return `${regularPrompt}\n\n${requestPrompt}\n\n${artifactsPrompt}`;
+  if (selectedChatModel === "chat-model-reasoning") {
+    return `${basePrompt}\n\n${requestPrompt}`;
+  }
+
+  return `${basePrompt}\n\n${requestPrompt}\n\n${artifactsPrompt}`;
 };
 
 export const codePrompt = `
