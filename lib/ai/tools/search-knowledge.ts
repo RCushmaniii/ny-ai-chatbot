@@ -2,6 +2,7 @@ import { tool, embed } from "ai";
 import { z } from "zod";
 import { openai } from "@ai-sdk/openai";
 import postgres from "postgres";
+import { logKnowledgeEvent } from "./log-knowledge-event";
 
 // Shared Postgres client for knowledge searches.
 // biome-ignore lint: Forbidden non-null assertion.
@@ -20,7 +21,12 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const cacheTimestamps = new Map<string, number>();
 
 export async function searchKnowledgeDirect(
-  query: string
+  query: string,
+  context?: {
+    chatId?: string;
+    messageId?: string;
+    sessionId?: string;
+  }
 ): Promise<KnowledgeSearchResult[]> {
   try {
     const trimmed = query.trim();
@@ -87,16 +93,25 @@ export async function searchKnowledgeDirect(
       .sort((a: any, b: any) => Number(b.similarity) - Number(a.similarity))
       .slice(0, 5);
 
-    if (!allResults || allResults.length === 0) {
-      return [];
-    }
-
-    return allResults.map((row: any) => ({
+    const results = allResults.map((row: any) => ({
       content: row.content as string,
       url: (row.url as string) ?? null,
       similarity: Number(row.similarity),
       metadata: row.metadata ? JSON.parse(row.metadata as string) : {},
     }));
+
+    // Log knowledge event for RAG insights
+    if (context) {
+      await logKnowledgeEvent({
+        chatId: context.chatId,
+        messageId: context.messageId,
+        sessionId: context.sessionId,
+        query: trimmed,
+        results,
+      });
+    }
+
+    return results;
   } catch (error) {
     console.error("Error searching knowledge base:", error);
     return [];

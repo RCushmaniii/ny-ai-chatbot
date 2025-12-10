@@ -1,11 +1,5 @@
 import { auth } from "@/app/(auth)/auth";
-import { drizzle } from "drizzle-orm/postgres-js";
-import { eq } from "drizzle-orm";
-import postgres from "postgres";
-import { botSettings } from "@/lib/db/schema";
-
-const client = postgres(process.env.POSTGRES_URL!);
-const db = drizzle(client);
+import { getGlobalBotSettings, updateGlobalBotSettings } from "@/lib/db/queries";
 
 export async function GET() {
   try {
@@ -14,18 +8,14 @@ export async function GET() {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get settings for this user
-    const settings = await db
-      .select()
-      .from(botSettings)
-      .where(eq(botSettings.userId, session.user.id))
-      .limit(1);
+    // SINGLE-TENANT: Get global bot settings (no userId filtering)
+    const settings = await getGlobalBotSettings();
 
-    if (settings.length === 0) {
+    if (!settings) {
       return Response.json({ error: "Settings not found" }, { status: 404 });
     }
 
-    return Response.json(settings[0]);
+    return Response.json(settings);
   } catch (error) {
     console.error("Error fetching settings:", error);
     return Response.json(
@@ -49,40 +39,18 @@ export async function POST(request: Request) {
       starterQuestions,
       colors,
       settings: userSettings,
+      embedSettings,
     } = body;
 
-    // Check if settings exist for this user
-    const existing = await db
-      .select()
-      .from(botSettings)
-      .where(eq(botSettings.userId, session.user.id))
-      .limit(1);
-
-    if (existing.length === 0) {
-      // Create new settings
-      await db.insert(botSettings).values({
-        userId: session.user.id,
-        botName,
-        customInstructions,
-        starterQuestions,
-        colors,
-        settings: userSettings,
-        updatedAt: new Date(),
-      });
-    } else {
-      // Update existing settings
-      await db
-        .update(botSettings)
-        .set({
-          ...(botName !== undefined && { botName }),
-          ...(customInstructions !== undefined && { customInstructions }),
-          ...(starterQuestions !== undefined && { starterQuestions }),
-          ...(colors !== undefined && { colors }),
-          ...(userSettings !== undefined && { settings: userSettings }),
-          updatedAt: new Date(),
-        })
-        .where(eq(botSettings.userId, session.user.id));
-    }
+    // SINGLE-TENANT: Update global bot settings (upsert pattern)
+    await updateGlobalBotSettings({
+      botName,
+      customInstructions,
+      starterQuestions,
+      colors,
+      settings: userSettings,
+      embedSettings,
+    });
 
     return Response.json({ success: true });
   } catch (error) {

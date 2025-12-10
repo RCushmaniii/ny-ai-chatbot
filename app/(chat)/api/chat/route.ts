@@ -11,6 +11,7 @@ import { validateMessage, checkRateLimit, getClientIdentifier } from "@/lib/secu
 import { setCorsHeaders, handleCorsPreflightRequest } from "@/lib/security/cors";
 import { unstable_cache as cache } from "next/cache";
 import { after } from "next/server";
+import { getOrCreateSessionId } from "@/lib/session";
 import {
   createResumableStreamContext,
   type ResumableStreamContext,
@@ -37,7 +38,7 @@ import {
   createStreamId,
   deleteChatById,
   getChatById,
-  getMessageCountByUserId,
+  getMessageCountBySessionId,
   getMessagesByChatId,
   saveChat,
   saveMessages,
@@ -146,12 +147,9 @@ export async function POST(request: Request) {
       selectedVisibilityType: VisibilityType;
     } = requestBody;
 
+    // SINGLE-TENANT: Support both authenticated admin and anonymous sessions
     const session = await auth();
-
-    if (!session?.user) {
-      const errorResponse = new ChatSDKError("unauthorized:chat").toResponse();
-      return setCorsHeaders(errorResponse, origin);
-    }
+    const sessionId = await getOrCreateSessionId();
 
     // Validate message content
     const messageText = getTextFromMessage(message);
@@ -165,13 +163,14 @@ export async function POST(request: Request) {
       return setCorsHeaders(errorResponse, origin);
     }
 
-    const userType: UserType = session.user.type;
-
-    const messageCount = await getMessageCountByUserId({
-      id: session.user.id,
+    // Rate limiting by sessionId (not userId)
+    const messageCount = await getMessageCountBySessionId({
+      sessionId,
       differenceInHours: 24,
     });
 
+    // Use guest entitlements for anonymous users
+    const userType: UserType = session?.user?.type || "guest";
     if (messageCount > entitlementsByUserType[userType].maxMessagesPerDay) {
       return new ChatSDKError("rate_limit:chat").toResponse();
     }
@@ -180,7 +179,8 @@ export async function POST(request: Request) {
     let messagesFromDb: DBMessage[] = [];
 
     if (chat) {
-      if (chat.userId !== session.user.id) {
+      // Verify chat belongs to this session (not userId)
+      if (chat.sessionId !== sessionId && chat.userId !== session?.user?.id) {
         return new ChatSDKError("forbidden:chat").toResponse();
       }
       // Only fetch messages if chat already exists
@@ -192,7 +192,8 @@ export async function POST(request: Request) {
 
       await saveChat({
         id,
-        userId: session.user.id,
+        userId: session?.user?.id, // Optional - only for admin
+        sessionId, // Always set for anonymous tracking
         title,
         visibility: selectedVisibilityType,
       });
@@ -310,12 +311,15 @@ ${uniqueUrls.map(url => `- ${url}`).join("\n")}
           tools: {
             searchKnowledge: searchKnowledgeTool,
             getWeather,
-            createDocument: createDocument({ session, dataStream }),
-            updateDocument: updateDocument({ session, dataStream }),
-            requestSuggestions: requestSuggestions({
-              session,
-              dataStream,
-            }),
+            // Document tools only available for authenticated users
+            ...(session ? {
+              createDocument: createDocument({ session, dataStream }),
+              updateDocument: updateDocument({ session, dataStream }),
+              requestSuggestions: requestSuggestions({
+                session,
+                dataStream,
+              }),
+            } : {}),
           },
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,

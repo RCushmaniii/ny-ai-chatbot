@@ -9,7 +9,9 @@ import {
   gt,
   gte,
   inArray,
+  isNotNull,
   lt,
+  sql,
   type SQL,
 } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -20,17 +22,19 @@ import { ChatSDKError } from "../errors";
 import type { AppUsage } from "../usage";
 import { generateUUID } from "../utils";
 import {
-  type Chat,
+  botSettings,
   chat,
-  type DBMessage,
   document,
+  knowledgeEvents,
   message,
-  type Suggestion,
   stream,
   suggestion,
-  type User,
   user,
   vote,
+  type User,
+  type DBMessage,
+  type Suggestion,
+  type BotSettings,
 } from "./schema";
 import { generateHashedPassword } from "./utils";
 
@@ -83,11 +87,13 @@ export async function createGuestUser() {
 export async function saveChat({
   id,
   userId,
+  sessionId,
   title,
   visibility,
 }: {
   id: string;
-  userId: string;
+  userId?: string; // Optional for anonymous sessions
+  sessionId?: string; // For anonymous sessions
   title: string;
   visibility: VisibilityType;
 }) {
@@ -95,7 +101,8 @@ export async function saveChat({
     return await db.insert(chat).values({
       id,
       createdAt: new Date(),
-      userId,
+      userId: userId || null,
+      sessionId: sessionId || null,
       title,
       visibility,
     });
@@ -119,114 +126,6 @@ export async function deleteChatById({ id }: { id: string }) {
     throw new ChatSDKError(
       "bad_request:database",
       "Failed to delete chat by id"
-    );
-  }
-}
-
-export async function deleteAllChatsByUserId({ userId }: { userId: string }) {
-  try {
-    const userChats = await db
-      .select({ id: chat.id })
-      .from(chat)
-      .where(eq(chat.userId, userId));
-
-    if (userChats.length === 0) {
-      return { deletedCount: 0 };
-    }
-
-    const chatIds = userChats.map(c => c.id);
-
-    await db.delete(vote).where(inArray(vote.chatId, chatIds));
-    await db.delete(message).where(inArray(message.chatId, chatIds));
-    await db.delete(stream).where(inArray(stream.chatId, chatIds));
-
-    const deletedChats = await db
-      .delete(chat)
-      .where(eq(chat.userId, userId))
-      .returning();
-
-    return { deletedCount: deletedChats.length };
-  } catch (_error) {
-    throw new ChatSDKError(
-      "bad_request:database",
-      "Failed to delete all chats by user id"
-    );
-  }
-}
-
-export async function getChatsByUserId({
-  id,
-  limit,
-  startingAfter,
-  endingBefore,
-}: {
-  id: string;
-  limit: number;
-  startingAfter: string | null;
-  endingBefore: string | null;
-}) {
-  try {
-    const extendedLimit = limit + 1;
-
-    const query = (whereCondition?: SQL<any>) =>
-      db
-        .select()
-        .from(chat)
-        .where(
-          whereCondition
-            ? and(whereCondition, eq(chat.userId, id))
-            : eq(chat.userId, id)
-        )
-        .orderBy(desc(chat.createdAt))
-        .limit(extendedLimit);
-
-    let filteredChats: Chat[] = [];
-
-    if (startingAfter) {
-      const [selectedChat] = await db
-        .select()
-        .from(chat)
-        .where(eq(chat.id, startingAfter))
-        .limit(1);
-
-      if (!selectedChat) {
-        throw new ChatSDKError(
-          "not_found:database",
-          `Chat with id ${startingAfter} not found`
-        );
-      }
-
-      filteredChats = await query(gt(chat.createdAt, selectedChat.createdAt));
-    } else if (endingBefore) {
-      const [selectedChat] = await db
-        .select()
-        .from(chat)
-        .where(eq(chat.id, endingBefore))
-        .limit(1);
-
-      if (!selectedChat) {
-        throw new ChatSDKError(
-          "not_found:database",
-          `Chat with id ${endingBefore} not found`
-        );
-      }
-
-      filteredChats = await query(lt(chat.createdAt, selectedChat.createdAt));
-    } else {
-      filteredChats = await query();
-    }
-
-    const hasMore = filteredChats.length > limit;
-
-    return {
-      chats: hasMore ? filteredChats.slice(0, limit) : filteredChats,
-      hasMore,
-    };
-  } catch (error) {
-    console.error("Error in getChatsByUserId:", error);
-    throw new ChatSDKError(
-      "bad_request:database",
-      "Failed to get chats by user id"
     );
   }
 }
@@ -523,36 +422,270 @@ export async function updateChatLastContextById({
   }
 }
 
-export async function getMessageCountByUserId({
-  id,
-  differenceInHours,
-}: {
-  id: string;
-  differenceInHours: number;
-}) {
-  try {
-    const twentyFourHoursAgo = new Date(
-      Date.now() - differenceInHours * 60 * 60 * 1000
-    );
+// REMOVED: getMessageCountByUserId() - Replaced by getMessageCountBySessionId()
 
-    const [stats] = await db
+/**
+ * Analytics Functions for Admin Dashboard
+ */
+
+export async function getAnalyticsData(days: number = 30) {
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    // Total chats in period
+    const totalChats = await db
+      .select({ count: count(chat.id) })
+      .from(chat)
+      .where(gte(chat.createdAt, startDate));
+
+    // Total messages in period
+    const totalMessages = await db
       .select({ count: count(message.id) })
       .from(message)
       .innerJoin(chat, eq(message.chatId, chat.id))
+      .where(gte(chat.createdAt, startDate));
+
+    // Unique sessions in period
+    const uniqueSessions = await db
+      .selectDistinct({ sessionId: chat.sessionId })
+      .from(chat)
       .where(
         and(
-          eq(chat.userId, id),
-          gte(message.createdAt, twentyFourHoursAgo),
-          eq(message.role, "user")
+          gte(chat.createdAt, startDate),
+          isNotNull(chat.sessionId)
         )
-      )
-      .execute();
+      );
 
-    return stats?.count ?? 0;
-  } catch (_error) {
+    // Messages per chat (average)
+    const messagesPerChat = await db
+      .select({
+        chatId: message.chatId,
+        count: count(message.id),
+      })
+      .from(message)
+      .innerJoin(chat, eq(message.chatId, chat.id))
+      .where(gte(chat.createdAt, startDate))
+      .groupBy(message.chatId);
+
+    const avgMessagesPerChat = messagesPerChat.length > 0
+      ? messagesPerChat.reduce((sum, c) => sum + Number(c.count), 0) / messagesPerChat.length
+      : 0;
+
+    return {
+      totalChats: totalChats[0]?.count || 0,
+      totalMessages: totalMessages[0]?.count || 0,
+      uniqueSessions: uniqueSessions.length,
+      avgMessagesPerChat: Math.round(avgMessagesPerChat * 10) / 10,
+    };
+  } catch (error) {
+    console.error("Error getting analytics data:", error);
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to get message count by user id"
+      "Failed to get analytics data"
+    );
+  }
+}
+
+export async function getTopQuestions(limit: number = 10) {
+  try {
+    // Get first user message from each chat
+    const questions = await db
+      .select({
+        parts: message.parts,
+        chatId: message.chatId,
+        createdAt: chat.createdAt,
+      })
+      .from(message)
+      .innerJoin(chat, eq(message.chatId, chat.id))
+      .where(eq(message.role, "user"))
+      .orderBy(desc(chat.createdAt))
+      .limit(100); // Get recent questions
+
+    // Count occurrences of similar questions (simple text matching)
+    const questionCounts = new Map<string, number>();
+    
+    questions.forEach((q) => {
+      // Extract text from parts (which is a JSON array)
+      const parts = q.parts as any[];
+      const text = parts
+        .filter((p: any) => p.type === 'text')
+        .map((p: any) => p.text)
+        .join(' ');
+      
+      if (text) {
+        const normalized = text.toLowerCase().trim().slice(0, 100);
+        questionCounts.set(normalized, (questionCounts.get(normalized) || 0) + 1);
+      }
+    });
+
+    // Convert to array and sort by count
+    const topQuestions = Array.from(questionCounts.entries())
+      .map(([question, count]) => ({ question, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, limit);
+
+    return topQuestions;
+  } catch (error) {
+    console.error("Error getting top questions:", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get top questions"
+    );
+  }
+}
+
+export async function getDailyStats(days: number = 14) {
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const dailyChats = await db
+      .select({
+        date: sql<string>`DATE(${chat.createdAt})`,
+        count: count(chat.id),
+      })
+      .from(chat)
+      .where(gte(chat.createdAt, startDate))
+      .groupBy(sql`DATE(${chat.createdAt})`)
+      .orderBy(sql`DATE(${chat.createdAt})`);
+
+    return dailyChats.map((d) => ({
+      date: d.date,
+      chats: Number(d.count),
+    }));
+  } catch (error) {
+    console.error("Error getting daily stats:", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get daily stats"
+    );
+  }
+}
+
+/**
+ * Chat Logs Functions for Admin Dashboard
+ */
+
+export async function getAllChatsWithMessages({
+  limit = 20,
+  offset = 0,
+  searchQuery,
+  startDate,
+  endDate,
+}: {
+  limit?: number;
+  offset?: number;
+  searchQuery?: string;
+  startDate?: Date;
+  endDate?: Date;
+}) {
+  try {
+    // Build where conditions
+    const conditions: SQL[] = [];
+
+    if (startDate) {
+      conditions.push(gte(chat.createdAt, startDate));
+    }
+    if (endDate) {
+      conditions.push(lt(chat.createdAt, endDate));
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    // Get chats with message count
+    const chats = await db
+      .select({
+        id: chat.id,
+        title: chat.title,
+        sessionId: chat.sessionId,
+        userId: chat.userId,
+        createdAt: chat.createdAt,
+        visibility: chat.visibility,
+        messageCount: sql<number>`(
+          SELECT COUNT(*) 
+          FROM ${message} 
+          WHERE ${message.chatId} = ${chat.id}
+        )`,
+      })
+      .from(chat)
+      .where(whereClause)
+      .orderBy(desc(chat.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    // Get total count for pagination
+    const [{ count: totalCount }] = await db
+      .select({ count: count(chat.id) })
+      .from(chat)
+      .where(whereClause);
+
+    // If search query, filter by message content
+    if (searchQuery && chats.length > 0) {
+      const chatIds = chats.map((c) => c.id);
+      
+      const messagesWithSearch = await db
+        .select({
+          chatId: message.chatId,
+        })
+        .from(message)
+        .where(
+          and(
+            inArray(message.chatId, chatIds),
+            sql`${message.parts}::text ILIKE ${`%${searchQuery}%`}`
+          )
+        )
+        .groupBy(message.chatId);
+
+      const matchingChatIds = new Set(messagesWithSearch.map((m) => m.chatId));
+      
+      return {
+        chats: chats.filter((c) => matchingChatIds.has(c.id)),
+        total: matchingChatIds.size,
+        hasMore: offset + limit < matchingChatIds.size,
+      };
+    }
+
+    return {
+      chats,
+      total: Number(totalCount),
+      hasMore: offset + limit < Number(totalCount),
+    };
+  } catch (error) {
+    console.error("Error getting all chats:", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get all chats"
+    );
+  }
+}
+
+export async function getChatWithFullTranscript(chatId: string) {
+  try {
+    const [chatData] = await db
+      .select()
+      .from(chat)
+      .where(eq(chat.id, chatId));
+
+    if (!chatData) {
+      throw new ChatSDKError("not_found:database", "Chat not found");
+    }
+
+    const messages = await db
+      .select()
+      .from(message)
+      .where(eq(message.chatId, chatId))
+      .orderBy(asc(message.createdAt));
+
+    return {
+      chat: chatData,
+      messages,
+    };
+  } catch (error) {
+    console.error("Error getting chat transcript:", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get chat transcript"
     );
   }
 }
@@ -590,6 +723,401 @@ export async function getStreamIdsByChatId({ chatId }: { chatId: string }) {
     throw new ChatSDKError(
       "bad_request:database",
       "Failed to get stream ids by chat id"
+    );
+  }
+}
+
+// ============================================================================
+// SINGLE-TENANT: Bot Settings (Global Singleton)
+// ============================================================================
+
+/**
+ * Get global bot settings (single active row)
+ * Returns null if no settings exist
+ */
+export async function getGlobalBotSettings(): Promise<BotSettings | null> {
+  try {
+    const settings = await db
+      .select()
+      .from(botSettings)
+      .where(eq(botSettings.is_active, true))
+      .limit(1);
+
+    return settings[0] || null;
+  } catch (error) {
+    console.error("Error fetching global bot settings:", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get global bot settings"
+    );
+  }
+}
+
+/**
+ * Update global bot settings (upsert pattern)
+ * Creates settings if none exist, updates if they do
+ */
+export async function updateGlobalBotSettings(
+  data: Partial<Omit<BotSettings, "id" | "createdAt" | "updatedAt" | "is_active">>
+): Promise<void> {
+  try {
+    const existing = await getGlobalBotSettings();
+
+    if (existing) {
+      // Update existing settings
+      await db
+        .update(botSettings)
+        .set({
+          ...data,
+          updatedAt: new Date(),
+        })
+        .where(eq(botSettings.id, existing.id));
+    } else {
+      // Create new settings
+      await db.insert(botSettings).values({
+        ...data,
+        is_active: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
+  } catch (error) {
+    console.error("Error updating global bot settings:", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to update global bot settings"
+    );
+  }
+}
+
+// ============================================================================
+// SINGLE-TENANT: Session-Based Chat Queries
+// ============================================================================
+
+/**
+ * Get chats by sessionId (for anonymous users)
+ * Replaces getChatsByUserId for single-tenant architecture
+ */
+export async function getChatsBySessionId({
+  sessionId,
+  limit = 50,
+}: {
+  sessionId: string;
+  limit?: number;
+}) {
+  try {
+    const chats = await db
+      .select()
+      .from(chat)
+      .where(eq(chat.sessionId, sessionId))
+      .orderBy(desc(chat.createdAt))
+      .limit(limit);
+
+    return chats;
+  } catch (error) {
+    console.error("Error in getChatsBySessionId:", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get chats by session id"
+    );
+  }
+}
+
+/**
+ * Get all chats (admin view)
+ * No user filtering - returns all chats across all sessions
+ */
+export async function getAllChats({
+  limit = 100,
+  offset = 0,
+}: {
+  limit?: number;
+  offset?: number;
+}) {
+  try {
+    const chats = await db
+      .select()
+      .from(chat)
+      .orderBy(desc(chat.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    return chats;
+  } catch (error) {
+    console.error("Error in getAllChats:", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get all chats"
+    );
+  }
+}
+
+/**
+ * Get message count by sessionId (for rate limiting)
+ */
+export async function getMessageCountBySessionId({
+  sessionId,
+  differenceInHours,
+}: {
+  sessionId: string;
+  differenceInHours: number;
+}) {
+  try {
+    const hoursAgo = new Date(
+      Date.now() - differenceInHours * 60 * 60 * 1000
+    );
+
+    const [stats] = await db
+      .select({ count: count(message.id) })
+      .from(message)
+      .innerJoin(chat, eq(message.chatId, chat.id))
+      .where(
+        and(
+          eq(chat.sessionId, sessionId),
+          gte(message.createdAt, hoursAgo),
+          eq(message.role, "user")
+        )
+      )
+      .execute();
+
+    return stats?.count ?? 0;
+  } catch (error) {
+    console.error("Error in getMessageCountBySessionId:", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get message count by session id"
+    );
+  }
+}
+
+/**
+ * Knowledge Insights Functions for RAG Intelligence Layer
+ */
+
+export async function getRagHitRatio(days: number = 30) {
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const [{ totalEvents }] = await db
+      .select({ totalEvents: count(knowledgeEvents.id) })
+      .from(knowledgeEvents)
+      .where(gte(knowledgeEvents.createdAt, startDate));
+
+    const [{ hitEvents }] = await db
+      .select({ hitEvents: count(knowledgeEvents.id) })
+      .from(knowledgeEvents)
+      .where(
+        and(
+          gte(knowledgeEvents.createdAt, startDate),
+          eq(knowledgeEvents.hit, true)
+        )
+      );
+
+    const total = Number(totalEvents) || 0;
+    const hits = Number(hitEvents) || 0;
+    const ratio = total > 0 ? (hits / total) * 100 : 0;
+
+    return {
+      total,
+      hits,
+      misses: total - hits,
+      ratio: Math.round(ratio * 10) / 10,
+    };
+  } catch (error) {
+    console.error("Error getting RAG hit ratio:", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get RAG hit ratio"
+    );
+  }
+}
+
+export async function getTopSources({ days = 30, limit = 50 }: { days?: number; limit?: number }) {
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const sources = await db
+      .select({
+        sourceId: knowledgeEvents.sourceId,
+        sourceType: knowledgeEvents.sourceType,
+        hits: count(knowledgeEvents.id),
+        avgRelevance: sql<number>`AVG(${knowledgeEvents.relevance})`,
+        lastHit: sql<Date>`MAX(${knowledgeEvents.createdAt})`,
+      })
+      .from(knowledgeEvents)
+      .where(
+        and(
+          eq(knowledgeEvents.hit, true),
+          gte(knowledgeEvents.createdAt, startDate)
+        )
+      )
+      .groupBy(knowledgeEvents.sourceId, knowledgeEvents.sourceType)
+      .orderBy(desc(count(knowledgeEvents.id)))
+      .limit(limit);
+
+    // Get example queries for each source
+    const sourcesWithExamples = await Promise.all(
+      sources.map(async (source) => {
+        const [example] = await db
+          .select({ query: knowledgeEvents.query })
+          .from(knowledgeEvents)
+          .where(
+            and(
+              eq(knowledgeEvents.sourceId, source.sourceId!),
+              eq(knowledgeEvents.hit, true)
+            )
+          )
+          .limit(1);
+
+        return {
+          sourceId: source.sourceId || "",
+          sourceType: source.sourceType || "",
+          hits: Number(source.hits),
+          avgRelevance: source.avgRelevance ? Math.round(Number(source.avgRelevance) * 1000) / 1000 : 0,
+          exampleQuery: example?.query || "",
+          lastHit: source.lastHit?.toISOString() || "",
+        };
+      })
+    );
+
+    return sourcesWithExamples;
+  } catch (error) {
+    console.error("Error getting top sources:", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get top sources"
+    );
+  }
+}
+
+export async function getMissingKnowledge({ 
+  days = 30, 
+  limit = 50, 
+  includeRaw = false 
+}: { 
+  days?: number; 
+  limit?: number; 
+  includeRaw?: boolean;
+}) {
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    // Get queries that had no hits
+    const missedQueries = await db
+      .select({
+        query: knowledgeEvents.query,
+        count: count(knowledgeEvents.id),
+        lastAsked: sql<Date>`MAX(${knowledgeEvents.createdAt})`,
+      })
+      .from(knowledgeEvents)
+      .where(
+        and(
+          eq(knowledgeEvents.hit, false),
+          gte(knowledgeEvents.createdAt, startDate)
+        )
+      )
+      .groupBy(knowledgeEvents.query)
+      .orderBy(desc(count(knowledgeEvents.id)))
+      .limit(limit);
+
+    // Group similar queries into topics (simple version - just use the query as topic)
+    const groups = missedQueries.map((q) => ({
+      topic: q.query,
+      count: Number(q.count),
+      examples: [q.query],
+    }));
+
+    const raw = includeRaw
+      ? missedQueries.map((q) => ({
+          query: q.query,
+          date: q.lastAsked?.toISOString().split('T')[0] || "",
+        }))
+      : [];
+
+    return { groups, raw };
+  } catch (error) {
+    console.error("Error getting missing knowledge:", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get missing knowledge"
+    );
+  }
+}
+
+export async function getTopChunks({ days = 30, limit = 50 }: { days?: number; limit?: number }) {
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const chunks = await db
+      .select({
+        chunkId: knowledgeEvents.chunkId,
+        sourceId: knowledgeEvents.sourceId,
+        sourceType: knowledgeEvents.sourceType,
+        hits: count(knowledgeEvents.id),
+        avgRelevance: sql<number>`AVG(${knowledgeEvents.relevance})`,
+      })
+      .from(knowledgeEvents)
+      .where(
+        and(
+          eq(knowledgeEvents.hit, true),
+          isNotNull(knowledgeEvents.chunkId),
+          gte(knowledgeEvents.createdAt, startDate)
+        )
+      )
+      .groupBy(knowledgeEvents.chunkId, knowledgeEvents.sourceId, knowledgeEvents.sourceType)
+      .orderBy(desc(count(knowledgeEvents.id)))
+      .limit(limit);
+
+    return chunks.map((c) => ({
+      chunkId: c.chunkId || "",
+      sourceId: c.sourceId || "",
+      sourceType: c.sourceType || "",
+      hits: Number(c.hits),
+      avgRelevance: c.avgRelevance ? Math.round(Number(c.avgRelevance) * 1000) / 1000 : 0,
+    }));
+  } catch (error) {
+    console.error("Error getting top chunks:", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get top chunks"
+    );
+  }
+}
+
+export async function getRagTrends(days: number = 30) {
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const trends = await db
+      .select({
+        date: sql<string>`DATE(${knowledgeEvents.createdAt})`,
+        totalQueries: count(knowledgeEvents.id),
+        hits: sql<number>`SUM(CASE WHEN ${knowledgeEvents.hit} = TRUE THEN 1 ELSE 0 END)`,
+        misses: sql<number>`SUM(CASE WHEN ${knowledgeEvents.hit} = FALSE THEN 1 ELSE 0 END)`,
+        avgScore: sql<number>`AVG(CASE WHEN ${knowledgeEvents.hit} = TRUE THEN ${knowledgeEvents.relevance} ELSE NULL END)`,
+      })
+      .from(knowledgeEvents)
+      .where(gte(knowledgeEvents.createdAt, startDate))
+      .groupBy(sql`DATE(${knowledgeEvents.createdAt})`)
+      .orderBy(sql`DATE(${knowledgeEvents.createdAt})`);
+
+    return trends.map((t) => ({
+      date: t.date,
+      totalQueries: Number(t.totalQueries),
+      hits: Number(t.hits),
+      misses: Number(t.misses),
+      avgScore: t.avgScore ? Math.round(Number(t.avgScore) * 1000) / 1000 : 0,
+    }));
+  } catch (error) {
+    console.error("Error getting RAG trends:", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get RAG trends"
     );
   }
 }

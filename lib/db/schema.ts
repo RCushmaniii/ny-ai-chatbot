@@ -3,8 +3,10 @@ import {
   boolean,
   customType,
   foreignKey,
+  integer,
   json,
   jsonb,
+  numeric,
   pgTable,
   primaryKey,
   serial,
@@ -40,9 +42,8 @@ export const chat = pgTable("Chat", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   createdAt: timestamp("createdAt").notNull(),
   title: text("title").notNull(),
-  userId: uuid("userId")
-    .notNull()
-    .references(() => user.id),
+  userId: uuid("userId").references(() => user.id), // Made optional for anonymous sessions
+  sessionId: varchar("sessionId", { length: 64 }), // For anonymous session tracking
   visibility: varchar("visibility", { enum: ["public", "private"] })
     .notNull()
     .default("private"),
@@ -199,12 +200,10 @@ export const documents = pgTable("Document_Knowledge", {
 
 export type KnowledgeDocument = InferSelectModel<typeof documents>;
 
-// Bot settings for customization
+// Bot settings for customization (SINGLE-TENANT: Global singleton)
 export const botSettings = pgTable("bot_settings", {
   id: serial("id").primaryKey(),
-  userId: uuid("userId")
-    .notNull()
-    .references(() => user.id),
+  is_active: boolean("is_active").default(true), // Singleton pattern - only one active row
   botName: varchar("botName", { length: 100 }),
   customInstructions: text("customInstructions"),
   starterQuestions: jsonb("starterQuestions").$type<
@@ -234,3 +233,37 @@ export const botSettings = pgTable("bot_settings", {
 });
 
 export type BotSettings = InferSelectModel<typeof botSettings>;
+
+// Knowledge Events table for RAG Intelligence Layer
+export const knowledgeEvents = pgTable("knowledge_events", {
+  id: serial("id").primaryKey(),
+  chatId: uuid("chatId").references(() => chat.id, { onDelete: "cascade" }),
+  messageId: uuid("messageId"),
+  sessionId: text("sessionId"),
+  query: text("query").notNull(),
+  sourceType: text("sourceType"), // 'website' | 'document'
+  sourceId: text("sourceId"),
+  chunkId: text("chunkId"),
+  relevance: numeric("relevance"),
+  hit: boolean("hit").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type KnowledgeEvent = InferSelectModel<typeof knowledgeEvents>;
+
+// Chat analytics for admin dashboard
+export const chatAnalytics = pgTable("chat_analytics", {
+  id: serial("id").primaryKey(),
+  chatId: uuid("chatId").references(() => chat.id, { onDelete: "cascade" }),
+  sessionId: varchar("sessionId", { length: 64 }),
+  messageCount: serial("messageCount").default(0),
+  knowledgeHits: serial("knowledgeHits").default(0),
+  avgResponseTime: serial("avgResponseTime"), // milliseconds
+  userLanguage: varchar("userLanguage", { length: 10 }),
+  hasKnowledgeResults: boolean("hasKnowledgeResults").default(false),
+  firstMessageAt: timestamp("firstMessageAt"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  lastActivityAt: timestamp("lastActivityAt").notNull().defaultNow(),
+});
+
+export type ChatAnalytics = InferSelectModel<typeof chatAnalytics>;

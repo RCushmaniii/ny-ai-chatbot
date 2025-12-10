@@ -1,20 +1,30 @@
-<h1 align="center">NY AI Chatbot</h1>
+<h1 align="center">🤖 NY AI Chatbot</h1>
 
 <p align="center">
-    <strong>Production-ready, bilingual (English/Spanish) AI chatbot</strong> with RAG capabilities for <a href="https://www.nyenglishteacher.com">New York English Teacher</a>. Single-tenant, secure, optimized for professional English coaching services.
+    <strong>Production-ready, enterprise-grade AI chatbot platform</strong> with advanced RAG intelligence, comprehensive admin analytics, and single-tenant architecture.
 </p>
 
 <p align="center">
-  <strong>Sister Project:</strong> <a href="https://github.com/RCushmaniii/ai-chatbot-saas">AI Chatbot SaaS</a> - Multi-tenant platform version
+  Built for <a href="https://www.nyenglishteacher.com">New York English Teacher</a> • Bilingual (EN/ES) • Fully Deployed • Ready for Clients
 </p>
 
 <p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#admin-dashboard"><strong>Admin Dashboard</strong></a> ·
-  <a href="#tech-stack"><strong>Tech Stack</strong></a> ·
-  <a href="#deployment"><strong>Deployment</strong></a> ·
-  <a href="#production-checklist"><strong>Production Checklist</strong></a>
+  <a href="#-features"><strong>Features</strong></a> ·
+  <a href="#-admin-panel--analytics"><strong>Admin Panel</strong></a> ·
+  <a href="#-tech-stack"><strong>Tech Stack</strong></a> ·
+  <a href="#-deployment"><strong>Deployment</strong></a> ·
+  <a href="#-documentation"><strong>Docs</strong></a>
 </p>
+
+---
+
+## ✨ What's New (Priority #1-4 Complete)
+
+✅ **Admin Profile & Account Management** - Secure login, password changes, account settings  
+✅ **Advanced Analytics Dashboard** - 7/30/90-day metrics, daily trends, top questions  
+✅ **Chat Logs Viewer** - Full transcript search, filtering, CSV export  
+✅ **Knowledge Insights Engine** - RAG performance tracking, content gap analysis, chunk heatmaps
+
 <br/>
 
 ## Features
@@ -52,48 +62,116 @@
   - Dual-parser strategy (unpdf + pdf-parse)
   - Robust error handling and validation
 
-## Admin Dashboard
+## 📊 Admin Panel & Analytics
 
-The `/admin` route provides a comprehensive dashboard for managing your chatbot:
+The `/admin` route provides a **9-tab professional dashboard** for complete chatbot management:
 
-### 📋 Manual Content
+### 1. 📋 Manual Content
 
 - Upload `.txt`, `.md`, and `.pdf` files
 - Add content manually via textarea
 - Categorize by type (Services, Pricing, FAQ, etc.)
 - Support for English and Spanish content
 
-### 🌐 Website Scraping
+### 2. 🌐 Website Scraping
 
 - **Automatic sitemap scraping** - Index entire websites automatically
 - **Knowledge base stats** - View counts for website vs manual content
-- **One-click ingestion** - Run `pnpm run ingest` from the UI
+- **One-click ingestion** - Run from the UI
 - **Clear data** - Reset website content when needed
-- Uses Cheerio for robust HTML parsing
 - Processes 48+ pages into 193+ searchable chunks
 
-### ⚙️ Bot Settings (Starter Questions)
+### 3. ⚙️ Bot Settings (Starter Questions)
 
 - **Add/Edit/Delete** suggested questions
 - **Emoji support** for visual appeal
-- **Drag-and-drop** ordering (coming soon)
 - **Live preview** of how questions appear to users
 - **Bilingual questions** - Mix English and Spanish prompts
 
-### 💬 Instructions (System Prompts)
+### 4. 💬 Instructions (System Prompts)
 
 - **Bot name** customization
 - **Custom system instructions** - Define personality and behavior
 - **Risk-averse templates** - Pre-built cautious response patterns
 - **Reset to default** - Restore original instructions
-- Instructions guide:
-  - Language matching rules
-  - Knowledge scope boundaries
-  - Cautious language patterns
-  - Missing information handling
-  - URL attribution requirements
 
-## Tech Stack
+### 5. 🔗 Embed Code
+
+- **One-click embed code** - Copy/paste widget for your website
+- **Responsive design** - Works on all devices
+- **Customizable dimensions** - Adjust width/height
+
+### 6. 📈 Analytics Dashboard ⭐ NEW
+
+- **Usage Metrics** - Total chats, messages, unique sessions
+- **Time-based Views** - Last 7/30/90 days
+- **Daily Trends** - Line charts showing activity over time
+- **Top Questions** - Most common user queries
+- **Language Breakdown** - EN vs ES usage
+- **Knowledge Base Hit Ratio** - RAG performance metrics
+
+### 7. 📜 Chat Logs Viewer ⭐ NEW
+
+- **Paginated Chat List** - Browse all conversations
+- **Full-text Search** - Find chats by content
+- **Date Filtering** - Filter by date range
+- **Language Filter** - EN/ES conversations
+- **Transcript Viewer** - Read complete conversations
+- **CSV Export** - Download chat data for analysis
+
+### 8. 💡 Knowledge Insights ⭐ NEW
+
+- **RAG Hit Ratio** - % of queries using knowledge base
+- **Top Sources** - Most valuable knowledge sources with usage stats
+- **Missing Knowledge** - Unanswered questions (content gaps)
+- **Chunk Heatmap** - Best/worst performing content chunks
+- **Performance Trends** - 7/30/90-day RAG quality metrics
+- **Example Queries** - See what users actually ask
+
+### 9. 👤 Account Settings ⭐ NEW
+
+- **Profile Information** - View admin details
+- **Secure Password Change** - Update credentials
+- **Account Type** - Administrator designation
+- **Logout** - Secure session termination
+
+## 🏗️ Enterprise Features
+
+### Security & Authentication
+
+- ✅ Secure admin authentication with NextAuth
+- ✅ Password hashing with bcrypt
+- ✅ Session management
+- ✅ Role-based access control (admin-only)
+- ✅ Single-tenant architecture (isolated data)
+
+### Data & Analytics
+
+- ✅ Real-time chat logging
+- ✅ RAG event tracking (knowledge retrieval logging)
+- ✅ Usage analytics and metrics
+- ✅ Performance monitoring
+- ✅ CSV export capabilities
+
+### Knowledge Management
+
+- ✅ Multi-source knowledge base (website + documents)
+- ✅ Semantic search with pgvector
+- ✅ Automatic content chunking
+- ✅ Embedding generation and caching
+- ✅ Content gap detection
+
+### Deployment & Scalability
+
+- ✅ Production-ready on Vercel
+- ✅ Automatic SSL/HTTPS
+- ✅ Database migrations
+- ✅ Environment-based configuration
+- ✅ Responsive design (mobile-friendly)
+
+---
+
+## 🛠️ Tech Stack
 
 - **Framework:** Next.js 15 (App Router, Turbopack)
 - **Language:** TypeScript
@@ -104,6 +182,7 @@ The `/admin` route provides a comprehensive dashboard for managing your chatbot:
 - **UI:** React 19, Tailwind CSS, shadcn/ui
 - **PDF Processing:** unpdf, pdf-parse
 - **Deployment:** Vercel
+- **Monitoring:** Vercel Analytics
 
 ## RAG Knowledge Base
 
@@ -157,11 +236,27 @@ The `scripts/ingest.ts` script:
 - **Testimonials** - Client reviews
 - **Business Info** - Contact details, booking URL
 
-## Deploy Your Own
+## 🚀 Deployment
 
-You can deploy your own version of the Next.js AI Chatbot to Vercel with one click:
+### Current Status
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/templates/next.js/nextjs-ai-chatbot)
+- ✅ **Production Ready** - Fully tested and deployed
+- ✅ **Vercel Hosting** - Automatic deployments from GitHub
+- ✅ **Database Migrations** - All schema updates applied
+- ✅ **Admin User** - Created and configured
+
+### Deploy Your Own
+
+Deploy to Vercel in minutes:
+
+1. **Fork/Clone** this repository
+2. **Connect to Vercel** - Import from GitHub
+3. **Add Environment Variables** - Database URL, OpenAI key, auth secret
+4. **Deploy** - Automatic builds on every push
+5. **Run Migrations** - Execute SQL migrations on production database
+6. **Create Admin User** - Use `pnpm create-admin` script
+
+See [PRODUCTION_DEPLOYMENT_GUIDE.md](./docs/PRODUCTION_DEPLOYMENT_GUIDE.md) for detailed instructions.
 
 ## Running Locally
 
@@ -340,13 +435,49 @@ vercel --prod
 5. Test the chatbot thoroughly
 6. Monitor usage and refine prompts
 
-## Documentation
+## ✅ Status & Roadmap
 
-For detailed documentation, see:
+### Completed Features (v1.0)
 
-- [Admin User Guide](./docs/ADMIN_GUIDE.md)
-- [API Documentation](./docs/API.md)
-- [Deployment Guide](./docs/DEPLOYMENT.md)
+- ✅ Bilingual chatbot (EN/ES)
+- ✅ RAG with semantic search
+- ✅ Multi-source knowledge base
+- ✅ Admin authentication & security
+- ✅ Analytics dashboard
+- ✅ Chat logs viewer
+- ✅ Knowledge insights engine
+- ✅ Account management
+- ✅ Production deployment
+- ✅ Website embedding
+
+### Future Enhancements
+
+- 🔄 Advanced NLP features
+- 🔄 Multi-admin support
+- 🔄 Custom branding options
+- 🔄 API for third-party integrations
+- 🔄 Advanced reporting & BI
+- 🔄 A/B testing for prompts
+- 🔄 Conversation feedback system
+
+---
+
+## 📚 Documentation
+
+Complete documentation is available in the `/docs` folder:
+
+### Quick Links
+
+- **[Documentation Index](./docs/INDEX.md)** - Central navigation hub
+- **[Getting Started](./docs/01-getting-started.md)** - Setup and installation
+- **[Admin Guide](./docs/ADMIN_GUIDE.md)** - Complete admin panel guide
+- **[Production Deployment](./docs/PRODUCTION_DEPLOYMENT_GUIDE.md)** - Deploy to production
+- **[Website Integration](./docs/EMBED_WIDGET.md)** - Embed chatbot on your site
+- **[RAG Architecture](./docs/02-rag-architecture.md)** - How the RAG system works
+- **[Knowledge Base](./docs/03-knowledge-base.md)** - Managing content
+- **[Testing Checklist](./docs/TESTING_CHECKLIST.md)** - Pre-launch testing
+
+👉 **[View Full Documentation Index](./docs/INDEX.md)**
 
 ## License
 

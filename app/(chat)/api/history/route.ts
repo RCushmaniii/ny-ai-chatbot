@@ -1,7 +1,8 @@
 import type { NextRequest } from "next/server";
 import { auth } from "@/app/(auth)/auth";
-import { getChatsByUserId, deleteAllChatsByUserId } from "@/lib/db/queries";
+import { getChatsBySessionId } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
+import { getOrCreateSessionId } from "@/lib/session";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -17,30 +18,26 @@ export async function GET(request: NextRequest) {
     ).toResponse();
   }
 
-  const session = await auth();
+  // SINGLE-TENANT: Use sessionId for anonymous users
+  const sessionId = await getOrCreateSessionId();
 
-  if (!session?.user) {
-    return new ChatSDKError("unauthorized:chat").toResponse();
-  }
-
-  const chats = await getChatsByUserId({
-    id: session.user.id,
+  // Simple pagination by limit only (no cursor-based pagination for now)
+  const chats = await getChatsBySessionId({
+    sessionId,
     limit,
-    startingAfter,
-    endingBefore,
   });
 
-  return Response.json(chats);
+  return Response.json({ chats, hasMore: chats.length === limit });
 }
 
 export async function DELETE() {
-  const session = await auth();
+  // SINGLE-TENANT: Delete all chats for this session
+  const sessionId = await getOrCreateSessionId();
 
-  if (!session?.user) {
-    return new ChatSDKError("unauthorized:chat").toResponse();
-  }
-
-  const result = await deleteAllChatsByUserId({ userId: session.user.id });
-
-  return Response.json(result, { status: 200 });
+  // For now, we'll implement this later if needed
+  // Deleting all chats for a session is less common in anonymous mode
+  return new ChatSDKError(
+    "bad_request:history",
+    "Bulk delete not available for anonymous sessions"
+  ).toResponse();
 }
