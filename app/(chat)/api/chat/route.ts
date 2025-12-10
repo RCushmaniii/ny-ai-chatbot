@@ -192,12 +192,12 @@ export async function POST(request: Request) {
         
         if (sessionMessages >= RATE_LIMITS.messagesPerSession) {
           // Detect language for appropriate message
-          let limitMessage = RATE_LIMIT_MESSAGES.en.sessionLimit;
+          let limitMessage: string = RATE_LIMIT_MESSAGES.en.sessionLimit;
           try {
             const { detectLanguage } = await import("@/lib/utils/language-detector");
             const messageText = getTextFromMessage(message) ?? "";
             const lang = detectLanguage(messageText);
-            limitMessage = RATE_LIMIT_MESSAGES[lang].sessionLimit;
+            limitMessage = RATE_LIMIT_MESSAGES[lang].sessionLimit as string;
           } catch (error) {
             console.error('Language detection failed for rate limit message:', error);
           }
