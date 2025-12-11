@@ -16,6 +16,7 @@ import { Loader2, Globe, RefreshCw, Database } from "lucide-react";
 
 export function AdminWebsiteScraping() {
   const [isIngesting, setIsIngesting] = useState(false);
+  const [isRebuilding, setIsRebuilding] = useState(false);
   const [sitemapUrl, setSitemapUrl] = useState(
     "https://www.nyenglishteacher.com/sitemap-0.xml"
   );
@@ -103,6 +104,48 @@ export function AdminWebsiteScraping() {
     } catch (error) {
       console.error("Error clearing website content:", error);
       toast.error("Failed to clear website content");
+    }
+  };
+
+  const handleRebuildKnowledgeBase = async () => {
+    if (
+      !confirm(
+        "This will clear all website content and re-crawl your website to ingest fresh content. This is useful when you've made significant updates to your website. This may take several minutes. Continue?"
+      )
+    ) {
+      return;
+    }
+
+    setIsRebuilding(true);
+    toast.info("Starting knowledge base rebuild... This may take several minutes.");
+
+    try {
+      const response = await fetch("/api/admin/knowledge/rebuild", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to rebuild knowledge base");
+      }
+
+      const result = await response.json();
+      toast.success(
+        `Knowledge base rebuilt! Found ${result.stats.urlsFound} URLs, processed ${result.stats.urlsProcessed} pages, created ${result.stats.chunksCreated} chunks.`
+      );
+      
+      // Reload stats
+      await loadStats();
+    } catch (error) {
+      console.error("Error rebuilding knowledge base:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to rebuild knowledge base"
+      );
+    } finally {
+      setIsRebuilding(false);
     }
   };
 
@@ -206,32 +249,55 @@ export function AdminWebsiteScraping() {
             </p>
           </div>
 
-          <div className="flex gap-2">
-            <Button
-              onClick={handleRunIngestion}
-              disabled={isIngesting}
-              className="flex-1"
-            >
-              {isIngesting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Ingesting...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Run Ingestion
-                </>
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <Button
+                onClick={handleRunIngestion}
+                disabled={isIngesting || isRebuilding}
+                className="flex-1"
+              >
+                {isIngesting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Ingesting...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Run Ingestion
+                  </>
+                )}
+              </Button>
+
+              {stats && stats.websiteContent > 0 && (
+                <Button
+                  onClick={handleClearWebsiteContent}
+                  disabled={isIngesting || isRebuilding}
+                  variant="destructive"
+                >
+                  Clear Website Data
+                </Button>
               )}
-            </Button>
+            </div>
 
             {stats && stats.websiteContent > 0 && (
               <Button
-                onClick={handleClearWebsiteContent}
-                disabled={isIngesting}
-                variant="destructive"
+                onClick={handleRebuildKnowledgeBase}
+                disabled={isIngesting || isRebuilding}
+                variant="outline"
+                className="w-full"
               >
-                Clear Website Data
+                {isRebuilding ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Rebuilding Knowledge Base...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Rebuild Knowledge Base (Clear & Re-crawl)
+                  </>
+                )}
               </Button>
             )}
           </div>
