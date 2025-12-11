@@ -42,7 +42,7 @@ export async function getDailyUsageStats(date: Date): Promise<DailyUsageStats | 
     // Get total messages for the day
     const messageStats = await client`
       SELECT COUNT(*) as total_messages
-      FROM message
+      FROM "Message"
       WHERE "createdAt" >= ${startOfDay}
         AND "createdAt" <= ${endOfDay}
     `;
@@ -58,7 +58,7 @@ export async function getDailyUsageStats(date: Date): Promise<DailyUsageStats | 
     const chatStats = await client`
       SELECT COUNT(DISTINCT id) as total_chats,
              COUNT(DISTINCT "sessionId") as total_sessions
-      FROM chat
+      FROM "Chat"
       WHERE "createdAt" >= ${startOfDay}
         AND "createdAt" <= ${endOfDay}
     `;
@@ -71,7 +71,7 @@ export async function getDailyUsageStats(date: Date): Promise<DailyUsageStats | 
       SELECT 
         SUM(CASE WHEN content ~* '[áéíóúñ¿¡]' THEN 1 ELSE 0 END) as spanish_messages,
         COUNT(*) - SUM(CASE WHEN content ~* '[áéíóúñ¿¡]' THEN 1 ELSE 0 END) as english_messages
-      FROM message
+      FROM "Message"
       WHERE "createdAt" >= ${startOfDay}
         AND "createdAt" <= ${endOfDay}
         AND role = 'user'
@@ -85,8 +85,8 @@ export async function getDailyUsageStats(date: Date): Promise<DailyUsageStats | 
       SELECT content, COUNT(*) as count
       FROM (
         SELECT DISTINCT ON (m."chatId") m.content
-        FROM message m
-        INNER JOIN chat c ON m."chatId" = c.id
+        FROM "Message" m
+        INNER JOIN "Chat" c ON m."chatId" = c.id
         WHERE m."createdAt" >= ${startOfDay}
           AND m."createdAt" <= ${endOfDay}
           AND m.role = 'user'
