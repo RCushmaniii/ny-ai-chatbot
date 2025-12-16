@@ -125,7 +125,7 @@ export async function POST(request: Request) {
         content: chunk,
         url,
         embedding: embedding as any,
-        metadata: JSON.stringify({ type, language, sourceFile: file.name }),
+        metadata: JSON.stringify({ type, language, sourceFile: file.name, sourceType: "pdf" }),
       });
     }
 

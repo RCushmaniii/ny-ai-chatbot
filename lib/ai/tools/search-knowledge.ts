@@ -88,17 +88,39 @@ export async function searchKnowledgeDirect(
       LIMIT 5
     `);
 
-    // Merge and sort by similarity, take top 5
-    const allResults = [...websiteResults, ...manualResults]
-      .sort((a: any, b: any) => Number(b.similarity) - Number(a.similarity))
-      .slice(0, 5);
+    const websiteMapped: KnowledgeSearchResult[] = websiteResults.map((row: any) => {
+      const parsed = row.metadata ? JSON.parse(row.metadata as string) : {};
+      return {
+        content: row.content as string,
+        url: (row.url as string) ?? null,
+        similarity: Number(row.similarity),
+        metadata: {
+          ...parsed,
+          sourceTable: "website_content",
+          sourceType: "website",
+        },
+      };
+    });
 
-    const results = allResults.map((row: any) => ({
-      content: row.content as string,
-      url: (row.url as string) ?? null,
-      similarity: Number(row.similarity),
-      metadata: row.metadata ? JSON.parse(row.metadata as string) : {},
-    }));
+    const manualMapped: KnowledgeSearchResult[] = manualResults.map((row: any) => {
+      const parsed = row.metadata ? JSON.parse(row.metadata as string) : {};
+      const inferredSourceType = parsed?.sourceType ?? (parsed?.sourceFile ? "pdf" : "manual");
+      return {
+        content: row.content as string,
+        url: (row.url as string) ?? null,
+        similarity: Number(row.similarity),
+        metadata: {
+          ...parsed,
+          sourceTable: "Document_Knowledge",
+          sourceType: inferredSourceType,
+        },
+      };
+    });
+
+    // Merge and sort by similarity, take top 5
+    const results = [...websiteMapped, ...manualMapped]
+      .sort((a, b) => Number(b.similarity) - Number(a.similarity))
+      .slice(0, 5);
 
     // Log knowledge event for RAG insights
     if (context) {

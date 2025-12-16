@@ -248,7 +248,25 @@ export async function POST(request: Request) {
 
     // Build knowledge context from vector DB for the latest user message.
     const latestUserText = getTextFromMessage(message) ?? "";
-    const knowledgeResults = await searchKnowledgeDirect(latestUserText);
+
+    await saveMessages({
+      messages: [
+        {
+          chatId: id,
+          id: message.id,
+          role: "user",
+          parts: message.parts,
+          attachments: [],
+          createdAt: new Date(),
+        },
+      ],
+    });
+
+    const knowledgeResults = await searchKnowledgeDirect(latestUserText, {
+      chatId: id,
+      messageId: message.id,
+      sessionId,
+    });
 
     // Detect language from user's message (with error handling)
     let detectedLang: 'en' | 'es' = 'en';
@@ -306,19 +324,6 @@ ${learnMoreText}
 ${uniqueUrls.map(url => `- ${url}`).join("\n")}
 === END KNOWLEDGE BASE RESULTS ===`
       : "";
-
-    await saveMessages({
-      messages: [
-        {
-          chatId: id,
-          id: message.id,
-          role: "user",
-          parts: message.parts,
-          attachments: [],
-          createdAt: new Date(),
-        },
-      ],
-    });
 
     const streamId = generateUUID();
     await createStreamId({ streamId, chatId: id });

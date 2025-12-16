@@ -43,9 +43,15 @@ export async function logKnowledgeEvent(params: LogKnowledgeEventParams) {
 
     // Log each retrieved chunk
     for (const result of results) {
-      const sourceType = result.url?.includes("Document_Knowledge")
-        ? "document"
-        : "website";
+      const metaSourceType = result.metadata?.sourceType;
+      const metaSourceTable = result.metadata?.sourceTable;
+
+      const sourceType =
+        metaSourceType ??
+        (metaSourceTable === "Document_Knowledge" ? "manual" : null) ??
+        (metaSourceTable === "website_content" ? "website" : null) ??
+        (result.metadata?.sourceFile ? "pdf" : null) ??
+        "website";
       const sourceId = result.url || "unknown";
       const chunkId = result.metadata?.chunkId || result.metadata?.id || null;
 

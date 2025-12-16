@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       content,
       url: url || "https://www.nyenglishteacher.com",
       embedding: embedding as any,
-      metadata: JSON.stringify(metadata || {}),
+      metadata: JSON.stringify({ ...(metadata || {}), sourceType: "manual" }),
     });
 
     return Response.json({ success: true }, { status: 200 });
