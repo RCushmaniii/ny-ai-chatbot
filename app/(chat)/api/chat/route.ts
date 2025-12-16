@@ -458,7 +458,42 @@ ${uniqueUrls.map(url => `- ${url}`).join("\n")}
       onError: (error) => {
         const vercelId = request.headers.get("x-vercel-id");
         console.error("Chat stream error:", error, { vercelId, chatId: id });
-        streamErrorMessage = "I ran into a technical issue generating a response. Please try again in a moment.";
+
+        const rawMessage =
+          error instanceof Error ? error.message : String(error ?? "");
+        const normalized = rawMessage.toLowerCase();
+
+        if (
+          normalized.includes("ai gateway requires a valid credit card") ||
+          normalized.includes("activate_gateway")
+        ) {
+          streamErrorMessage =
+            "AI Gateway needs billing enabled (credit card) to serve requests. Please add a card in Vercel → AI Gateway, then try again.";
+        } else if (
+          normalized.includes("openai_api_key") ||
+          normalized.includes("api key") ||
+          normalized.includes("no api key") ||
+          normalized.includes("missing api key")
+        ) {
+          streamErrorMessage =
+            "The chatbot model isn’t configured in production (missing OpenAI API key). Add OPENAI_API_KEY in Vercel Environment Variables, then redeploy.";
+        } else if (normalized.includes("401") || normalized.includes("unauthorized")) {
+          streamErrorMessage =
+            "The chatbot model credentials were rejected (401). Double-check your OPENAI_API_KEY (or AI Gateway config) in Vercel, then redeploy.";
+        } else if (normalized.includes("429") || normalized.includes("rate limit")) {
+          streamErrorMessage =
+            "The chatbot is temporarily rate-limited by the model provider. Please wait a minute and try again.";
+        } else if (normalized.includes("timeout") || normalized.includes("timed out")) {
+          streamErrorMessage =
+            "The model provider timed out generating a response. Please try again.";
+        } else {
+          streamErrorMessage =
+            "I ran into a technical issue generating a response. Please try again in a moment.";
+        }
+
+        if (vercelId) {
+          streamErrorMessage = `${streamErrorMessage} (ref: ${vercelId})`;
+        }
         return streamErrorMessage;
       },
     });
