@@ -118,9 +118,47 @@ export async function searchKnowledgeDirect(
     });
 
     // Merge and sort by similarity, take top 5
-    const results = [...websiteMapped, ...manualMapped]
+    let results = [...websiteMapped, ...manualMapped]
       .sort((a, b) => Number(b.similarity) - Number(a.similarity))
       .slice(0, 5);
+
+    if (results.length === 0) {
+      const markerTokens = trimmed.match(/[A-Z0-9_]{8,}/g) ?? [];
+      const fallbackTerms = markerTokens.length > 0 ? markerTokens.slice(0, 3) : [trimmed];
+      const keywordRows: any[] = [];
+
+      for (const term of fallbackTerms) {
+        const rows = await client`
+          SELECT content, url, metadata, 0.99 as similarity
+          FROM "Document_Knowledge"
+          WHERE content ILIKE ${`%${term}%`}
+          ORDER BY "createdAt" DESC
+          LIMIT 5
+        `;
+        keywordRows.push(...rows);
+      }
+
+      const deduped = new Map<string, KnowledgeSearchResult>();
+      for (const row of keywordRows) {
+        const parsed = row.metadata ? JSON.parse(row.metadata as string) : {};
+        const inferredSourceType = parsed?.sourceType ?? (parsed?.sourceFile ? "pdf" : "manual");
+        const mapped: KnowledgeSearchResult = {
+          content: row.content as string,
+          url: (row.url as string) ?? null,
+          similarity: Number(row.similarity),
+          metadata: {
+            ...parsed,
+            sourceTable: "Document_Knowledge",
+            sourceType: inferredSourceType,
+          },
+        };
+
+        const key = `${mapped.url ?? ""}::${mapped.content.slice(0, 80)}`;
+        if (!deduped.has(key)) deduped.set(key, mapped);
+      }
+
+      results = Array.from(deduped.values()).slice(0, 5);
+    }
 
     // Log knowledge event for RAG insights
     if (context) {
