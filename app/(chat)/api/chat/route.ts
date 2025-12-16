@@ -329,6 +329,9 @@ ${uniqueUrls.map(url => `- ${url}`).join("\n")}
     await createStreamId({ streamId, chatId: id });
 
     let finalMergedUsage: AppUsage | undefined;
+    let streamErrorMessage: string | null = null;
+    const emptyAssistantFallbackMessage =
+      "I wasn’t able to generate a response. Please try again in a moment.";
 
     const stream = createUIMessageStream({
       execute: async ({ writer: dataStream }) => {
@@ -408,8 +411,30 @@ ${uniqueUrls.map(url => `- ${url}`).join("\n")}
       },
       generateId: generateUUID,
       onFinish: async ({ messages }) => {
+        const messagesToSave = messages
+          .map((currentMessage) => {
+            if (currentMessage.role !== "assistant") return currentMessage;
+
+            const parts = currentMessage.parts;
+
+            if (Array.isArray(parts) && parts.length > 0) {
+              return currentMessage;
+            }
+
+            return {
+              ...currentMessage,
+              parts: [
+                {
+                  type: "text",
+                  text: streamErrorMessage ?? emptyAssistantFallbackMessage,
+                },
+              ],
+            };
+          })
+          .filter(Boolean) as typeof messages;
+
         await saveMessages({
-          messages: messages.map((currentMessage) => ({
+          messages: messagesToSave.map((currentMessage) => ({
             id: currentMessage.id,
             role: currentMessage.role,
             parts: currentMessage.parts,
@@ -430,8 +455,11 @@ ${uniqueUrls.map(url => `- ${url}`).join("\n")}
           }
         }
       },
-      onError: () => {
-        return "Oops, an error occurred!";
+      onError: (error) => {
+        const vercelId = request.headers.get("x-vercel-id");
+        console.error("Chat stream error:", error, { vercelId, chatId: id });
+        streamErrorMessage = "I ran into a technical issue generating a response. Please try again in a moment.";
+        return streamErrorMessage;
       },
     });
 
