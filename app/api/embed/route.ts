@@ -13,8 +13,49 @@ export async function GET(request: Request) {
   
   const scriptTag = document.currentScript;
   const getAttr = (name) => scriptTag?.getAttribute(name) || scriptTag?.getAttribute('data-' + name) || scriptTag?.getAttribute(name.toLowerCase()) || scriptTag?.getAttribute('data-' + name.toLowerCase());
+
+  const normalizeLocale = (value) => {
+    if (!value) return null;
+    const lower = String(value).trim().toLowerCase();
+    if (lower === 'en' || lower.startsWith('en-')) return 'en';
+    if (lower === 'es' || lower.startsWith('es-')) return 'es';
+    return null;
+  };
+
+  const detectLocale = () => {
+    const explicit = normalizeLocale(getAttr('language'));
+    if (explicit) return explicit;
+
+    try {
+      const path = String(window.location.pathname || '').toLowerCase();
+      if (path.includes('/es/')) return 'es';
+      if (path.includes('/en/')) return 'en';
+    } catch (e) {
+      // ignore
+    }
+
+    try {
+      const fromBrowser = normalizeLocale(navigator.language);
+      if (fromBrowser) return fromBrowser;
+    } catch (e) {
+      // ignore
+    }
+
+    return 'es';
+  };
+
+  const language = detectLocale();
+
+  const defaultWelcomeMessage = language === 'es'
+    ? '👋 ¡Hola! Haz tus preguntas aquí!'
+    : '👋 Hey... ask questions here!';
+
+  const defaultPlaceholder = language === 'es'
+    ? 'Escribe tu mensaje...'
+    : 'Type your message...';
+
   const config = {
-    welcomeMessage: getAttr('welcome-message') || getAttr('welcomeMessage') || '👋 Hey... ask questions here!',
+    welcomeMessage: getAttr('welcome-message') || getAttr('welcomeMessage') || defaultWelcomeMessage,
     welcomeGif: getAttr('welcome-gif') || getAttr('welcomeGif') || '',
     showWelcomeMessage: (getAttr('show-welcome-message') || getAttr('showWelcomeMessage') || 'true') !== 'false',
     buttonColor: getAttr('button-color') || getAttr('buttonColor') || '#4f46e5',
@@ -22,8 +63,8 @@ export async function GET(request: Request) {
     position: getAttr('position') || 'bottom-right',
     openDelay: parseInt(getAttr('open-delay') || getAttr('openDelay') || '5000'),
     autoOpen: (getAttr('open') || 'false') === 'true',
-    language: getAttr('language') || 'en',
-    placeholder: getAttr('placeholder') || 'Type your message...',
+    language,
+    placeholder: getAttr('placeholder') || defaultPlaceholder,
   };
 
   const iframeId = 'nyenglish-chat-iframe';

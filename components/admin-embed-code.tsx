@@ -22,7 +22,7 @@ export function AdminEmbedCode() {
     position: "bottom-right",
     openDelay: 5000,
     autoOpen: true,
-    language: "en",
+    language: "auto",
     placeholder: "Type your message...",
     suggestedQuestions: [
       "What are the prices for classes?",
@@ -36,7 +36,9 @@ export function AdminEmbedCode() {
   const generateEmbedCode = () => {
     const params = [];
     if (settings.welcomeMessage) params.push(`welcomeMessage="${settings.welcomeMessage}"`);
-    if (settings.language) params.push(`language="${settings.language}"`);
+    if (settings.language && settings.language !== "auto") {
+      params.push(`language="${settings.language}"`);
+    }
     if (settings.placeholder) params.push(`placeholder="${settings.placeholder}"`);
     if (settings.position) params.push(`position="${settings.position}"`);
     if (settings.autoOpen) params.push(`open="true"`);
@@ -197,6 +199,7 @@ export function AdminEmbedCode() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="auto">Auto (detect)</SelectItem>
                   <SelectItem value="en">English</SelectItem>
                   <SelectItem value="es">Español</SelectItem>
                 </SelectContent>

@@ -4,38 +4,40 @@ import { useState, useRef, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { nanoid } from "nanoid";
 import ReactMarkdown from "react-markdown";
+import {
+  widgetMessages,
+  type WidgetLocale,
+  normalizeWidgetLocale,
+  detectWidgetLocaleFromUrl,
+  detectWidgetLocaleFromNavigatorLanguage,
+} from "@/lib/i18n/widget-messages";
 
 // Translations
-const translations = {
-  en: {
-    title: "NY English Teacher",
-    welcome: "Welcome! 👋",
-    subtitle: "How can I help you today?",
-    quickQuestions: "Quick questions:",
-    placeholder: "Type your message...",
-    error: "Sorry, I encountered an error. Please try again.",
-    close: "Close chat",
-    suggestedQuestions: [
-      "What are the prices for classes?",
-      "What services do you offer?",
-      "How do I book a session?"
-    ]
-  },
-  es: {
-    title: "NY English Teacher",
-    welcome: "¡Bienvenido! 👋",
-    subtitle: "¿Cómo puedo ayudarte hoy?",
-    quickQuestions: "Preguntas rápidas:",
-    placeholder: "Escribe tu mensaje...",
-    error: "Lo siento, ocurrió un error. Por favor, inténtalo de nuevo.",
-    close: "Cerrar chat",
-    suggestedQuestions: [
-      "¿Cuáles son los precios de las clases?",
-      "¿Qué servicios ofreces?",
-      "¿Cómo reservo una sesión?"
-    ]
+function resolveWidgetLocale(searchParams: URLSearchParams): WidgetLocale {
+  const explicit = normalizeWidgetLocale(
+    searchParams.get("lang") ?? searchParams.get("locale"),
+  );
+  if (explicit) return explicit;
+
+  try {
+    const parentUrl = document.referrer || window.location.href;
+    const fromUrl = detectWidgetLocaleFromUrl(parentUrl);
+    if (fromUrl) return fromUrl;
+  } catch {
+    // ignore
   }
-};
+
+  try {
+    const fromNavigator = detectWidgetLocaleFromNavigatorLanguage(
+      navigator.language,
+    );
+    if (fromNavigator) return fromNavigator;
+  } catch {
+    // ignore
+  }
+
+  return "es";
+}
 
 function EmbedChatContent() {
   const searchParams = useSearchParams();
@@ -43,28 +45,10 @@ function EmbedChatContent() {
   const [isLoadingSettings, setIsLoadingSettings] = useState(true);
   
   // Detect language from parent page URL or query param
-  const [language, setLanguage] = useState<'en' | 'es'>('en');
+  const [language, setLanguage] = useState<WidgetLocale>("es");
   
   useEffect(() => {
-    // Try to get language from query param first
-    const langParam = searchParams.get('lang');
-    if (langParam === 'es' || langParam === 'en') {
-      setLanguage(langParam);
-      return;
-    }
-    
-    // Try to detect from parent page URL
-    try {
-      const parentUrl = document.referrer || window.location.href;
-      if (parentUrl.includes('/es/')) {
-        setLanguage('es');
-      } else {
-        setLanguage('en');
-      }
-    } catch (e) {
-      // Default to English if detection fails
-      setLanguage('en');
-    }
+    setLanguage(resolveWidgetLocale(searchParams));
   }, [searchParams]);
   
   // Fetch embed settings from admin
@@ -82,7 +66,7 @@ function EmbedChatContent() {
   }, []);
   
   // Get translations for current language
-  const t = translations[language];
+  const t = widgetMessages[language];
   
   // Use language-specific defaults, don't let embedSettings override language
   const placeholder = t.placeholder;
