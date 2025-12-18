@@ -52,6 +52,29 @@ Complete this checklist before deploying to production.
   - Confirm the action
   - Reload stats to verify count is 0
 
+### Insights Tab
+
+- [ ] **Overview loads without crashing**
+
+  - Visit Admin → Insights
+  - Switch 7/30/90 day ranges
+  - Should not show a 500 error
+
+- [ ] **Insights data populates**
+  - Ask 2-3 questions in chat (include at least one that should hit the KB)
+  - Refresh Insights
+  - Verify:
+    - Hit ratio is non-zero
+    - Top Sources has entries
+    - Missing Knowledge shows 0-hit queries
+    - Top Chunks has entries after new chats
+
+### SSR / Hydration sanity check
+
+- [ ] **No hydration mismatch warnings**
+  - Load /chat and /admin
+  - Confirm no hydration mismatch errors in the browser console
+
 ### Bot Settings Tab (Starter Questions)
 
 - [ ] **Add new question**
@@ -419,6 +442,6 @@ Once all tests pass:
 - [ ] Performance acceptable
 - [ ] Ready for production deployment
 
-**Tested by:** ****\_\_\_****  
-**Date:** ****\_\_\_****  
+**Tested by:** \***\*\_\_\_\*\***  
+**Date:** \***\*\_\_\_\*\***  
 **Approved for deployment:** [ ] Yes [ ] No

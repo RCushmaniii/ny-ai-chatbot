@@ -31,17 +31,48 @@ export function AdminInsights() {
   const [days, setDays] = useState(30);
   const [data, setData] = useState<Overview | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let abort = false;
     setLoading(true);
+
+    setError(null);
+    setData(null);
+
     fetch(`/api/admin/insights/overview?days=${days}`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (!abort) setData(d);
+      .then(async (r) => {
+        if (r.ok) {
+          const d = (await r.json()) as Overview;
+          if (!abort) setData(d);
+          return;
+        }
+
+        let message = `Failed to load insights (${r.status})`;
+        let details: string | null = null;
+
+        try {
+          const d = (await r.json()) as { error?: string; details?: string };
+          if (d?.error) message = d.error;
+          if (d?.details) details = d.details;
+        } catch {
+          try {
+            const t = await r.text();
+            if (t) message = t;
+          } catch {
+            // ignore
+          }
+        }
+
+        if (details) {
+          message = `${message}\n\nDetails: ${details}`;
+        }
+
+        if (!abort) setError(message);
       })
       .catch((err) => {
         console.error("Failed to load insights:", err);
+        if (!abort) setError("Failed to load insights");
       })
       .finally(() => {
         if (!abort) setLoading(false);
@@ -70,6 +101,36 @@ export function AdminInsights() {
         <div className="flex items-center gap-2 text-muted-foreground">
           <Loader2 className="w-4 h-4 animate-spin" /> Loading…
         </div>
+      )}
+
+      {!loading && error && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Insights unavailable / Insights no disponibles</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">{error}</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Local tip: ensure ADMIN_EMAIL matches your login and generate a
+              few chats so there is data. / Consejo local: verifica ADMIN_EMAIL
+              y genera algunas conversaciones para crear datos.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {!loading && !error && !data && (
+        <Card>
+          <CardHeader>
+            <CardTitle>No insights yet / Aun sin insights</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              No insight data is available for this period yet. / Aun no hay
+              datos para este periodo.
+            </p>
+          </CardContent>
+        </Card>
       )}
 
       {!loading && data && (

@@ -11,6 +11,8 @@
 
 - **[02-rag-architecture.md](02-rag-architecture.md)** - RAG system design and flow
 - **[03-knowledge-base.md](03-knowledge-base.md)** - Knowledge base structure
+- **[RAG_CLIENT_PLAYBOOK.md](RAG_CLIENT_PLAYBOOK.md)** - Client-ready RAG standards, testing, and operational checklist
+- **[LESSONS_LEARNED.md](LESSONS_LEARNED.md)** - Practical learnings from troubleshooting RAG, Insights, and hydration
 - **[CODE_CHANGES_SUMMARY.md](CODE_CHANGES_SUMMARY.md)** - Summary of all code changes
 
 ### Knowledge Base Management
@@ -66,6 +68,9 @@
 **Understand the RAG system**
 → Read: [02-rag-architecture.md](02-rag-architecture.md)
 
+**Ship RAG reliably for clients (playbook)**
+→ Read: [RAG_CLIENT_PLAYBOOK.md](RAG_CLIENT_PLAYBOOK.md)
+
 **Upload knowledge base content**
 → Read: [04-file-upload.md](04-file-upload.md)
 
@@ -100,6 +105,7 @@ docs/
 ├── EMBED_INSTRUCTIONS.md           # Embedding guide
 ├── EMBED_WIDGET.md                 # Widget docs
 ├── KNOWLEDGE_BASE.md               # KB docs
+├── RAG_CLIENT_PLAYBOOK.md          # Client-ready RAG playbook
 ├── MIGRATION_SUMMARY.md            # Migrations
 ├── PRIORITY_4_STATUS.md            # Insights feature
 ├── PRODUCTION_CHECKLIST.md         # Pre-prod checklist
@@ -130,5 +136,5 @@ For issues or questions, refer to:
 
 ---
 
-**Last Updated**: December 9, 2025
+**Last Updated**: December 18, 2025
 **Status**: All 4 Priorities Complete ✅

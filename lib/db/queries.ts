@@ -933,6 +933,16 @@ export async function getRagHitRatio(days: number = 30) {
   }
 }
 
+function toIsoStringOrEmpty(value: unknown) {
+  if (!value) return "";
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "string" || typeof value === "number") {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? "" : d.toISOString();
+  }
+  return "";
+}
+
 export async function getTopSources({ days = 30, limit = 50 }: { days?: number; limit?: number }) {
   try {
     const startDate = new Date();
@@ -977,7 +987,7 @@ export async function getTopSources({ days = 30, limit = 50 }: { days?: number; 
           hits: Number(source.hits),
           avgRelevance: source.avgRelevance ? Math.round(Number(source.avgRelevance) * 1000) / 1000 : 0,
           exampleQuery: example?.query || "",
-          lastHit: source.lastHit?.toISOString() || "",
+          lastHit: toIsoStringOrEmpty(source.lastHit),
         };
       })
     );

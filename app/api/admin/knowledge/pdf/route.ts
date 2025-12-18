@@ -13,6 +13,16 @@ export const runtime = "nodejs";
 const client = postgres(process.env.POSTGRES_URL!);
 const db = drizzle(client);
 
+function getAdminEmail() {
+  return (
+    process.env.ADMIN_EMAIL ||
+    process.env.NEXT_PUBLIC_ADMIN_EMAIL ||
+    "info@nyenglishteacher.com"
+  );
+}
+
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
+
 function chunkText(text: string, maxLength = 1500) {
   const chunks: string[] = [];
   let current = text.trim();
@@ -43,6 +53,10 @@ export async function POST(request: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  if (session.user.email !== getAdminEmail()) {
+    return Response.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
@@ -71,6 +85,13 @@ export async function POST(request: Request) {
     if (buffer.length === 0) {
       return Response.json(
         { error: "PDF file is empty or corrupted" },
+        { status: 400 }
+      );
+    }
+
+    if (buffer.length > MAX_FILE_BYTES) {
+      return Response.json(
+        { error: "PDF file is too large" },
         { status: 400 }
       );
     }
@@ -108,7 +129,10 @@ export async function POST(request: Request) {
 
     if (!text || text.trim().length === 0) {
       return Response.json(
-        { error: "No text content found in PDF. The file may be scanned images without OCR, or may be empty." },
+        {
+          error:
+            "No text could be extracted from this PDF. This usually means the PDF is scanned/flattened (image-only) or is protected/corrupted. For now this app only supports text-based PDFs (selectable text). Try exporting/saving the PDF with OCR/text, or upload the original document as .docx/.txt/.md instead.",
+        },
         { status: 400 }
       );
     }
@@ -125,7 +149,12 @@ export async function POST(request: Request) {
         content: chunk,
         url,
         embedding: embedding as any,
-        metadata: JSON.stringify({ type, language, sourceFile: file.name, sourceType: "pdf" }),
+        metadata: JSON.stringify({
+          type,
+          language,
+          sourceFile: file.name,
+          sourceType: "pdf",
+        }),
       });
     }
 

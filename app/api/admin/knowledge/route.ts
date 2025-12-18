@@ -9,12 +9,24 @@ import { documents } from "@/lib/db/schema";
 const client = postgres(process.env.POSTGRES_URL!);
 const db = drizzle(client);
 
+function getAdminEmail() {
+  return (
+    process.env.ADMIN_EMAIL ||
+    process.env.NEXT_PUBLIC_ADMIN_EMAIL ||
+    "info@nyenglishteacher.com"
+  );
+}
+
 export async function POST(request: Request) {
   try {
     // Check authentication
     const session = await auth();
     if (!session?.user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (session.user.email !== getAdminEmail()) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Optional: Add admin role check here
@@ -64,12 +76,44 @@ export async function GET(request: Request) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    if (session.user.email !== getAdminEmail()) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const q = searchParams.get("q");
+    const limitParam = searchParams.get("limit");
+    const limit = Math.min(
+      50,
+      Math.max(1, Number.parseInt(limitParam ?? "50", 10) || 50)
+    );
+
+    if (q && q.trim().length > 0) {
+      const trimmed = q.trim();
+      const rows = await client`
+        SELECT id, content, url, metadata, "createdAt"
+        FROM "Document_Knowledge"
+        WHERE content ILIKE ${`%${trimmed}%`}
+        ORDER BY "createdAt" DESC
+        LIMIT ${limit}
+      `;
+
+      return Response.json(
+        {
+          query: trimmed,
+          count: rows.length,
+          documents: rows,
+        },
+        { status: 200 }
+      );
+    }
+
     // Get all documents
     const allDocuments = await client.unsafe(`
       SELECT id, content, url, metadata, "createdAt"
       FROM "Document_Knowledge"
       ORDER BY "createdAt" DESC
-      LIMIT 50
+      LIMIT ${limit}
     `);
 
     return Response.json({ documents: allDocuments }, { status: 200 });
@@ -90,6 +134,10 @@ export async function DELETE(request: Request) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    if (session.user.email !== getAdminEmail()) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 
@@ -97,9 +145,14 @@ export async function DELETE(request: Request) {
       return Response.json({ error: "ID is required" }, { status: 400 });
     }
 
+    const parsedId = Number.parseInt(id, 10);
+    if (Number.isNaN(parsedId)) {
+      return Response.json({ error: "Invalid ID" }, { status: 400 });
+    }
+
     await client.unsafe(`
       DELETE FROM "Document_Knowledge"
-      WHERE id = ${id}
+      WHERE id = ${parsedId}
     `);
 
     return Response.json({ success: true }, { status: 200 });

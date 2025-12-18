@@ -82,6 +82,9 @@ export const PromptInputTextarea = ({
         "focus-visible:ring-0",
         className
       )}
+      data-gramm="false"
+      data-gramm_editor="false"
+      data-enable-grammarly="false"
       name="message"
       onChange={(e) => {
         onChange?.(e);

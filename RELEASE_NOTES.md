@@ -1,7 +1,25 @@
-# Release v2.0.0 - Admin Panel & Analytics Suite
+# Release v1.1.0 - Admin Panel & Analytics Suite
 
-**Release Date:** December 9, 2025  
+**Release Date:** December 18, 2025  
 **Status:** Production Ready ✅
+
+---
+
+## 🔧 Stabilization & Hardening (Dec 18, 2025)
+
+- **RAG retrieval hardening**
+  - Improved metadata parsing safety
+  - Tuned manual knowledge retrieval thresholds/top-k and added keyword fallback
+- **Knowledge ingestion improvements**
+  - Admin upload supports PDF and DOCX ingestion into `Document_Knowledge`
+  - Added admin-only diagnostics (stats + substring search) for ingestion validation
+- **Insights stability**
+  - Prevented Insights tab crashes on partial/empty API responses
+  - Fixed timestamp type mismatch causing Insights 500s (`lastHit` normalization)
+  - Enabled Top Chunks by ensuring a stable `chunkId` is logged for each hit
+- **SSR / hydration stability**
+  - Removed SSR non-determinism and reduced extension-driven hydration warnings
+  - Reduced dev noise from stale service worker requests
 
 ---
 
@@ -413,7 +431,7 @@ For questions or issues:
 
 ---
 
-**Version:** 2.0.0  
-**Release Date:** December 9, 2025  
+**Version:** 1.1.0  
+**Release Date:** December 18, 2025  
 **Status:** Production Ready ✅  
 **Next Release:** TBD

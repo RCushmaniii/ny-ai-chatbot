@@ -2,6 +2,7 @@ import { tool, embed } from "ai";
 import { z } from "zod";
 import { openai } from "@ai-sdk/openai";
 import postgres from "postgres";
+import { createHash } from "crypto";
 import { logKnowledgeEvent } from "./log-knowledge-event";
 
 // Shared Postgres client for knowledge searches.
@@ -14,6 +15,25 @@ export type KnowledgeSearchResult = {
   similarity: number;
   metadata: Record<string, any>;
 };
+
+function safeParseMetadata(value: unknown): Record<string, any> {
+  if (!value) return {};
+  if (typeof value === "object") return value as Record<string, any>;
+  if (typeof value !== "string") return {};
+  try {
+    return JSON.parse(value) as Record<string, any>;
+  } catch {
+    return {};
+  }
+}
+
+function stableChunkId(sourceTable: string, url: string | null, content: string) {
+  const base = `${sourceTable}::${url ?? ""}::${content.slice(0, 500)}`;
+  return createHash("sha1").update(base).digest("hex");
+}
+
+const MANUAL_SIMILARITY_THRESHOLD = 0.25;
+const MANUAL_TOP_K = 20;
 
 // Simple in-memory cache for embeddings (prevents rate limiting during testing)
 const embeddingCache = new Map<string, number[]>();
@@ -80,42 +100,71 @@ export async function searchKnowledgeDirect(
 
     // Search Document_Knowledge (manually added content from admin)
     const manualResults = await client.unsafe(`
-      SELECT content, url, metadata,
+      SELECT id, content, url, metadata,
         1 - (embedding <=> '${JSON.stringify(embedding)}'::vector) as similarity
       FROM "Document_Knowledge"
-      WHERE 1 - (embedding <=> '${JSON.stringify(embedding)}'::vector) > 0.5
+      WHERE embedding IS NOT NULL
       ORDER BY similarity DESC
-      LIMIT 5
+      LIMIT ${MANUAL_TOP_K}
     `);
 
     const websiteMapped: KnowledgeSearchResult[] = websiteResults.map((row: any) => {
-      const parsed = row.metadata ? JSON.parse(row.metadata as string) : {};
+      const parsed = safeParseMetadata(row.metadata);
+      const url = (row.url as string) ?? null;
+      const content = row.content as string;
+      const chunkId =
+        parsed?.chunkId ?? stableChunkId("website_content", url, content);
       return {
-        content: row.content as string,
-        url: (row.url as string) ?? null,
+        content,
+        url,
         similarity: Number(row.similarity),
         metadata: {
           ...parsed,
           sourceTable: "website_content",
           sourceType: "website",
+          chunkId,
         },
       };
     });
 
-    const manualMapped: KnowledgeSearchResult[] = manualResults.map((row: any) => {
-      const parsed = row.metadata ? JSON.parse(row.metadata as string) : {};
+    const manualMappedAll: KnowledgeSearchResult[] = manualResults.map((row: any) => {
+      const parsed = safeParseMetadata(row.metadata);
       const inferredSourceType = parsed?.sourceType ?? (parsed?.sourceFile ? "pdf" : "manual");
+      const url = (row.url as string) ?? null;
+      const content = row.content as string;
+      const chunkId = parsed?.chunkId ?? `Document_Knowledge:${String(row.id)}`;
       return {
-        content: row.content as string,
-        url: (row.url as string) ?? null,
+        content,
+        url,
         similarity: Number(row.similarity),
         metadata: {
           ...parsed,
           sourceTable: "Document_Knowledge",
           sourceType: inferredSourceType,
+          chunkId,
         },
       };
     });
+
+    const manualMapped = manualMappedAll.filter(
+      (r) => Number(r.similarity) >= MANUAL_SIMILARITY_THRESHOLD
+    );
+
+    if (process.env.NODE_ENV !== "production") {
+      const top = manualMappedAll
+        .slice(0, 5)
+        .map((r) => ({
+          similarity: Number(r.similarity),
+          sourceFile: r.metadata?.sourceFile,
+          sourceType: r.metadata?.sourceType,
+        }));
+      console.log("[RAG] Document_Knowledge candidates:", {
+        total: manualMappedAll.length,
+        passed: manualMapped.length,
+        threshold: MANUAL_SIMILARITY_THRESHOLD,
+        top,
+      });
+    }
 
     // Merge and sort by similarity, take top 5
     let results = [...websiteMapped, ...manualMapped]
@@ -124,12 +173,56 @@ export async function searchKnowledgeDirect(
 
     if (results.length === 0) {
       const markerTokens = trimmed.match(/[A-Z0-9_]{8,}/g) ?? [];
-      const fallbackTerms = markerTokens.length > 0 ? markerTokens.slice(0, 3) : [trimmed];
+      const stopWords = new Set([
+        "the",
+        "a",
+        "an",
+        "and",
+        "or",
+        "to",
+        "for",
+        "of",
+        "in",
+        "on",
+        "at",
+        "is",
+        "are",
+        "was",
+        "were",
+        "be",
+        "with",
+        "your",
+        "my",
+        "our",
+        "when",
+        "what",
+        "which",
+        "who",
+        "how",
+        "why",
+      ]);
+
+      const words = trimmed
+        .toLowerCase()
+        .match(/[a-z0-9]+/g)
+        ?.filter((w) => w.length >= 4 && !stopWords.has(w)) ?? [];
+
+      const keywordTerms = Array.from(new Set(words)).slice(0, 5);
+      const fallbackTerms =
+        markerTokens.length > 0
+          ? markerTokens.slice(0, 3)
+          : keywordTerms.length > 0
+            ? keywordTerms
+            : [trimmed];
+
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[RAG] Keyword fallback terms:", fallbackTerms);
+      }
       const keywordRows: any[] = [];
 
       for (const term of fallbackTerms) {
         const rows = await client`
-          SELECT content, url, metadata, 0.99 as similarity
+          SELECT id, content, url, metadata, 0.99 as similarity
           FROM "Document_Knowledge"
           WHERE content ILIKE ${`%${term}%`}
           ORDER BY "createdAt" DESC
@@ -140,16 +233,20 @@ export async function searchKnowledgeDirect(
 
       const deduped = new Map<string, KnowledgeSearchResult>();
       for (const row of keywordRows) {
-        const parsed = row.metadata ? JSON.parse(row.metadata as string) : {};
+        const parsed = safeParseMetadata(row.metadata);
         const inferredSourceType = parsed?.sourceType ?? (parsed?.sourceFile ? "pdf" : "manual");
+        const url = (row.url as string) ?? null;
+        const content = row.content as string;
+        const chunkId = parsed?.chunkId ?? `Document_Knowledge:${String(row.id)}`;
         const mapped: KnowledgeSearchResult = {
-          content: row.content as string,
-          url: (row.url as string) ?? null,
+          content,
+          url,
           similarity: Number(row.similarity),
           metadata: {
             ...parsed,
             sourceTable: "Document_Knowledge",
             sourceType: inferredSourceType,
+            chunkId,
           },
         };
 
@@ -158,6 +255,13 @@ export async function searchKnowledgeDirect(
       }
 
       results = Array.from(deduped.values()).slice(0, 5);
+
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[RAG] Keyword fallback results:", {
+          rows: keywordRows.length,
+          deduped: results.length,
+        });
+      }
     }
 
     // Log knowledge event for RAG insights

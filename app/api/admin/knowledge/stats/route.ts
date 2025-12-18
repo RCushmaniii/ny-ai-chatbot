@@ -3,11 +3,23 @@ import postgres from "postgres";
 
 const client = postgres(process.env.POSTGRES_URL!);
 
+function getAdminEmail() {
+  return (
+    process.env.ADMIN_EMAIL ||
+    process.env.NEXT_PUBLIC_ADMIN_EMAIL ||
+    "info@nyenglishteacher.com"
+  );
+}
+
 export async function GET() {
   try {
     const session = await auth();
     if (!session?.user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (session.user.email !== getAdminEmail()) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Get count from website_content table
@@ -20,9 +32,34 @@ export async function GET() {
       SELECT COUNT(*) as count FROM "Document_Knowledge"
     `;
 
+    const manualEmbeddingStats = await client`
+      SELECT
+        COUNT(*)::int as total,
+        COUNT(*) FILTER (WHERE embedding IS NOT NULL)::int as with_embedding,
+        COUNT(*) FILTER (WHERE embedding IS NULL)::int as without_embedding,
+        MAX("createdAt") as latest_created_at
+      FROM "Document_Knowledge"
+    `;
+
+    const manualBySourceType = await client`
+      SELECT
+        COALESCE((metadata::jsonb ->> 'sourceType'), 'unknown') as source_type,
+        COUNT(*)::int as count
+      FROM "Document_Knowledge"
+      GROUP BY 1
+      ORDER BY count DESC
+    `;
+
     return Response.json({
       websiteContent: Number(websiteResult[0]?.count || 0),
       manualContent: Number(manualResult[0]?.count || 0),
+      manualEmbedding: {
+        total: Number(manualEmbeddingStats[0]?.total || 0),
+        withEmbedding: Number(manualEmbeddingStats[0]?.with_embedding || 0),
+        withoutEmbedding: Number(manualEmbeddingStats[0]?.without_embedding || 0),
+        latestCreatedAt: manualEmbeddingStats[0]?.latest_created_at || null,
+      },
+      manualBySourceType,
     });
   } catch (error) {
     console.error("Error fetching knowledge base stats:", error);

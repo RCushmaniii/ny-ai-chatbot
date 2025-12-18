@@ -3,6 +3,7 @@ import { expect, test } from "../fixtures";
 import { generateRandomTestUser } from "../helpers";
 import { AuthPage } from "../pages/auth";
 import { ChatPage } from "../pages/chat";
+import type { Request as PlaywrightRequest } from "@playwright/test";
 
 test.describe
   .serial("Guest Session", () => {
@@ -15,7 +16,7 @@ test.describe
         throw new Error("Failed to load page");
       }
 
-      let request = response.request();
+      let request: PlaywrightRequest | null = response.request();
 
       const chain: string[] = [];
 
@@ -57,7 +58,7 @@ test.describe
         throw new Error("Failed to load page");
       }
 
-      let request = response.request();
+      let request: PlaywrightRequest | null = response.request();
 
       const chain: string[] = [];
 

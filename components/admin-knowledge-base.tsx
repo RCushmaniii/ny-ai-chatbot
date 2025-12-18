@@ -165,9 +165,56 @@ export function AdminKnowledgeBase() {
           continue;
         }
 
+        // Handle DOCX via dedicated server-side extraction endpoint.
+        if (lowerName.endsWith(".docx")) {
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("type", type);
+          formData.append("language", language);
+          formData.append("url", url);
+
+          const response = await fetch("/api/admin/knowledge/docx", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            let errorMessage = `Failed to add content from ${file.name}`;
+            try {
+              const errorData = await response.json();
+              if (errorData.error) {
+                errorMessage = errorData.error;
+              }
+            } catch (e) {
+              // If JSON parsing fails, use the default error message
+            }
+
+            setUploadItems((prev) =>
+              prev.map((item) =>
+                item.name === file.name
+                  ? { ...item, status: "error", errorMessage }
+                  : item
+              )
+            );
+
+            toast.error(errorMessage);
+            continue;
+          }
+
+          setUploadItems((prev) =>
+            prev.map((item) =>
+              item.name === file.name
+                ? { ...item, status: "complete" }
+                : item
+            )
+          );
+
+          continue;
+        }
+
         // Handle plain text / markdown directly on the client.
         if (!lowerName.endsWith(".txt") && !lowerName.endsWith(".md")) {
-          const errorMessage = `Unsupported file type for ${file.name}. Currently .txt, .md, and .pdf files are supported.`;
+          const errorMessage = `Unsupported file type for ${file.name}. Currently .txt, .md, .pdf, and .docx files are supported.`;
           toast.error(errorMessage);
           setUploadItems((prev) =>
             prev.map((item) =>
@@ -419,14 +466,14 @@ export function AdminKnowledgeBase() {
                 drop
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Supports .txt, .md, and .pdf files.
+                Supports .txt, .md, .pdf, and .docx files.
               </p>
               <Input
                 id="file-upload"
                 type="file"
                 multiple
                 className="hidden"
-                accept=".txt,.md,.pdf,text/plain,text/markdown,application/pdf"
+                accept=".txt,.md,.pdf,.docx,text/plain,text/markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                 onChange={handleFileUpload}
                 disabled={isUploading}
               />

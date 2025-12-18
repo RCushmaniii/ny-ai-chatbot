@@ -22,6 +22,7 @@ import { getUsage } from "tokenlens/helpers";
 import { auth, type UserType } from "@/app/(auth)/auth";
 import type { VisibilityType } from "@/components/visibility-selector";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
+import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 import type { ChatModel } from "@/lib/ai/models";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { myProvider } from "@/lib/ai/providers";
@@ -137,14 +138,10 @@ export async function POST(request: Request) {
     const {
       id,
       message,
-      selectedChatModel,
       selectedVisibilityType,
-    }: {
-      id: string;
-      message: ChatMessage;
-      selectedChatModel: ChatModel["id"];
-      selectedVisibilityType: VisibilityType;
     } = requestBody;
+
+    const effectiveChatModel: ChatModel["id"] = DEFAULT_CHAT_MODEL;
 
     // SINGLE-TENANT: Support both authenticated admin and anonymous sessions
     const session = await auth();
@@ -335,21 +332,22 @@ ${uniqueUrls.map(url => `- ${url}`).join("\n")}
 
     const stream = createUIMessageStream({
       execute: async ({ writer: dataStream }) => {
-        const systemPromptText = await systemPrompt({ selectedChatModel, requestHints });
+        const systemPromptText = await systemPrompt({
+          selectedChatModel: effectiveChatModel,
+          requestHints,
+        });
         const result = streamText({
-          model: myProvider.languageModel(selectedChatModel),
+          model: myProvider.languageModel(effectiveChatModel),
           system: `${systemPromptText}${knowledgeContext}`,
           messages: convertToModelMessages(uiMessages),
           stopWhen: stepCountIs(5),
           experimental_activeTools:
-            selectedChatModel === "chat-model-reasoning"
-              ? []
-              : [
-                  "searchKnowledge",
-                  "createDocument",
-                  "updateDocument",
-                  "requestSuggestions",
-                ],
+            [
+              "searchKnowledge",
+              "createDocument",
+              "updateDocument",
+              "requestSuggestions",
+            ],
           experimental_transform: smoothStream({ chunking: "word" }),
           tools: {
             searchKnowledge: searchKnowledgeTool,
@@ -371,7 +369,7 @@ ${uniqueUrls.map(url => `- ${url}`).join("\n")}
             try {
               const providers = await getTokenlensCatalog();
               const modelId =
-                myProvider.languageModel(selectedChatModel).modelId;
+                myProvider.languageModel(effectiveChatModel).modelId;
               if (!modelId) {
                 finalMergedUsage = usage;
                 dataStream.write({

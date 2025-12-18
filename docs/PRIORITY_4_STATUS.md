@@ -21,33 +21,27 @@ Added to `lib/db/queries.ts`:
 - `getRagHitRatio(days)` - Calculate hit/miss ratio
 - `getTopSources(limit)` - Most used knowledge sources
 - `getMissingKnowledge(limit)` - Queries with no results
-- `getTopChunks(limit)` - Most valuable chunks
+- `getTopChunks(limit)` - Best performing chunks
 - `getRagTrends(days)` - Daily trends over time
 
-## 🚧 In Progress
-
-### 4. API Endpoints (Next)
-
-Need to create:
+### 4. API Endpoints ✅
 
 - `/api/admin/insights/overview` - Main dashboard data
 - `/api/admin/insights/sources` - Detailed source stats
 - `/api/admin/insights/questions` - Missing knowledge queries
 
-### 5. UI Component (Next)
+### 5. UI Component ✅
 
-Need to create `components/admin-insights.tsx` with:
+- `components/admin-insights.tsx` implemented with:
+  - RAG performance overview cards
+  - RAG trends
+  - Top sources table
+  - Missing knowledge list
+  - Top chunks table
 
-- RAG Performance Overview cards
-- Top Sources table
-- Missing Knowledge list
-- RAG Trends graph
-- Chunk Heatmap
+### 6. Admin Tab Integration ✅
 
-### 6. Admin Tab Integration (Final)
-
-- Add "Insights" tab to admin panel
-- Wire up the UI component
+- Insights tab is wired into the admin dashboard
 
 ## 📝 Implementation Notes
 
@@ -82,13 +76,29 @@ Need to create `components/admin-insights.tsx` with:
 4. **Chunk Performance** - Which specific chunks are valuable
 5. **Trends** - Is RAG improving or degrading over time
 
-## 🎯 Next Steps
+---
 
-1. Create API endpoints
-2. Build UI component
-3. Add tab to admin panel
-4. Run migration to create table
-5. Test with real queries
+## 🔧 Additional Notes (Validated in Dev)
+
+### Top Chunks requires stable `chunkId`
+
+`Top Chunks` will be empty even with hits if `knowledge_events.chunkId` is not logged.
+
+Validated behavior:
+
+- Manual/PDF knowledge uses a stable id like `Document_Knowledge:<rowId>`
+- Website chunks use a deterministic hash id derived from the source URL + content prefix
+
+### Common local failure modes
+
+- Missing DB migration for `knowledge_events` can cause Insights to error.
+- Timestamp type differences (string vs Date) require defensive normalization in queries.
+
+## ✅ Validation Checklist
+
+- Overview endpoint returns 200 and renders in the admin UI
+- Hit ratio, top sources, missing knowledge populate after a few chats
+- Top Chunks populates after new chats (verifies `chunkId` is logged)
 
 ## 🔧 Migration Command
 
@@ -139,5 +149,5 @@ This feature allows you to:
 
 ---
 
-**Status**: 60% Complete
-**ETA**: 2-3 more steps to finish
+**Status**: Complete ✅
+**Validated**: Insights data populates after a few chat interactions (hits/misses, sources, missing knowledge, top chunks)
