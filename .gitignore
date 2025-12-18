@@ -49,3 +49,5 @@ yarn-error.log*
 
 # TypeScript build artifacts
 *.tsbuildinfo
+
+.vercel
