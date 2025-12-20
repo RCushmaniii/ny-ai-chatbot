@@ -13,6 +13,7 @@ jobs:
       AUTH_SECRET: "playwright-test-secret"
       POSTGRES_URL: "postgresql://postgres:postgres@localhost:5432/postgres"
       OPENAI_API_KEY: "test"
+      PLAYWRIGHT: "true"
 
     services:
       postgres:
@@ -80,7 +81,9 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Run Playwright tests
-        run: pnpm test
+        run: |
+          mkdir -p playwright-report
+          pnpm exec playwright test
 
       - uses: actions/upload-artifact@v4
         if: always() && !cancelled()
