@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -48,6 +48,11 @@ export function VisibilitySelector({
   selectedVisibilityType: VisibilityType;
 } & React.ComponentProps<typeof Button>) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const { visibilityType, setVisibilityType } = useChatVisibility({
     chatId,
@@ -56,8 +61,24 @@ export function VisibilitySelector({
 
   const selectedVisibility = useMemo(
     () => visibilities.find((visibility) => visibility.id === visibilityType),
-    [visibilityType]
+    [visibilityType],
   );
+
+  // Prevent hydration mismatch by not rendering Radix components until mounted
+  if (!mounted) {
+    return (
+      <Button
+        className="hidden h-8 md:flex md:h-fit md:px-2"
+        data-testid="visibility-selector"
+        variant="outline"
+        disabled
+      >
+        <LockIcon />
+        <span className="md:sr-only">Private</span>
+        <ChevronDownIcon />
+      </Button>
+    );
+  }
 
   return (
     <DropdownMenu onOpenChange={setOpen} open={open}>
@@ -65,7 +86,7 @@ export function VisibilitySelector({
         asChild
         className={cn(
           "w-fit data-[state=open]:bg-accent data-[state=open]:text-accent-foreground",
-          className
+          className,
         )}
       >
         <Button
