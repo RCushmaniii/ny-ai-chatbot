@@ -1,16 +1,26 @@
 "use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AdminKnowledgeBase } from "@/components/admin-knowledge-base";
-import { AdminWebsiteScraping } from "@/components/admin-website-scraping";
-import { AdminSystemInstructions } from "@/components/admin-system-instructions";
-import { AdminStarterQuestions } from "@/components/admin-starter-questions";
-import { AdminEmbedCode } from "@/components/admin-embed-code";
+import {
+  BarChart3,
+  Code,
+  Database,
+  Globe,
+  Lightbulb,
+  MessageSquare,
+  ScrollText,
+  Settings,
+  User,
+} from "lucide-react";
 import { AdminAccount } from "@/components/admin-account";
 import { AdminAnalytics } from "@/components/admin-analytics";
 import { AdminChatLogs } from "@/components/admin-chat-logs";
+import { AdminEmbedCode } from "@/components/admin-embed-code";
 import { AdminInsights } from "@/components/admin-insights";
-import { Database, Globe, Settings, MessageSquare, Code, User, BarChart3, ScrollText, Lightbulb } from "lucide-react";
+import { AdminKnowledgeBase } from "@/components/admin-knowledge-base";
+import { AdminStarterQuestions } from "@/components/admin-starter-questions";
+import { AdminSystemInstructions } from "@/components/admin-system-instructions";
+import { AdminWebsiteScraping } from "@/components/admin-website-scraping";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface AdminTabsProps {
   userEmail: string;

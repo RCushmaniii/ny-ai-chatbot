@@ -1,9 +1,9 @@
 import { openai } from "@ai-sdk/openai";
 import { embed } from "ai";
+import { config } from "dotenv";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { documents } from "../lib/db/schema";
-import { config } from "dotenv";
 
 // Load environment variables
 config({ path: ".env.development.local" });
@@ -14,11 +14,7 @@ config({ path: ".env" });
 const client = postgres(process.env.POSTGRES_URL!);
 const db = drizzle(client);
 
-async function addDocument(
-  content: string,
-  url: string,
-  metadata: any = {}
-) {
+async function addDocument(content: string, url: string, metadata: any = {}) {
   try {
     // Create embedding
     const { embedding } = await embed({
@@ -62,7 +58,7 @@ async function populateKnowledgeBase() {
     
     A free 30-minute coaching session is available to start.`,
     "https://www.nyenglishteacher.com",
-    { type: "services-overview", language: "en" }
+    { type: "services-overview", language: "en" },
   );
 
   // Target Audience
@@ -76,7 +72,7 @@ async function populateKnowledgeBase() {
     
     The coaching is NOT academic English - it's focused on practical business communication.`,
     "https://www.nyenglishteacher.com",
-    { type: "target-audience", language: "en" }
+    { type: "target-audience", language: "en" },
   );
 
   // Coaching Approach
@@ -91,7 +87,7 @@ async function populateKnowledgeBase() {
     
     Proven results with executives from companies like CEVA Logistics, Driscoll's, and Smarttie.`,
     "https://www.nyenglishteacher.com",
-    { type: "coaching-approach", language: "en" }
+    { type: "coaching-approach", language: "en" },
   );
 
   // Pricing Information
@@ -104,7 +100,7 @@ async function populateKnowledgeBase() {
     
     To learn about pricing, book a free 30-minute coaching session to discuss your needs.`,
     "https://www.nyenglishteacher.com",
-    { type: "pricing", language: "en" }
+    { type: "pricing", language: "en" },
   );
 
   // Spanish Version - Services
@@ -118,7 +114,7 @@ async function populateKnowledgeBase() {
     
     Hay disponible una sesión de coaching gratuita de 30 minutos para comenzar.`,
     "https://www.nyenglishteacher.com",
-    { type: "services-overview", language: "es" }
+    { type: "services-overview", language: "es" },
   );
 
   // Spanish Version - Target Audience
@@ -131,7 +127,7 @@ async function populateKnowledgeBase() {
     
     El coaching NO es inglés académico - está enfocado en comunicación empresarial práctica del mundo real.`,
     "https://www.nyenglishteacher.com",
-    { type: "target-audience", language: "es" }
+    { type: "target-audience", language: "es" },
   );
 
   // Spanish Version - Pricing
@@ -143,7 +139,7 @@ async function populateKnowledgeBase() {
     
     Para conocer los precios, reserve una sesión de coaching gratuita de 30 minutos.`,
     "https://www.nyenglishteacher.com",
-    { type: "pricing", language: "es" }
+    { type: "pricing", language: "es" },
   );
 
   // FAQ - Levels and Backgrounds
@@ -152,7 +148,7 @@ async function populateKnowledgeBase() {
     Robert works with intermediate and advanced learners—busy professionals in business, law, medicine, logistics, engineering, and other fields. 
     He does not teach absolute beginners. The coaching is designed for professionals who already have a foundation in English and want to improve their business communication skills.`,
     "https://www.nyenglishteacher.com/faq",
-    { type: "faq-levels", language: "en" }
+    { type: "faq-levels", language: "en" },
   );
 
   // FAQ - Lesson Content
@@ -167,7 +163,7 @@ async function populateKnowledgeBase() {
     
     All lessons are customized to your specific job and professional goals.`,
     "https://www.nyenglishteacher.com/faq",
-    { type: "faq-content", language: "en" }
+    { type: "faq-content", language: "en" },
   );
 
   // FAQ - How Classes Work
@@ -179,7 +175,7 @@ async function populateKnowledgeBase() {
     - Lessons are personalized to your job and specific professional needs
     - Flexible scheduling available`,
     "https://www.nyenglishteacher.com/faq",
-    { type: "faq-how-it-works", language: "en" }
+    { type: "faq-how-it-works", language: "en" },
   );
 
   // FAQ - Scheduling
@@ -191,7 +187,7 @@ async function populateKnowledgeBase() {
     
     Important: Please give at least 24 hours' notice to reschedule and avoid any fees.`,
     "https://www.nyenglishteacher.com/faq",
-    { type: "faq-scheduling", language: "en" }
+    { type: "faq-scheduling", language: "en" },
   );
 
   // FAQ - Pricing Details
@@ -204,7 +200,7 @@ async function populateKnowledgeBase() {
     Payment (individuals): Due before each session via Zelle or bank transfer
     Companies: Monthly invoicing available`,
     "https://www.nyenglishteacher.com/faq",
-    { type: "faq-pricing-details", language: "en" }
+    { type: "faq-pricing-details", language: "en" },
   );
 
   // FAQ - Senior Leadership
@@ -213,7 +209,7 @@ async function populateKnowledgeBase() {
     Yes! Robert designs custom workshops and private coaching sessions specifically for senior leaders and executives.
     Contact him directly for a customized proposal and pricing tailored to your organization's needs.`,
     "https://www.nyenglishteacher.com/faq",
-    { type: "faq-leadership", language: "en" }
+    { type: "faq-leadership", language: "en" },
   );
 
   // FAQ - Progress Timeline
@@ -229,7 +225,7 @@ async function populateKnowledgeBase() {
     
     The coaching is designed to deliver practical, real-world results quickly.`,
     "https://www.nyenglishteacher.com/faq",
-    { type: "faq-progress", language: "en" }
+    { type: "faq-progress", language: "en" },
   );
 
   // FAQ - Cancellation Policy
@@ -247,7 +243,7 @@ async function populateKnowledgeBase() {
     - Individuals: Payment due before each session via Zelle or bank transfer
     - Companies: Monthly invoicing available`,
     "https://www.nyenglishteacher.com/faq",
-    { type: "faq-policy", language: "en" }
+    { type: "faq-policy", language: "en" },
   );
 
   console.log("\n✅ Knowledge base populated successfully!");

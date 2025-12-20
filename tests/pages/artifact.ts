@@ -25,7 +25,7 @@ export class ArtifactPage {
 
   async isGenerationComplete() {
     const response = await this.page.waitForResponse((currentResponse) =>
-      currentResponse.url().includes("/api/chat")
+      currentResponse.url().includes("/api/chat"),
     );
 
     await response.finished();
@@ -59,7 +59,7 @@ export class ArtifactPage {
           ? await lastMessageElement
               .getByTestId("message-reasoning")
               .innerText()
-          : null
+          : null,
       )
       .catch(() => null);
 
@@ -107,7 +107,7 @@ export class ArtifactPage {
         await page.getByTestId("message-editor").fill(newMessage);
         await page.getByTestId("message-editor-send-button").click();
         await expect(
-          page.getByTestId("message-editor-send-button")
+          page.getByTestId("message-editor-send-button"),
         ).not.toBeVisible();
       },
     };

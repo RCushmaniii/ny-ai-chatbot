@@ -108,15 +108,18 @@ export const systemPrompt = async ({
   requestHints: RequestHints;
 }) => {
   const requestPrompt = getRequestPromptFromHints(requestHints);
-  
+
   // Try to get custom system instructions from admin settings
   let basePrompt = regularPrompt;
   try {
     const { getGlobalBotSettings } = await import("@/lib/db/queries");
     const settings = await getGlobalBotSettings();
-    
+
     // Use custom system instructions if available, otherwise fall back to default
-    if (settings?.customInstructions && settings.customInstructions.trim().length > 0) {
+    if (
+      settings?.customInstructions &&
+      settings.customInstructions.trim().length > 0
+    ) {
       basePrompt = settings.customInstructions;
     }
   } catch (error) {
@@ -162,7 +165,7 @@ You are a spreadsheet creation assistant. Create a spreadsheet in csv format bas
 
 export const updateDocumentPrompt = (
   currentContent: string | null,
-  type: ArtifactKind
+  type: ArtifactKind,
 ) => {
   let mediaType = "document";
 
@@ -181,4 +184,4 @@ export const titlePrompt = `\n
     - you will generate a short title based on the first message a user begins a conversation with
     - ensure it is not more than 80 characters long
     - the title should be a summary of the user's message
-    - do not use quotes or colons`
+    - do not use quotes or colons`;

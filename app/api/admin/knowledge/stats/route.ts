@@ -1,7 +1,5 @@
-import { auth } from "@/app/(auth)/auth";
 import postgres from "postgres";
-
-const client = postgres(process.env.POSTGRES_URL!);
+import { auth } from "@/app/(auth)/auth";
 
 function getAdminEmail() {
   return (
@@ -13,6 +11,16 @@ function getAdminEmail() {
 
 export async function GET() {
   try {
+    const postgresUrl = process.env.POSTGRES_URL;
+    if (!postgresUrl) {
+      return Response.json(
+        { error: "Database not configured" },
+        { status: 500 },
+      );
+    }
+
+    const client = postgres(postgresUrl);
+
     const session = await auth();
     if (!session?.user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -56,16 +64,15 @@ export async function GET() {
       manualEmbedding: {
         total: Number(manualEmbeddingStats[0]?.total || 0),
         withEmbedding: Number(manualEmbeddingStats[0]?.with_embedding || 0),
-        withoutEmbedding: Number(manualEmbeddingStats[0]?.without_embedding || 0),
+        withoutEmbedding: Number(
+          manualEmbeddingStats[0]?.without_embedding || 0,
+        ),
         latestCreatedAt: manualEmbeddingStats[0]?.latest_created_at || null,
       },
       manualBySourceType,
     });
   } catch (error) {
     console.error("Error fetching knowledge base stats:", error);
-    return Response.json(
-      { error: "Failed to fetch stats" },
-      { status: 500 }
-    );
+    return Response.json({ error: "Failed to fetch stats" }, { status: 500 });
   }
 }

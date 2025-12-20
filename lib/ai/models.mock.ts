@@ -17,14 +17,18 @@ function getLatestUserText(options: any): string {
 
           if (Array.isArray(content)) {
             const textParts = content
-              .map((part: any) => (typeof part?.text === "string" ? part.text : ""))
+              .map((part: any) =>
+                typeof part?.text === "string" ? part.text : "",
+              )
               .filter(Boolean);
             if (textParts.length > 0) return textParts.join("\n");
           }
 
           if (Array.isArray(item.parts)) {
             const textParts = item.parts
-              .map((part: any) => (typeof part?.text === "string" ? part.text : ""))
+              .map((part: any) =>
+                typeof part?.text === "string" ? part.text : "",
+              )
               .filter(Boolean);
             if (textParts.length > 0) return textParts.join("\n");
           }
@@ -38,7 +42,10 @@ function getLatestUserText(options: any): string {
   return "";
 }
 
-function getMockResponseText(userText: string, kind: "chat" | "reasoning"): string {
+function getMockResponseText(
+  userText: string,
+  kind: "chat" | "reasoning",
+): string {
   const normalized = userText.toLowerCase();
 
   if (normalized.includes("what are the advantages of")) {
@@ -61,14 +68,19 @@ function getMockResponseText(userText: string, kind: "chat" | "reasoning"): stri
     return "This painting is by Monet!";
   }
 
-  if (normalized.includes("what's the weather in sf") || normalized.includes("weather in sf")) {
+  if (
+    normalized.includes("what's the weather in sf") ||
+    normalized.includes("weather in sf")
+  ) {
     return "The current temperature in San Francisco is 17°C.";
   }
 
   return "Mock response";
 }
 
-const createMockModel = (kind: "chat" | "reasoning" = "chat"): LanguageModel => {
+const createMockModel = (
+  kind: "chat" | "reasoning" = "chat",
+): LanguageModel => {
   return {
     specificationVersion: "v2",
     provider: "mock",

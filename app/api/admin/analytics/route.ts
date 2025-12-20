@@ -1,5 +1,9 @@
 import { auth } from "@/app/(auth)/auth";
-import { getAnalyticsData, getTopQuestions, getDailyStats } from "@/lib/db/queries";
+import {
+  getAnalyticsData,
+  getDailyStats,
+  getTopQuestions,
+} from "@/lib/db/queries";
 
 export async function GET(request: Request) {
   try {
@@ -14,13 +18,14 @@ export async function GET(request: Request) {
     const days = parseInt(period, 10);
 
     // Get all analytics data in parallel
-    const [stats7, stats30, statsAll, topQuestions, dailyStats] = await Promise.all([
-      getAnalyticsData(7),
-      getAnalyticsData(30),
-      getAnalyticsData(365), // All time (1 year)
-      getTopQuestions(10),
-      getDailyStats(14),
-    ]);
+    const [stats7, stats30, statsAll, topQuestions, dailyStats] =
+      await Promise.all([
+        getAnalyticsData(7),
+        getAnalyticsData(30),
+        getAnalyticsData(365), // All time (1 year)
+        getTopQuestions(10),
+        getDailyStats(14),
+      ]);
 
     return Response.json({
       stats: {
@@ -35,7 +40,7 @@ export async function GET(request: Request) {
     console.error("Error fetching analytics:", error);
     return Response.json(
       { error: "Failed to fetch analytics" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

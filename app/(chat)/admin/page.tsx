@@ -1,11 +1,11 @@
 "use client";
 
-import { redirect, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
-import { AdminTabs } from "@/components/admin-tabs";
-import { AdminHeader } from "@/components/admin-header";
 import { Loader2 } from "lucide-react";
+import { redirect, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { AdminHeader } from "@/components/admin-header";
+import { AdminTabs } from "@/components/admin-tabs";
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -34,8 +34,9 @@ export default function AdminPage() {
   }
 
   // Single-tenant: Only the owner can access admin
-  const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "info@nyenglishteacher.com";
-  
+  const ADMIN_EMAIL =
+    process.env.NEXT_PUBLIC_ADMIN_EMAIL || "info@nyenglishteacher.com";
+
   if (session.user.email !== ADMIN_EMAIL) {
     redirect("/");
   }
@@ -46,8 +47,8 @@ export default function AdminPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <AdminHeader 
-        userEmail={session.user.email || ""} 
+      <AdminHeader
+        userEmail={session.user.email || ""}
         onAccountClick={handleAccountClick}
       />
       <div className="flex-1 overflow-y-auto">
@@ -58,8 +59,8 @@ export default function AdminPage() {
               Manage your AI chatbot's knowledge base and settings
             </p>
           </div>
-          <AdminTabs 
-            userEmail={session.user.email || ""} 
+          <AdminTabs
+            userEmail={session.user.email || ""}
             userId={session.user.id}
             activeTab={activeTab}
           />

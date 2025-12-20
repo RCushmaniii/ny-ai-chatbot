@@ -1,12 +1,12 @@
-self.addEventListener('install', (event) => {
+self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
+self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       try {
-        const windowClients = await self.clients.matchAll({ type: 'window' });
+        const windowClients = await self.clients.matchAll({ type: "window" });
         await self.registration.unregister();
         for (const client of windowClients) {
           try {
@@ -18,6 +18,6 @@ self.addEventListener('activate', (event) => {
       } catch {
         // no-op
       }
-    })()
+    })(),
   );
 });

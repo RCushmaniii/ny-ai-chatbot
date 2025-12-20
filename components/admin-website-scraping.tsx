@@ -1,10 +1,9 @@
 "use client";
 
+import { Database, Globe, Loader2, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -12,13 +11,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2, Globe, RefreshCw, Database } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function AdminWebsiteScraping() {
   const [isIngesting, setIsIngesting] = useState(false);
   const [isRebuilding, setIsRebuilding] = useState(false);
   const [sitemapUrl, setSitemapUrl] = useState(
-    "https://www.nyenglishteacher.com/sitemap-0.xml"
+    "https://www.nyenglishteacher.com/sitemap-0.xml",
   );
   const [stats, setStats] = useState<{
     websiteContent: number;
@@ -68,15 +68,15 @@ export function AdminWebsiteScraping() {
 
       const result = await response.json();
       toast.success(
-        `Ingestion complete! Processed ${result.pagesProcessed} pages, created ${result.chunksCreated} chunks.`
+        `Ingestion complete! Processed ${result.pagesProcessed} pages, created ${result.chunksCreated} chunks.`,
       );
-      
+
       // Reload stats
       await loadStats();
     } catch (error) {
       console.error("Error running ingestion:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to run ingestion"
+        error instanceof Error ? error.message : "Failed to run ingestion",
       );
     } finally {
       setIsIngesting(false);
@@ -86,7 +86,7 @@ export function AdminWebsiteScraping() {
   const handleClearWebsiteContent = async () => {
     if (
       !confirm(
-        "Are you sure you want to clear all website content? This will delete all scraped data from the website_content table."
+        "Are you sure you want to clear all website content? This will delete all scraped data from the website_content table.",
       )
     ) {
       return;
@@ -110,14 +110,16 @@ export function AdminWebsiteScraping() {
   const handleRebuildKnowledgeBase = async () => {
     if (
       !confirm(
-        "This will clear all website content and re-crawl your website to ingest fresh content. This is useful when you've made significant updates to your website. This may take several minutes. Continue?"
+        "This will clear all website content and re-crawl your website to ingest fresh content. This is useful when you've made significant updates to your website. This may take several minutes. Continue?",
       )
     ) {
       return;
     }
 
     setIsRebuilding(true);
-    toast.info("Starting knowledge base rebuild... This may take several minutes.");
+    toast.info(
+      "Starting knowledge base rebuild... This may take several minutes.",
+    );
 
     try {
       const response = await fetch("/api/admin/knowledge/rebuild", {
@@ -134,15 +136,17 @@ export function AdminWebsiteScraping() {
 
       const result = await response.json();
       toast.success(
-        `Knowledge base rebuilt! Found ${result.stats.urlsFound} URLs, processed ${result.stats.urlsProcessed} pages, created ${result.stats.chunksCreated} chunks.`
+        `Knowledge base rebuilt! Found ${result.stats.urlsFound} URLs, processed ${result.stats.urlsProcessed} pages, created ${result.stats.chunksCreated} chunks.`,
       );
-      
+
       // Reload stats
       await loadStats();
     } catch (error) {
       console.error("Error rebuilding knowledge base:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to rebuild knowledge base"
+        error instanceof Error
+          ? error.message
+          : "Failed to rebuild knowledge base",
       );
     } finally {
       setIsRebuilding(false);
@@ -305,9 +309,7 @@ export function AdminWebsiteScraping() {
           {isIngesting && (
             <div className="rounded-lg bg-muted p-4 text-sm">
               <p className="font-medium mb-2">Ingestion in progress...</p>
-              <p className="text-muted-foreground">
-                This process will:
-              </p>
+              <p className="text-muted-foreground">This process will:</p>
               <ul className="list-disc list-inside text-muted-foreground space-y-1 mt-2">
                 <li>Fetch and parse the sitemap</li>
                 <li>Scrape content from each page</li>
@@ -331,9 +333,9 @@ export function AdminWebsiteScraping() {
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <p>
-            <strong>Website Content (website_content table):</strong> Automatically
-            scraped from your sitemap. Used for answering questions about your
-            website content.
+            <strong>Website Content (website_content table):</strong>{" "}
+            Automatically scraped from your sitemap. Used for answering
+            questions about your website content.
           </p>
           <p>
             <strong>Manual Content (Document_Knowledge table):</strong> Content

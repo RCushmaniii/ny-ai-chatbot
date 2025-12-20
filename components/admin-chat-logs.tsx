@@ -1,6 +1,18 @@
 "use client";
 
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Eye,
+  MessageSquare,
+  Search,
+  User,
+} from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -8,9 +20,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -18,17 +27,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  MessageSquare,
-  Search,
-  Download,
-  Eye,
-  Calendar,
-  User,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
-import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ChatLog {
   id: string;
@@ -82,7 +82,7 @@ export function AdminChatLogs() {
       }
 
       const response = await fetch(`/api/admin/chat-logs?${params}`);
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch chat logs");
       }
@@ -105,7 +105,7 @@ export function AdminChatLogs() {
       setViewDialogOpen(true);
 
       const response = await fetch(`/api/admin/chat-logs?chatId=${chatId}`);
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch transcript");
       }
@@ -218,7 +218,9 @@ export function AdminChatLogs() {
             <CardContent className="py-12 text-center">
               <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground">
-                {searchQuery ? "No chats found matching your search" : "No chats yet"}
+                {searchQuery
+                  ? "No chats found matching your search"
+                  : "No chats yet"}
               </p>
             </CardContent>
           </Card>
@@ -276,7 +278,8 @@ export function AdminChatLogs() {
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
             Showing {currentPage * ITEMS_PER_PAGE + 1} to{" "}
-            {Math.min((currentPage + 1) * ITEMS_PER_PAGE, total)} of {total} chats
+            {Math.min((currentPage + 1) * ITEMS_PER_PAGE, total)} of {total}{" "}
+            chats
           </p>
           <div className="flex gap-2">
             <Button
@@ -311,7 +314,8 @@ export function AdminChatLogs() {
             <DialogDescription>
               {selectedChat && (
                 <>
-                  Created {new Date(selectedChat.chat.createdAt).toLocaleString()} •{" "}
+                  Created{" "}
+                  {new Date(selectedChat.chat.createdAt).toLocaleString()} •{" "}
                   {selectedChat.messages.length} messages
                 </>
               )}
@@ -333,9 +337,7 @@ export function AdminChatLogs() {
                 <div
                   key={msg.id}
                   className={`rounded-lg p-4 ${
-                    msg.role === "user"
-                      ? "bg-primary/10 ml-8"
-                      : "bg-muted mr-8"
+                    msg.role === "user" ? "bg-primary/10 ml-8" : "bg-muted mr-8"
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-2">

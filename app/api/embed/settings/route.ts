@@ -1,11 +1,8 @@
-import { NextResponse } from "next/server";
+import { desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
+import { NextResponse } from "next/server";
 import postgres from "postgres";
 import { botSettings } from "@/lib/db/schema";
-import { desc } from "drizzle-orm";
-
-const client = postgres(process.env.POSTGRES_URL!);
-const db = drizzle(client);
 
 // Default embed settings
 const DEFAULT_EMBED_SETTINGS = {
@@ -18,12 +15,20 @@ const DEFAULT_EMBED_SETTINGS = {
   suggestedQuestions: [
     "What are the prices for classes?",
     "What services do you offer?",
-    "How do I book a session?"
+    "How do I book a session?",
   ],
 };
 
 export async function GET() {
   try {
+    const postgresUrl = process.env.POSTGRES_URL;
+    if (!postgresUrl) {
+      return NextResponse.json(DEFAULT_EMBED_SETTINGS);
+    }
+
+    const client = postgres(postgresUrl);
+    const db = drizzle(client);
+
     // Get the most recent bot settings (no auth required for embed)
     const settings = await db
       .select()

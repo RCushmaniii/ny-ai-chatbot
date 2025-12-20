@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  Activity,
+  BarChart3,
+  MessageSquare,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -9,13 +16,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  MessageSquare,
-  Users,
-  TrendingUp,
-  Activity,
-  BarChart3,
-} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface AnalyticsStats {
@@ -40,15 +40,11 @@ export function AdminAnalytics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchAnalytics();
-  }, []);
-
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch("/api/admin/analytics");
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch analytics");
       }
@@ -60,14 +56,19 @@ export function AdminAnalytics() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
 
   if (loading) {
+    const skeletonKeys = ["total", "messages", "sessions", "avg"];
     return (
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}>
+          {skeletonKeys.map((key) => (
+            <Card key={key}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <Skeleton className="h-4 w-24" />
                 <Skeleton className="h-4 w-4" />
@@ -120,9 +121,7 @@ export function AdminAnalytics() {
       <Card>
         <CardHeader>
           <CardTitle>Daily Activity (Last 14 Days)</CardTitle>
-          <CardDescription>
-            Number of chats created per day
-          </CardDescription>
+          <CardDescription>Number of chats created per day</CardDescription>
         </CardHeader>
         <CardContent>
           <DailyChart data={data.dailyStats} />
@@ -144,9 +143,9 @@ export function AdminAnalytics() {
                 No questions yet. Start chatting to see analytics!
               </p>
             ) : (
-              data.topQuestions.map((q, i) => (
+              data.topQuestions.map((q) => (
                 <div
-                  key={i}
+                  key={`${q.question}-${q.count}`}
                   className="flex items-start justify-between gap-4 rounded-lg border p-3"
                 >
                   <div className="flex-1">
@@ -177,9 +176,7 @@ function StatsGrid({ stats }: { stats: AnalyticsStats }) {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.totalChats}</div>
-          <p className="text-xs text-muted-foreground">
-            Conversations started
-          </p>
+          <p className="text-xs text-muted-foreground">Conversations started</p>
         </CardContent>
       </Card>
 
@@ -190,9 +187,7 @@ function StatsGrid({ stats }: { stats: AnalyticsStats }) {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.totalMessages}</div>
-          <p className="text-xs text-muted-foreground">
-            Messages exchanged
-          </p>
+          <p className="text-xs text-muted-foreground">Messages exchanged</p>
         </CardContent>
       </Card>
 
@@ -203,29 +198,31 @@ function StatsGrid({ stats }: { stats: AnalyticsStats }) {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.uniqueSessions}</div>
-          <p className="text-xs text-muted-foreground">
-            Different users
-          </p>
+          <p className="text-xs text-muted-foreground">Different users</p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Avg Messages/Chat</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            Avg Messages/Chat
+          </CardTitle>
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.avgMessagesPerChat}</div>
-          <p className="text-xs text-muted-foreground">
-            Engagement level
-          </p>
+          <p className="text-xs text-muted-foreground">Engagement level</p>
         </CardContent>
       </Card>
     </div>
   );
 }
 
-function DailyChart({ data }: { data: Array<{ date: string; chats: number }> }) {
+function DailyChart({
+  data,
+}: {
+  data: Array<{ date: string; chats: number }>;
+}) {
   if (data.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">

@@ -1,16 +1,16 @@
 /**
  * Rebuild Knowledge Base Endpoint
- * 
+ *
  * POST /api/admin/knowledge/rebuild
- * 
+ *
  * Clears all website content and re-crawls the website to ingest fresh content.
  * This is useful when website content has been significantly updated.
- * 
+ *
  * Requires admin authentication.
  */
 
-import { auth } from "@/app/(auth)/auth";
 import { NextResponse } from "next/server";
+import { auth } from "@/app/(auth)/auth";
 import { ingestWebsite } from "@/lib/ingest/website";
 
 export const maxDuration = 300; // 5 minutes max
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

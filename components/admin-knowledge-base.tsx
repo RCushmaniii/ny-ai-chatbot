@@ -3,9 +3,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -13,6 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -20,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 type UploadItem = {
   name: string;
@@ -99,7 +99,7 @@ export function AdminKnowledgeBase() {
   };
 
   const handleFileUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const files = event.target.files;
 
@@ -141,25 +141,23 @@ export function AdminKnowledgeBase() {
             } catch (e) {
               // If JSON parsing fails, use the default error message
             }
-            
+
             setUploadItems((prev) =>
               prev.map((item) =>
                 item.name === file.name
                   ? { ...item, status: "error", errorMessage }
-                  : item
-              )
+                  : item,
+              ),
             );
-            
+
             toast.error(errorMessage);
             continue;
           }
 
           setUploadItems((prev) =>
             prev.map((item) =>
-              item.name === file.name
-                ? { ...item, status: "complete" }
-                : item
-            )
+              item.name === file.name ? { ...item, status: "complete" } : item,
+            ),
           );
 
           continue;
@@ -193,8 +191,8 @@ export function AdminKnowledgeBase() {
               prev.map((item) =>
                 item.name === file.name
                   ? { ...item, status: "error", errorMessage }
-                  : item
-              )
+                  : item,
+              ),
             );
 
             toast.error(errorMessage);
@@ -203,10 +201,8 @@ export function AdminKnowledgeBase() {
 
           setUploadItems((prev) =>
             prev.map((item) =>
-              item.name === file.name
-                ? { ...item, status: "complete" }
-                : item
-            )
+              item.name === file.name ? { ...item, status: "complete" } : item,
+            ),
           );
 
           continue;
@@ -218,8 +214,10 @@ export function AdminKnowledgeBase() {
           toast.error(errorMessage);
           setUploadItems((prev) =>
             prev.map((item) =>
-              item.name === file.name ? { ...item, status: "error", errorMessage } : item
-            )
+              item.name === file.name
+                ? { ...item, status: "error", errorMessage }
+                : item,
+            ),
           );
           continue;
         }
@@ -250,31 +248,33 @@ export function AdminKnowledgeBase() {
             } catch (e) {
               // If JSON parsing fails, use the default error message
             }
-            
+
             setUploadItems((prev) =>
               prev.map((item) =>
                 item.name === file.name
                   ? { ...item, status: "error", errorMessage }
-                  : item
-              )
+                  : item,
+              ),
             );
-            
+
             toast.error(errorMessage);
-            continue;
           }
         }
 
         setUploadItems((prev) =>
           prev.map((item) =>
-            item.name === file.name ? { ...item, status: "complete" } : item
-          )
+            item.name === file.name ? { ...item, status: "complete" } : item,
+          ),
         );
       }
 
       toast.success("File content added to knowledge base!");
     } catch (error) {
       console.error("Error uploading files:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to process one or more files. Please try again.";
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to process one or more files. Please try again.";
       toast.error(errorMessage);
     } finally {
       setIsUploading(false);
@@ -427,7 +427,7 @@ export function AdminKnowledgeBase() {
               className="flex flex-col items-center justify-center rounded-lg border border-dashed border-muted-foreground/40 bg-muted/30 px-4 py-8 text-center cursor-pointer hover:bg-muted/70 transition-colors"
               onClick={() => {
                 const input = document.getElementById(
-                  "file-upload"
+                  "file-upload",
                 ) as HTMLInputElement | null;
                 input?.click();
               }}
@@ -440,7 +440,7 @@ export function AdminKnowledgeBase() {
                 e.stopPropagation();
 
                 const input = document.getElementById(
-                  "file-upload"
+                  "file-upload",
                 ) as HTMLInputElement | null;
                 if (input) {
                   // Create a DataTransfer to reuse the existing handler
@@ -462,8 +462,8 @@ export function AdminKnowledgeBase() {
                 <span className="text-xl">⬆️</span>
               </div>
               <p className="text-sm font-medium">
-                <span className="text-primary">Click to upload</span> or drag and
-                drop
+                <span className="text-primary">Click to upload</span> or drag
+                and drop
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 Supports .txt, .md, .pdf, and .docx files.
@@ -518,8 +518,8 @@ export function AdminKnowledgeBase() {
                           item.status === "complete"
                             ? "h-1.5 w-full rounded-full bg-emerald-500"
                             : item.status === "error"
-                            ? "h-1.5 w-1/3 rounded-full bg-destructive"
-                            : "h-1.5 w-1/2 rounded-full bg-blue-500 animate-pulse"
+                              ? "h-1.5 w-1/3 rounded-full bg-destructive"
+                              : "h-1.5 w-1/2 rounded-full bg-blue-500 animate-pulse"
                         }
                       />
                     </div>
@@ -541,8 +541,8 @@ export function AdminKnowledgeBase() {
             services, and processes
           </p>
           <p>
-            • <strong>Use natural language:</strong> Write as if explaining to
-            a customer
+            • <strong>Use natural language:</strong> Write as if explaining to a
+            customer
           </p>
           <p>
             • <strong>Add both languages:</strong> Create English and Spanish

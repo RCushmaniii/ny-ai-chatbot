@@ -27,14 +27,18 @@ export async function GET(req: Request) {
     const days = Number(searchParams.get("days") ?? 30);
     const limit = Math.min(Number(searchParams.get("limit") ?? 50), 200);
 
-    const { groups, raw } = await getMissingKnowledge({ days, limit, includeRaw: true });
+    const { groups, raw } = await getMissingKnowledge({
+      days,
+      limit,
+      includeRaw: true,
+    });
 
     return NextResponse.json({ groups, raw });
   } catch (error) {
     console.error("Error fetching missing knowledge:", error);
     return NextResponse.json(
       { error: "Failed to fetch missing knowledge" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

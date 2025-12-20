@@ -7,11 +7,8 @@ import {
   stepCountIs,
   streamText,
 } from "ai";
-import { validateMessage, checkRateLimit, getClientIdentifier } from "@/lib/security/validation";
-import { setCorsHeaders, handleCorsPreflightRequest } from "@/lib/security/cors";
 import { unstable_cache as cache } from "next/cache";
 import { after } from "next/server";
-import { getOrCreateSessionId } from "@/lib/session";
 import {
   createResumableStreamContext,
   type ResumableStreamContext,
@@ -22,16 +19,16 @@ import { getUsage } from "tokenlens/helpers";
 import { auth, type UserType } from "@/app/(auth)/auth";
 import type { VisibilityType } from "@/components/visibility-selector";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
-import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 import type { ChatModel } from "@/lib/ai/models";
+import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { myProvider } from "@/lib/ai/providers";
 import { createDocument } from "@/lib/ai/tools/create-document";
+import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import {
   searchKnowledgeDirect,
   searchKnowledgeTool,
 } from "@/lib/ai/tools/search-knowledge";
-import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { updateDocument } from "@/lib/ai/tools/update-document";
 import { isProductionEnvironment } from "@/lib/constants";
 import {
@@ -46,6 +43,16 @@ import {
 } from "@/lib/db/queries";
 import type { DBMessage } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
+import {
+  handleCorsPreflightRequest,
+  setCorsHeaders,
+} from "@/lib/security/cors";
+import {
+  checkRateLimit,
+  getClientIdentifier,
+  validateMessage,
+} from "@/lib/security/validation";
+import { getOrCreateSessionId } from "@/lib/session";
 import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 import {
@@ -73,13 +80,13 @@ const getTokenlensCatalog = cache(
     } catch (err) {
       console.warn(
         "TokenLens: catalog fetch failed, using default catalog",
-        err
+        err,
       );
       return; // tokenlens helpers will fall back to defaultCatalog
     }
   },
   ["tokenlens-catalog"],
-  { revalidate: 24 * 60 * 60 } // 24 hours
+  { revalidate: 24 * 60 * 60 }, // 24 hours
 );
 
 export function getStreamContext() {
@@ -91,7 +98,7 @@ export function getStreamContext() {
     } catch (error: any) {
       if (error.message.includes("REDIS_URL")) {
         console.log(
-          " > Resumable streams are disabled due to missing REDIS_URL"
+          " > Resumable streams are disabled due to missing REDIS_URL",
         );
       } else {
         console.error(error);
@@ -105,7 +112,7 @@ export function getStreamContext() {
 export async function POST(request: Request) {
   // Apply CORS
   const origin = request.headers.get("origin");
-  
+
   let requestBody: PostRequestBody;
 
   try {
@@ -119,27 +126,23 @@ export async function POST(request: Request) {
   // Rate limiting check
   const clientId = getClientIdentifier(request);
   const rateLimitResult = checkRateLimit(clientId);
-  
+
   if (!rateLimitResult.allowed) {
     const errorResponse = new Response(
       JSON.stringify({ error: rateLimitResult.error }),
-      { 
+      {
         status: 429,
         headers: {
           "Content-Type": "application/json",
-          "Retry-After": String(rateLimitResult.retryAfter || 60)
-        }
-      }
+          "Retry-After": String(rateLimitResult.retryAfter || 60),
+        },
+      },
     );
     return setCorsHeaders(errorResponse, origin);
   }
 
   try {
-    const {
-      id,
-      message,
-      selectedVisibilityType,
-    } = requestBody;
+    const { id, message, selectedVisibilityType } = requestBody;
 
     const effectiveChatModel: ChatModel["id"] = DEFAULT_CHAT_MODEL;
 
@@ -150,11 +153,11 @@ export async function POST(request: Request) {
     // Validate message content
     const messageText = getTextFromMessage(message);
     const validation = validateMessage(messageText);
-    
+
     if (!validation.valid) {
       const errorResponse = new Response(
         JSON.stringify({ error: validation.error }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { "Content-Type": "application/json" } },
       );
       return setCorsHeaders(errorResponse, origin);
     }
@@ -181,38 +184,45 @@ export async function POST(request: Request) {
       }
       // Only fetch messages if chat already exists
       messagesFromDb = await getMessagesByChatId({ id });
-      
+
       // Check session-based rate limit (20 messages per session) for non-admin users
       if (!session?.user) {
-        const { RATE_LIMITS, RATE_LIMIT_MESSAGES } = await import("@/lib/config/rate-limits");
+        const { RATE_LIMITS, RATE_LIMIT_MESSAGES } = await import(
+          "@/lib/config/rate-limits"
+        );
         const sessionMessages = messagesFromDb.length;
-        
+
         if (sessionMessages >= RATE_LIMITS.messagesPerSession) {
           // Detect language for appropriate message
           let limitMessage: string = RATE_LIMIT_MESSAGES.en.sessionLimit;
           try {
-            const { detectLanguage } = await import("@/lib/utils/language-detector");
+            const { detectLanguage } = await import(
+              "@/lib/utils/language-detector"
+            );
             const messageText = getTextFromMessage(message) ?? "";
             const lang = detectLanguage(messageText);
             limitMessage = RATE_LIMIT_MESSAGES[lang].sessionLimit as string;
           } catch (error) {
-            console.error('Language detection failed for rate limit message:', error);
+            console.error(
+              "Language detection failed for rate limit message:",
+              error,
+            );
           }
-          
+
           const errorResponse = new Response(
-            JSON.stringify({ 
+            JSON.stringify({
               error: "rate_limit_exceeded",
               message: limitMessage,
               limit: RATE_LIMITS.messagesPerSession,
-              current: sessionMessages
+              current: sessionMessages,
             }),
-            { 
+            {
               status: 429,
-              headers: { 
+              headers: {
                 "Content-Type": "application/json",
-                "Retry-After": "3600" // 1 hour
-              }
-            }
+                "Retry-After": "3600", // 1 hour
+              },
+            },
           );
           return setCorsHeaders(errorResponse, origin);
         }
@@ -266,23 +276,33 @@ export async function POST(request: Request) {
     });
 
     // Detect language from user's message (with error handling)
-    let detectedLang: 'en' | 'es' = 'en';
-    let learnMoreText = 'Learn more:';
-    let translateUrlFn: ((url: string, lang: 'en' | 'es') => string) | null = null;
-    
+    let detectedLang: "en" | "es" = "en";
+    let learnMoreText = "Learn more:";
+    let translateUrlFn: ((url: string, lang: "en" | "es") => string) | null =
+      null;
+
     try {
-      const { detectLanguage, translateUrl, getLearnMoreText } = await import("@/lib/utils/language-detector");
+      const { detectLanguage, translateUrl, getLearnMoreText } = await import(
+        "@/lib/utils/language-detector"
+      );
       detectedLang = detectLanguage(latestUserText);
       learnMoreText = getLearnMoreText(detectedLang);
       translateUrlFn = translateUrl;
-      console.log(`🌐 Detected language: ${detectedLang} for message: "${latestUserText.substring(0, 50)}..."`);
+      console.log(
+        `🌐 Detected language: ${detectedLang} for message: "${latestUserText.substring(0, 50)}..."`,
+      );
     } catch (error) {
-      console.error('⚠️  Language detection failed, defaulting to English:', error);
+      console.error(
+        "⚠️  Language detection failed, defaulting to English:",
+        error,
+      );
     }
 
     // Debug: Log knowledge results
     if (knowledgeResults.length > 0) {
-      console.log(`📚 Found ${knowledgeResults.length} knowledge results for: "${latestUserText}"`);
+      console.log(
+        `📚 Found ${knowledgeResults.length} knowledge results for: "${latestUserText}"`,
+      );
       knowledgeResults.forEach((r, idx) => {
         console.log(`  ${idx + 1}. URL: ${r.url}, Similarity: ${r.similarity}`);
       });
@@ -292,15 +312,16 @@ export async function POST(request: Request) {
 
     // Extract unique URLs from knowledge results and translate them based on detected language
     const uniqueUrls = knowledgeResults.length
-      ? Array.from(new Set(knowledgeResults.map(r => r.url).filter(Boolean)))
-          .map(url => {
-            if (translateUrlFn) {
-              const translated = translateUrlFn(url as string, detectedLang);
-              console.log(`🔗 Translating URL: ${url} -> ${translated}`);
-              return translated;
-            }
-            return url as string;
-          })
+      ? Array.from(
+          new Set(knowledgeResults.map((r) => r.url).filter(Boolean)),
+        ).map((url) => {
+          if (translateUrlFn) {
+            const translated = translateUrlFn(url as string, detectedLang);
+            console.log(`🔗 Translating URL: ${url} -> ${translated}`);
+            return translated;
+          }
+          return url as string;
+        })
       : [];
 
     const knowledgeContext = knowledgeResults.length
@@ -308,17 +329,17 @@ export async function POST(request: Request) {
 Use these facts in your answer, and prefer them over your own assumptions when talking about New York English Teacher.
 
 ${knowledgeResults
-          .map((r, idx) => {
-            const prefix = `${idx + 1}) `;
-            const urlPart = r.url ? ` (source: ${r.url})` : "";
-            return `${prefix}${r.content.trim()}${urlPart}`;
-          })
-          .join("\n\n")}
+  .map((r, idx) => {
+    const prefix = `${idx + 1}) `;
+    const urlPart = r.url ? ` (source: ${r.url})` : "";
+    return `${prefix}${r.content.trim()}${urlPart}`;
+  })
+  .join("\n\n")}
 
 MANDATORY: After your answer, add this exact section:
 
 ${learnMoreText}
-${uniqueUrls.map(url => `- ${url}`).join("\n")}
+${uniqueUrls.map((url) => `- ${url}`).join("\n")}
 === END KNOWLEDGE BASE RESULTS ===`
       : "";
 
@@ -341,25 +362,26 @@ ${uniqueUrls.map(url => `- ${url}`).join("\n")}
           system: `${systemPromptText}${knowledgeContext}`,
           messages: convertToModelMessages(uiMessages),
           stopWhen: stepCountIs(5),
-          experimental_activeTools:
-            [
-              "searchKnowledge",
-              "createDocument",
-              "updateDocument",
-              "requestSuggestions",
-            ],
+          experimental_activeTools: [
+            "searchKnowledge",
+            "createDocument",
+            "updateDocument",
+            "requestSuggestions",
+          ],
           experimental_transform: smoothStream({ chunking: "word" }),
           tools: {
             searchKnowledge: searchKnowledgeTool,
             // Document tools only available for authenticated users
-            ...(session ? {
-              createDocument: createDocument({ session, dataStream }),
-              updateDocument: updateDocument({ session, dataStream }),
-              requestSuggestions: requestSuggestions({
-                session,
-                dataStream,
-              }),
-            } : {}),
+            ...(session
+              ? {
+                  createDocument: createDocument({ session, dataStream }),
+                  updateDocument: updateDocument({ session, dataStream }),
+                  requestSuggestions: requestSuggestions({
+                    session,
+                    dataStream,
+                  }),
+                }
+              : {}),
           },
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,
@@ -404,7 +426,7 @@ ${uniqueUrls.map(url => `- ${url}`).join("\n")}
         dataStream.merge(
           result.toUIMessageStream({
             sendReasoning: true,
-          })
+          }),
         );
       },
       generateId: generateUUID,
@@ -475,13 +497,22 @@ ${uniqueUrls.map(url => `- ${url}`).join("\n")}
         ) {
           streamErrorMessage =
             "The chatbot model isn’t configured in production (missing OpenAI API key). Add OPENAI_API_KEY in Vercel Environment Variables, then redeploy.";
-        } else if (normalized.includes("401") || normalized.includes("unauthorized")) {
+        } else if (
+          normalized.includes("401") ||
+          normalized.includes("unauthorized")
+        ) {
           streamErrorMessage =
             "The chatbot model credentials were rejected (401). Double-check your OPENAI_API_KEY (or AI Gateway config) in Vercel, then redeploy.";
-        } else if (normalized.includes("429") || normalized.includes("rate limit")) {
+        } else if (
+          normalized.includes("429") ||
+          normalized.includes("rate limit")
+        ) {
           streamErrorMessage =
             "The chatbot is temporarily rate-limited by the model provider. Please wait a minute and try again.";
-        } else if (normalized.includes("timeout") || normalized.includes("timed out")) {
+        } else if (
+          normalized.includes("timeout") ||
+          normalized.includes("timed out")
+        ) {
           streamErrorMessage =
             "The model provider timed out generating a response. Please try again.";
         } else {
@@ -506,7 +537,9 @@ ${uniqueUrls.map(url => `- ${url}`).join("\n")}
     //   );
     // }
 
-    const response = new Response(stream.pipeThrough(new JsonToSseTransformStream()));
+    const response = new Response(
+      stream.pipeThrough(new JsonToSseTransformStream()),
+    );
     return setCorsHeaders(response, origin);
   } catch (error) {
     const vercelId = request.headers.get("x-vercel-id");
@@ -519,14 +552,20 @@ ${uniqueUrls.map(url => `- ${url}`).join("\n")}
     if (
       error instanceof Error &&
       error.message?.includes(
-        "AI Gateway requires a valid credit card on file to service requests"
+        "AI Gateway requires a valid credit card on file to service requests",
       )
     ) {
-      return setCorsHeaders(new ChatSDKError("bad_request:activate_gateway").toResponse(), origin);
+      return setCorsHeaders(
+        new ChatSDKError("bad_request:activate_gateway").toResponse(),
+        origin,
+      );
     }
 
     console.error("Unhandled error in chat API:", error, { vercelId });
-    return setCorsHeaders(new ChatSDKError("offline:chat").toResponse(), origin);
+    return setCorsHeaders(
+      new ChatSDKError("offline:chat").toResponse(),
+      origin,
+    );
   }
 }
 

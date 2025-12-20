@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     if (!sitemapUrl) {
       return Response.json(
         { error: "Sitemap URL is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
         error:
           error instanceof Error ? error.message : "Failed to run ingestion",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

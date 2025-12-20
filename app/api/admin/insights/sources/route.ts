@@ -34,7 +34,7 @@ export async function GET(req: Request) {
     console.error("Error fetching top sources:", error);
     return NextResponse.json(
       { error: "Failed to fetch top sources" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

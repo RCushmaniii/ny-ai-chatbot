@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useRef, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import { nanoid } from "nanoid";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import {
-  widgetMessages,
-  type WidgetLocale,
-  normalizeWidgetLocale,
-  detectWidgetLocaleFromUrl,
   detectWidgetLocaleFromNavigatorLanguage,
+  detectWidgetLocaleFromUrl,
+  normalizeWidgetLocale,
+  type WidgetLocale,
+  widgetMessages,
 } from "@/lib/i18n/widget-messages";
 
 // Translations
@@ -42,50 +42,52 @@ function resolveWidgetLocale(searchParams: URLSearchParams): WidgetLocale {
 function EmbedChatContent() {
   const searchParams = useSearchParams();
   const [embedSettings, setEmbedSettings] = useState<any>(null);
-  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
-  
+  const [_isLoadingSettings, setIsLoadingSettings] = useState(true);
+
   // Detect language from parent page URL or query param
   const [language, setLanguage] = useState<WidgetLocale>("es");
-  
+
   useEffect(() => {
     setLanguage(resolveWidgetLocale(searchParams));
   }, [searchParams]);
-  
+
   // Fetch embed settings from admin
   useEffect(() => {
     fetch("/api/embed/settings")
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         setEmbedSettings(data);
         setIsLoadingSettings(false);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Failed to load embed settings:", err);
         setIsLoadingSettings(false);
       });
   }, []);
-  
+
   // Get translations for current language
   const t = widgetMessages[language];
-  
+
   // Use language-specific defaults, don't let embedSettings override language
   const placeholder = t.placeholder;
   const botIcon = embedSettings?.botIcon || "🎓";
   const suggestedQuestions = t.suggestedQuestions;
-  
-  const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([]);
+
+  const [messages, setMessages] = useState<
+    Array<{ role: string; content: string }>
+  >([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatId = useRef(nanoid());
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
   const handleClose = () => {
     window.parent.postMessage("close-chat", "*");
@@ -97,7 +99,7 @@ function EmbedChatContent() {
 
     const userMessage = input.trim();
     setInput("");
-    setMessages(prev => [...prev, { role: "user", content: userMessage }]);
+    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setIsLoading(true);
 
     try {
@@ -113,13 +115,19 @@ function EmbedChatContent() {
       if (!response.ok) throw new Error("Failed to send message");
 
       const data = await response.json();
-      setMessages(prev => [...prev, { role: "assistant", content: data.response }]);
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: data.response },
+      ]);
     } catch (error) {
       console.error("Error:", error);
-      setMessages(prev => [...prev, { 
-        role: "assistant", 
-        content: t.error
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: t.error,
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -136,6 +144,7 @@ function EmbedChatContent() {
           <h1 className="text-lg font-semibold text-gray-900">{t.title}</h1>
         </div>
         <button
+          type="button"
           onClick={handleClose}
           className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-700"
           aria-label={t.close}
@@ -162,13 +171,18 @@ function EmbedChatContent() {
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full space-y-4 px-4">
             <div className="text-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-2">{t.welcome}</h2>
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                {t.welcome}
+              </h2>
               <p className="text-gray-600">{t.subtitle}</p>
             </div>
             <div className="w-full max-w-md space-y-2">
-              <p className="text-sm font-medium text-gray-700 mb-3">{t.quickQuestions}</p>
+              <p className="text-sm font-medium text-gray-700 mb-3">
+                {t.quickQuestions}
+              </p>
               {suggestedQuestions.map((question: string, idx: number) => (
                 <button
+                  type="button"
                   key={idx}
                   onClick={() => setInput(question)}
                   className="w-full text-left px-4 py-3 bg-white border border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all text-sm text-gray-700 hover:text-blue-700"
@@ -190,44 +204,71 @@ function EmbedChatContent() {
                   ? "bg-blue-600"
                   : "bg-white border border-gray-200"
               }`}
-              style={msg.role === "user" ? { color: "#ffffff", wordBreak: "break-word", overflowWrap: "break-word" } : { wordBreak: "break-word", overflowWrap: "break-word" }}
+              style={
+                msg.role === "user"
+                  ? {
+                      color: "#ffffff",
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                    }
+                  : { wordBreak: "break-word", overflowWrap: "break-word" }
+              }
             >
               <div className="text-sm leading-relaxed">
                 <ReactMarkdown
                   components={{
                     p: ({ children }) => (
-                      <p className="mb-2 last:mb-0 wrap-break-word" style={msg.role === "user" ? { color: "#ffffff" } : {}}>
+                      <p
+                        className="mb-2 last:mb-0 wrap-break-word"
+                        style={msg.role === "user" ? { color: "#ffffff" } : {}}
+                      >
                         {children}
                       </p>
                     ),
                     strong: ({ children }) => (
-                      <strong className="font-semibold wrap-break-word" style={msg.role === "user" ? { color: "#ffffff" } : {}}>
+                      <strong
+                        className="font-semibold wrap-break-word"
+                        style={msg.role === "user" ? { color: "#ffffff" } : {}}
+                      >
                         {children}
                       </strong>
                     ),
                     a: ({ href, children }) => (
-                      <a 
-                        href={href} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className={msg.role === "user" ? "underline hover:opacity-80 break-all" : "text-blue-600 hover:underline break-all"}
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={
+                          msg.role === "user"
+                            ? "underline hover:opacity-80 break-all"
+                            : "text-blue-600 hover:underline break-all"
+                        }
                         style={msg.role === "user" ? { color: "#ffffff" } : {}}
                       >
                         {children}
                       </a>
                     ),
                     ul: ({ children }) => (
-                      <ul className="list-disc pl-4 mb-2" style={msg.role === "user" ? { color: "#ffffff" } : {}}>
+                      <ul
+                        className="list-disc pl-4 mb-2"
+                        style={msg.role === "user" ? { color: "#ffffff" } : {}}
+                      >
                         {children}
                       </ul>
                     ),
                     ol: ({ children }) => (
-                      <ol className="list-decimal pl-4 mb-2" style={msg.role === "user" ? { color: "#ffffff" } : {}}>
+                      <ol
+                        className="list-decimal pl-4 mb-2"
+                        style={msg.role === "user" ? { color: "#ffffff" } : {}}
+                      >
                         {children}
                       </ol>
                     ),
                     li: ({ children }) => (
-                      <li className="mb-1" style={msg.role === "user" ? { color: "#ffffff" } : {}}>
+                      <li
+                        className="mb-1"
+                        style={msg.role === "user" ? { color: "#ffffff" } : {}}
+                      >
                         {children}
                       </li>
                     ),
@@ -244,8 +285,14 @@ function EmbedChatContent() {
             <div className="bg-gray-100 rounded-lg px-4 py-2">
               <div className="flex space-x-2">
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                <div
+                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                  style={{ animationDelay: "0.1s" }}
+                ></div>
+                <div
+                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                  style={{ animationDelay: "0.2s" }}
+                ></div>
               </div>
             </div>
           </div>
@@ -263,7 +310,6 @@ function EmbedChatContent() {
             placeholder={placeholder}
             className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 bg-white"
             disabled={isLoading}
-            autoFocus
           />
           <button
             type="submit"
@@ -294,7 +340,13 @@ function EmbedChatContent() {
 
 export default function EmbedChatPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-screen">
+          Loading...
+        </div>
+      }
+    >
       <EmbedChatContent />
     </Suspense>
   );

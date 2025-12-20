@@ -1,9 +1,9 @@
+import type { Request as PlaywrightRequest } from "@playwright/test";
 import { getMessageByErrorCode } from "@/lib/errors";
 import { expect, test } from "../fixtures";
 import { generateRandomTestUser } from "../helpers";
 import { AuthPage } from "../pages/auth";
 import { ChatPage } from "../pages/chat";
-import type { Request as PlaywrightRequest } from "@playwright/test";
 
 test.describe
   .serial("Guest Session", () => {
@@ -204,7 +204,7 @@ test.describe("Entitlements", () => {
 
     await chatPage.sendUserMessage("Why is the sky blue?");
     await chatPage.expectToastToContain(
-      getMessageByErrorCode("rate_limit:chat")
+      getMessageByErrorCode("rate_limit:chat"),
     );
   });
 });

@@ -131,7 +131,7 @@ export function getClientIdentifier(request: Request): string {
   // Try to get IP from headers (Vercel provides this)
   const forwardedFor = request.headers.get("x-forwarded-for");
   const realIp = request.headers.get("x-real-ip");
-  
+
   return forwardedFor?.split(",")[0] || realIp || "unknown";
 }
 

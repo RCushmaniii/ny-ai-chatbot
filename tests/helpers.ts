@@ -35,20 +35,20 @@ export async function createAuthenticatedContext({
   const context = await browser.newContext();
   const page = await context.newPage();
 
-  const email = `test-${name}@playwright.com`;
-  const password = generateId();
+  // Use existing admin credentials for testing
+  const email = "admin@example.com";
+  const password = "admin123";
 
-  await page.goto("http://localhost:3000/register");
+  await page.goto("http://localhost:3000/login");
   await page.getByPlaceholder("user@acme.com").click();
   await page.getByPlaceholder("user@acme.com").fill(email);
   await page.getByLabel("Password").click();
   await page.getByLabel("Password").fill(password);
-  await page.getByRole("button", { name: "Sign Up" }).click();
+  await page.getByRole("button", { name: "Sign in" }).click();
 
-  await expect(page.getByTestId("toast")).toContainText(
-    "Account created successfully!"
-  );
-
+  // Wait for successful login
+  await page.waitForURL("**/admin");
+  
   const chatPage = new ChatPage(page);
   await chatPage.createNewChat();
   await chatPage.chooseModelFromSelector("chat-model-reasoning");

@@ -45,7 +45,9 @@ export function normalizeWidgetLocale(input: LocaleInput): WidgetLocale | null {
   return null;
 }
 
-export function detectWidgetLocaleFromUrl(url: LocaleInput): WidgetLocale | null {
+export function detectWidgetLocaleFromUrl(
+  url: LocaleInput,
+): WidgetLocale | null {
   if (!url) return null;
   const lower = url.toLowerCase();
 

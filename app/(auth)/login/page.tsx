@@ -20,7 +20,7 @@ export default function Page() {
     login,
     {
       status: "idle",
-    }
+    },
   );
 
   const { update: updateSession } = useSession();
@@ -42,7 +42,7 @@ export default function Page() {
       router.refresh();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.status]);
+  }, [router, state.status, updateSession]);
 
   const handleSubmit = (formData: FormData) => {
     setEmail(formData.get("email") as string);

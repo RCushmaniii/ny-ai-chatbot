@@ -1,8 +1,8 @@
-import { tool, embed } from "ai";
-import { z } from "zod";
 import { openai } from "@ai-sdk/openai";
-import postgres from "postgres";
+import { embed, tool } from "ai";
 import { createHash } from "crypto";
+import postgres from "postgres";
+import { z } from "zod";
 import { logKnowledgeEvent } from "./log-knowledge-event";
 
 // Shared Postgres client for knowledge searches.
@@ -27,7 +27,11 @@ function safeParseMetadata(value: unknown): Record<string, any> {
   }
 }
 
-function stableChunkId(sourceTable: string, url: string | null, content: string) {
+function stableChunkId(
+  sourceTable: string,
+  url: string | null,
+  content: string,
+) {
   const base = `${sourceTable}::${url ?? ""}::${content.slice(0, 500)}`;
   return createHash("sha1").update(base).digest("hex");
 }
@@ -46,7 +50,7 @@ export async function searchKnowledgeDirect(
     chatId?: string;
     messageId?: string;
     sessionId?: string;
-  }
+  },
 ): Promise<KnowledgeSearchResult[]> {
   try {
     const trimmed = query.trim();
@@ -57,32 +61,37 @@ export async function searchKnowledgeDirect(
     const cacheKey = trimmed.toLowerCase();
     const cachedEmbedding = embeddingCache.get(cacheKey);
     const cacheTime = cacheTimestamps.get(cacheKey);
-    
-    if (cachedEmbedding && cacheTime && (Date.now() - cacheTime < CACHE_TTL)) {
-      console.log(`📦 Using cached embedding for: "${trimmed.substring(0, 50)}..."`);
+
+    if (cachedEmbedding && cacheTime && Date.now() - cacheTime < CACHE_TTL) {
+      console.log(
+        `📦 Using cached embedding for: "${trimmed.substring(0, 50)}..."`,
+      );
       embedding = cachedEmbedding;
     } else {
       try {
-        console.log(`🔄 Generating new embedding for: "${trimmed.substring(0, 50)}..."`);
+        console.log(
+          `🔄 Generating new embedding for: "${trimmed.substring(0, 50)}..."`,
+        );
         const result = await embed({
           model: openai.embedding("text-embedding-3-small"),
           value: trimmed,
         });
         embedding = result.embedding;
-        
+
         // Cache the embedding
         embeddingCache.set(cacheKey, embedding);
         cacheTimestamps.set(cacheKey, Date.now());
-        
+
         // Clean up old cache entries (keep cache size manageable)
         if (embeddingCache.size > 100) {
-          const oldestKey = Array.from(cacheTimestamps.entries())
-            .sort((a, b) => a[1] - b[1])[0][0];
+          const oldestKey = Array.from(cacheTimestamps.entries()).sort(
+            (a, b) => a[1] - b[1],
+          )[0][0];
           embeddingCache.delete(oldestKey);
           cacheTimestamps.delete(oldestKey);
         }
       } catch (embedError) {
-        console.error('⚠️  Embedding generation failed:', embedError);
+        console.error("⚠️  Embedding generation failed:", embedError);
         return []; // Return empty results if embedding fails
       }
     }
@@ -108,56 +117,60 @@ export async function searchKnowledgeDirect(
       LIMIT ${MANUAL_TOP_K}
     `);
 
-    const websiteMapped: KnowledgeSearchResult[] = websiteResults.map((row: any) => {
-      const parsed = safeParseMetadata(row.metadata);
-      const url = (row.url as string) ?? null;
-      const content = row.content as string;
-      const chunkId =
-        parsed?.chunkId ?? stableChunkId("website_content", url, content);
-      return {
-        content,
-        url,
-        similarity: Number(row.similarity),
-        metadata: {
-          ...parsed,
-          sourceTable: "website_content",
-          sourceType: "website",
-          chunkId,
-        },
-      };
-    });
+    const websiteMapped: KnowledgeSearchResult[] = websiteResults.map(
+      (row: any) => {
+        const parsed = safeParseMetadata(row.metadata);
+        const url = (row.url as string) ?? null;
+        const content = row.content as string;
+        const chunkId =
+          parsed?.chunkId ?? stableChunkId("website_content", url, content);
+        return {
+          content,
+          url,
+          similarity: Number(row.similarity),
+          metadata: {
+            ...parsed,
+            sourceTable: "website_content",
+            sourceType: "website",
+            chunkId,
+          },
+        };
+      },
+    );
 
-    const manualMappedAll: KnowledgeSearchResult[] = manualResults.map((row: any) => {
-      const parsed = safeParseMetadata(row.metadata);
-      const inferredSourceType = parsed?.sourceType ?? (parsed?.sourceFile ? "pdf" : "manual");
-      const url = (row.url as string) ?? null;
-      const content = row.content as string;
-      const chunkId = parsed?.chunkId ?? `Document_Knowledge:${String(row.id)}`;
-      return {
-        content,
-        url,
-        similarity: Number(row.similarity),
-        metadata: {
-          ...parsed,
-          sourceTable: "Document_Knowledge",
-          sourceType: inferredSourceType,
-          chunkId,
-        },
-      };
-    });
+    const manualMappedAll: KnowledgeSearchResult[] = manualResults.map(
+      (row: any) => {
+        const parsed = safeParseMetadata(row.metadata);
+        const inferredSourceType =
+          parsed?.sourceType ?? (parsed?.sourceFile ? "pdf" : "manual");
+        const url = (row.url as string) ?? null;
+        const content = row.content as string;
+        const chunkId =
+          parsed?.chunkId ?? `Document_Knowledge:${String(row.id)}`;
+        return {
+          content,
+          url,
+          similarity: Number(row.similarity),
+          metadata: {
+            ...parsed,
+            sourceTable: "Document_Knowledge",
+            sourceType: inferredSourceType,
+            chunkId,
+          },
+        };
+      },
+    );
 
     const manualMapped = manualMappedAll.filter(
-      (r) => Number(r.similarity) >= MANUAL_SIMILARITY_THRESHOLD
+      (r) => Number(r.similarity) >= MANUAL_SIMILARITY_THRESHOLD,
     );
 
     if (process.env.NODE_ENV !== "production") {
-      const top = manualMappedAll
-        .slice(0, 5)
-        .map((r) => ({
-          similarity: Number(r.similarity),
-          sourceFile: r.metadata?.sourceFile,
-          sourceType: r.metadata?.sourceType,
-        }));
+      const top = manualMappedAll.slice(0, 5).map((r) => ({
+        similarity: Number(r.similarity),
+        sourceFile: r.metadata?.sourceFile,
+        sourceType: r.metadata?.sourceType,
+      }));
       console.log("[RAG] Document_Knowledge candidates:", {
         total: manualMappedAll.length,
         passed: manualMapped.length,
@@ -202,10 +215,11 @@ export async function searchKnowledgeDirect(
         "why",
       ]);
 
-      const words = trimmed
-        .toLowerCase()
-        .match(/[a-z0-9]+/g)
-        ?.filter((w) => w.length >= 4 && !stopWords.has(w)) ?? [];
+      const words =
+        trimmed
+          .toLowerCase()
+          .match(/[a-z0-9]+/g)
+          ?.filter((w) => w.length >= 4 && !stopWords.has(w)) ?? [];
 
       const keywordTerms = Array.from(new Set(words)).slice(0, 5);
       const fallbackTerms =
@@ -234,10 +248,12 @@ export async function searchKnowledgeDirect(
       const deduped = new Map<string, KnowledgeSearchResult>();
       for (const row of keywordRows) {
         const parsed = safeParseMetadata(row.metadata);
-        const inferredSourceType = parsed?.sourceType ?? (parsed?.sourceFile ? "pdf" : "manual");
+        const inferredSourceType =
+          parsed?.sourceType ?? (parsed?.sourceFile ? "pdf" : "manual");
         const url = (row.url as string) ?? null;
         const content = row.content as string;
-        const chunkId = parsed?.chunkId ?? `Document_Knowledge:${String(row.id)}`;
+        const chunkId =
+          parsed?.chunkId ?? `Document_Knowledge:${String(row.id)}`;
         const mapped: KnowledgeSearchResult = {
           content,
           url,
@@ -287,9 +303,7 @@ export const searchKnowledgeTool = tool({
     "Search the knowledge base for information about New York English Teacher services, pricing, coaching approach, and business details. Use this when the user asks about services, pricing, coaching methods, or any business-related questions. ALWAYS include the source URL in your response when referencing information.",
 
   inputSchema: z.object({
-    query: z
-      .string()
-      .describe("The search query to find relevant information"),
+    query: z.string().describe("The search query to find relevant information"),
   }),
 
   execute: async (input) => {
@@ -314,7 +328,8 @@ export const searchKnowledgeTool = tool({
 
     return {
       results: formattedResults,
-      instruction: "When answering, include the source URL(s) so users can learn more. Format as: 'Learn more: [URL]' or 'Read more about this: [URL]'",
+      instruction:
+        "When answering, include the source URL(s) so users can learn more. Format as: 'Learn more: [URL]' or 'Read more about this: [URL]'",
     };
   },
 });

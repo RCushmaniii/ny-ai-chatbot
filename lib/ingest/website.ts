@@ -54,7 +54,9 @@ function createClient() {
   return postgres(process.env.POSTGRES_URL!);
 }
 
-async function fetchSitemapUrls(config: typeof DEFAULT_CONFIG): Promise<string[]> {
+async function fetchSitemapUrls(
+  config: typeof DEFAULT_CONFIG,
+): Promise<string[]> {
   const sitemapUrl = config.sitemapUrl;
   console.log("📥 Fetching sitemap:", sitemapUrl);
 
@@ -62,7 +64,9 @@ async function fetchSitemapUrls(config: typeof DEFAULT_CONFIG): Promise<string[]
     const response = await fetch(sitemapUrl);
 
     if (!response.ok) {
-      console.warn(`⚠️  Sitemap not found at ${sitemapUrl}, using fallback URLs`);
+      console.warn(
+        `⚠️  Sitemap not found at ${sitemapUrl}, using fallback URLs`,
+      );
       return getFallbackUrls();
     }
 
@@ -140,7 +144,10 @@ async function scrapePage(url: string): Promise<PageData | null> {
   }
 }
 
-function splitIntoChunks(page: PageData, config: typeof DEFAULT_CONFIG): Chunk[] {
+function splitIntoChunks(
+  page: PageData,
+  config: typeof DEFAULT_CONFIG,
+): Chunk[] {
   const chunks: Chunk[] = [];
   const { content, url, title, description } = page;
 
@@ -173,7 +180,11 @@ function splitIntoChunks(page: PageData, config: typeof DEFAULT_CONFIG): Chunk[]
   return chunks;
 }
 
-async function storeChunk(client: postgres.Sql, config: typeof DEFAULT_CONFIG, chunk: Chunk): Promise<void> {
+async function storeChunk(
+  client: postgres.Sql,
+  config: typeof DEFAULT_CONFIG,
+  chunk: Chunk,
+): Promise<void> {
   const { content, metadata } = chunk;
 
   const { embedding } = await embed({
@@ -193,7 +204,9 @@ async function storeChunk(client: postgres.Sql, config: typeof DEFAULT_CONFIG, c
   `;
 }
 
-export async function ingestWebsite(options: IngestOptions = {}): Promise<IngestStats> {
+export async function ingestWebsite(
+  options: IngestOptions = {},
+): Promise<IngestStats> {
   const config: typeof DEFAULT_CONFIG = {
     ...DEFAULT_CONFIG,
     ...(options.sitemapUrl ? { sitemapUrl: options.sitemapUrl } : {}),

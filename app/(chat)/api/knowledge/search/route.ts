@@ -2,13 +2,21 @@ import { openai } from "@ai-sdk/openai";
 import { embed } from "ai";
 import postgres from "postgres";
 
-// Create a singleton pool for serverless environments
-const client = postgres(process.env.POSTGRES_URL!, {
-  max: 1, // Limit connections in serverless
-});
-
 export async function POST(req: Request) {
   try {
+    const postgresUrl = process.env.POSTGRES_URL;
+    if (!postgresUrl) {
+      return Response.json(
+        { error: "Database not configured" },
+        { status: 500 },
+      );
+    }
+
+    // Create a singleton pool for serverless environments
+    const client = postgres(postgresUrl, {
+      max: 1, // Limit connections in serverless
+    });
+
     const { query, limit = 4 } = await req.json();
 
     if (!query) {
@@ -37,20 +45,23 @@ export async function POST(req: Request) {
     // Format context for the LLM
     const contextText = results
       .map((r) => {
-        const meta = typeof r.metadata === 'string' ? JSON.parse(r.metadata) : r.metadata;
-        return `SOURCE: ${meta.title || 'Untitled'} (${r.url})\nCONTENT: ${r.content}`;
+        const meta =
+          typeof r.metadata === "string" ? JSON.parse(r.metadata) : r.metadata;
+        return `SOURCE: ${meta.title || "Untitled"} (${r.url})\nCONTENT: ${r.content}`;
       })
       .join("\n\n---\n\n");
 
-    return Response.json({ 
+    return Response.json({
       context: contextText,
-      sources: results.map(r => ({
+      sources: results.map((r) => ({
         url: r.url,
-        title: typeof r.metadata === 'string' ? JSON.parse(r.metadata).title : r.metadata?.title,
-        similarity: r.similarity
-      }))
+        title:
+          typeof r.metadata === "string"
+            ? JSON.parse(r.metadata).title
+            : r.metadata?.title,
+        similarity: r.similarity,
+      })),
     });
-
   } catch (error) {
     console.error("Knowledge search error:", error);
     return Response.json({ error: "Search failed" }, { status: 500 });

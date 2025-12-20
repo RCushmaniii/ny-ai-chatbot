@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Loader2, RotateCcw, Save } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -13,7 +11,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2, Save, RotateCcw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 const DEFAULT_INSTRUCTIONS = `I am an AI assistant for New York English Teacher (nyenglishteacher.com), a professional English coaching service run by Robert Cushman.
 
@@ -51,11 +51,7 @@ export function AdminSystemInstructions() {
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch("/api/admin/settings");
@@ -79,7 +75,11 @@ export function AdminSystemInstructions() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -110,7 +110,7 @@ export function AdminSystemInstructions() {
   const handleReset = () => {
     if (
       confirm(
-        "Are you sure you want to reset to default instructions? This will overwrite your current custom instructions."
+        "Are you sure you want to reset to default instructions? This will overwrite your current custom instructions.",
       )
     ) {
       setCustomInstructions(DEFAULT_INSTRUCTIONS);
@@ -224,12 +224,12 @@ export function AdminSystemInstructions() {
             different scenarios
           </p>
           <p>
-            • <strong>Set boundaries:</strong> Define the scope of knowledge
-            and when to escalate to humans
+            • <strong>Set boundaries:</strong> Define the scope of knowledge and
+            when to escalate to humans
           </p>
           <p>
-            • <strong>Define tone:</strong> Specify if the bot should be
-            formal, casual, encouraging, etc.
+            • <strong>Define tone:</strong> Specify if the bot should be formal,
+            casual, encouraging, etc.
           </p>
           <p>
             • <strong>Risk-averse approach:</strong> Include guidelines for

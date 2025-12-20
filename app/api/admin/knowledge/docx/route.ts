@@ -8,10 +8,6 @@ import { documents } from "@/lib/db/schema";
 
 export const runtime = "nodejs";
 
-// biome-ignore lint: Forbidden non-null assertion.
-const client = postgres(process.env.POSTGRES_URL!);
-const db = drizzle(client);
-
 function getAdminEmail() {
   return (
     process.env.ADMIN_EMAIL ||
@@ -56,12 +52,21 @@ export async function POST(request: Request) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  const postgresUrl = process.env.POSTGRES_URL;
+  if (!postgresUrl) {
+    return Response.json({ error: "Database not configured" }, { status: 500 });
+  }
+
+  const client = postgres(postgresUrl);
+  const db = drizzle(client);
+
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const type = (formData.get("type") as string) || "general";
     const language = (formData.get("language") as string) || "en";
-    const url = (formData.get("url") as string) || "https://www.nyenglishteacher.com";
+    const url =
+      (formData.get("url") as string) || "https://www.nyenglishteacher.com";
 
     if (!file) {
       return Response.json({ error: "No file provided" }, { status: 400 });
@@ -73,7 +78,7 @@ export async function POST(request: Request) {
           error:
             "Invalid file type. Only DOCX files are supported for this endpoint.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -83,14 +88,14 @@ export async function POST(request: Request) {
     if (buffer.length === 0) {
       return Response.json(
         { error: "DOCX file is empty or corrupted" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (buffer.length > MAX_FILE_BYTES) {
       return Response.json(
         { error: "DOCX file is too large" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -103,7 +108,7 @@ export async function POST(request: Request) {
           error:
             "No text content found in DOCX. The document may be empty or unsupported.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -131,10 +136,11 @@ export async function POST(request: Request) {
     return Response.json({ success: true }, { status: 200 });
   } catch (error) {
     console.error("Error processing DOCX knowledge upload:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     return Response.json(
       { error: `Failed to process DOCX: ${errorMessage}` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

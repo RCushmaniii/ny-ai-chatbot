@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
 import {
-  getRagHitRatio,
-  getTopSources,
   getMissingKnowledge,
-  getTopChunks,
+  getRagHitRatio,
   getRagTrends,
+  getTopChunks,
+  getTopSources,
 } from "@/lib/db/queries";
 
 function isMissingRelationError(error: unknown, relationName: string) {
@@ -56,13 +56,14 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const days = Number(searchParams.get("days") ?? 30);
 
-    const [hitRatio, topSources, missing, topChunks, trends] = await Promise.all([
-      getRagHitRatio(days),
-      getTopSources({ days, limit: 10 }),
-      getMissingKnowledge({ days, limit: 20 }),
-      getTopChunks({ days, limit: 20 }),
-      getRagTrends(days),
-    ]);
+    const [hitRatio, topSources, missing, topChunks, trends] =
+      await Promise.all([
+        getRagHitRatio(days),
+        getTopSources({ days, limit: 10 }),
+        getMissingKnowledge({ days, limit: 20 }),
+        getTopChunks({ days, limit: 20 }),
+        getRagTrends(days),
+      ]);
 
     return NextResponse.json({
       hitRatio,
@@ -95,13 +96,16 @@ export async function GET(req: Request) {
           ...emptyOverviewResponse(),
           ...(details ? { details } : {}),
         },
-        { status: 200 }
+        { status: 200 },
       );
     }
 
     return NextResponse.json(
-      { error: "Failed to fetch insights overview", ...(details ? { details } : {}) },
-      { status: 500 }
+      {
+        error: "Failed to fetch insights overview",
+        ...(details ? { details } : {}),
+      },
+      { status: 500 },
     );
   }
 }

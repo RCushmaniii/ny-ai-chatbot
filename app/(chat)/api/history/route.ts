@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   if (startingAfter && endingBefore) {
     return new ChatSDKError(
       "bad_request:api",
-      "Only one of starting_after or ending_before can be provided."
+      "Only one of starting_after or ending_before can be provided.",
     ).toResponse();
   }
 
@@ -38,6 +38,6 @@ export async function DELETE() {
   // Deleting all chats for a session is less common in anonymous mode
   return new ChatSDKError(
     "bad_request:history",
-    "Bulk delete not available for anonymous sessions"
+    "Bulk delete not available for anonymous sessions",
   ).toResponse();
 }
