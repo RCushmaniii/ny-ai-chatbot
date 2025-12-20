@@ -77,7 +77,7 @@ async function fetchSitemapUrls(): Promise<string[]> {
 
     console.log(`✅ Found ${urls.length} URLs in sitemap (English + Spanish)`);
     return urls.length > 0 ? urls : getFallbackUrls();
-  } catch (error) {
+  } catch (_error) {
     console.warn("⚠️  Failed to parse sitemap, using fallback URLs");
     return getFallbackUrls();
   }

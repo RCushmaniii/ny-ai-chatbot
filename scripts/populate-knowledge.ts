@@ -43,7 +43,7 @@ async function populateKnowledgeBase() {
   try {
     await client.unsafe("CREATE EXTENSION IF NOT EXISTS vector");
     console.log("✅ pgvector extension enabled\n");
-  } catch (error) {
+  } catch (_error) {
     console.log("⚠️  pgvector extension may already exist\n");
   }
 

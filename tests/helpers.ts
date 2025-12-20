@@ -48,7 +48,7 @@ export async function createAuthenticatedContext({
 
   // Wait for successful login
   await page.waitForURL("**/admin");
-  
+
   const chatPage = new ChatPage(page);
   await chatPage.createNewChat();
   await chatPage.chooseModelFromSelector("chat-model-reasoning");
