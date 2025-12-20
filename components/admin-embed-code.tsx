@@ -31,8 +31,6 @@ export function AdminEmbedCode() {
     ],
   });
 
-  const botId = "YOUR_BOT_ID"; // This will be dynamic based on user's bot
-
   const generateEmbedCode = () => {
     const params = [];
     if (settings.welcomeMessage) params.push(`welcomeMessage="${settings.welcomeMessage}"`);
@@ -50,8 +48,7 @@ export function AdminEmbedCode() {
 
     return `<script 
   async 
-  src="${typeof window !== 'undefined' ? window.location.origin : ''}/api/embed" 
-  id="${botId}"
+  src="${typeof window !== 'undefined' ? window.location.origin : ''}/api/embed?id=default" 
   ${params.join('\n  ')}
 ></script>`;
   };
