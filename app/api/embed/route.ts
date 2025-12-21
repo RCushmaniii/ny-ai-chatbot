@@ -78,7 +78,7 @@ export async function GET(request: Request) {
     autoOpen: (getAttr('open') || 'false') === 'true',
     language,
     placeholder: getAttr('placeholder') || serverSettings.placeholder || defaultPlaceholder,
-    botIcon: serverSettings.botIcon || '💬',
+    botIcon: getAttr('botIcon') || getAttr('bot-icon') || serverSettings.botIcon || '💬',
   };
 
   const iframeId = 'nyenglish-chat-iframe';
