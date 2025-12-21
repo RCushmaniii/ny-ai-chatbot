@@ -54,17 +54,31 @@ export async function GET(request: Request) {
     ? 'Escribe tu mensaje...'
     : 'Type your message...';
 
+  // Fetch custom settings from admin panel
+  let serverSettings = {};
+  try {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', CHAT_APP_URL + '/api/embed/settings', false); // Synchronous for simplicity
+    xhr.send();
+    if (xhr.status === 200) {
+      serverSettings = JSON.parse(xhr.responseText);
+    }
+  } catch (e) {
+    console.warn('Failed to load custom embed settings, using defaults');
+  }
+
   const config = {
-    welcomeMessage: getAttr('welcome-message') || getAttr('welcomeMessage') || defaultWelcomeMessage,
-    welcomeGif: getAttr('welcome-gif') || getAttr('welcomeGif') || '',
+    welcomeMessage: getAttr('welcome-message') || getAttr('welcomeMessage') || serverSettings.welcomeMessage || defaultWelcomeMessage,
+    welcomeGif: getAttr('welcome-gif') || getAttr('welcomeGif') || serverSettings.welcomeGif || '',
     showWelcomeMessage: (getAttr('show-welcome-message') || getAttr('showWelcomeMessage') || 'true') !== 'false',
-    buttonColor: getAttr('button-color') || getAttr('buttonColor') || '#4f46e5',
-    buttonSize: parseFloat(getAttr('button-size') || getAttr('buttonSize') || '1'),
-    position: getAttr('position') || 'bottom-right',
+    buttonColor: getAttr('button-color') || getAttr('buttonColor') || serverSettings.buttonColor || '#4f46e5',
+    buttonSize: parseFloat(getAttr('button-size') || getAttr('buttonSize') || serverSettings.buttonSize || '1'),
+    position: getAttr('position') || serverSettings.position || 'bottom-right',
     openDelay: parseInt(getAttr('open-delay') || getAttr('openDelay') || '5000'),
     autoOpen: (getAttr('open') || 'false') === 'true',
     language,
-    placeholder: getAttr('placeholder') || defaultPlaceholder,
+    placeholder: getAttr('placeholder') || serverSettings.placeholder || defaultPlaceholder,
+    botIcon: serverSettings.botIcon || '💬',
   };
 
   const iframeId = 'nyenglish-chat-iframe';
@@ -159,7 +173,12 @@ export async function GET(request: Request) {
 
     const button = document.createElement('button');
     button.id = buttonId;
-    button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>';
+    // Use custom icon (emoji or text) if provided, otherwise use default chat SVG
+    if (config.botIcon) {
+      button.innerHTML = '<span style="font-size:32px;line-height:1;">' + config.botIcon + '</span>';
+    } else {
+      button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>';
+    }
     button.style.cssText = 'display:flex;align-items:center;justify-content:center;opacity:1;position:fixed;z-index:2147483647;width:60px;height:60px;border-radius:50%;background-color:' + config.buttonColor + ';color:white;border:none;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15);transition:transform 200ms,box-shadow 200ms;transform:scale(' + config.buttonSize + ');transform-origin:bottom ' + (config.position === 'bottom-right' ? 'right' : 'left') + ';bottom:20px;padding:0;';
     button.style[config.position === 'bottom-right' ? 'right' : 'left'] = '20px';
     button.onmouseover = () => { button.style.transform = 'scale(' + (config.buttonSize * 1.1) + ')'; button.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)'; };
