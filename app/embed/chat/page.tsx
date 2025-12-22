@@ -199,57 +199,64 @@ function EmbedChatContent() {
 
   return (
     <div className="flex flex-col h-screen bg-white">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-white shadow-sm">
+      {/* Unified Header - NY Navy with professional styling */}
+      <div className="flex items-center justify-between px-5 py-4 bg-[#0F172A] text-white">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-2xl">
-            {botIcon}
+          <div className="w-11 h-11 rounded-full bg-white flex items-center justify-center p-1.5 shrink-0">
+            <span className="text-2xl">{botIcon}</span>
           </div>
-          <h1 className="text-lg font-semibold text-gray-900">{t.title}</h1>
+          <div>
+            <h1 className="text-base font-semibold leading-tight">NY English AI Coach</h1>
+            <p className="text-[13px] opacity-80 leading-tight mt-0.5">
+              {language === 'es' ? 'Tu asistente académico 24/7' : 'Your 24/7 academic assistant'}
+            </p>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={handleClose}
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-700"
-          aria-label={t.close}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+        {/* Hide close button when embedded on a page, show only in popup widget */}
+        {!isEmbedded && (
+          <button
+            type="button"
+            onClick={handleClose}
+            className="p-1 opacity-70 hover:opacity-100 transition-opacity"
+            aria-label={t.close}
           >
-            <path d="M18 6 6 18" />
-            <path d="m6 6 12 12" />
-          </svg>
-        </button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </button>
+        )}
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+      {/* Messages - Professional light background */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#F8FAFC]">
         {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full space-y-4 px-4">
-            <div className="text-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-2">
-                {t.welcome}
+          <div className="flex flex-col items-center justify-center h-full space-y-6 px-4">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-[#334155] mb-2">
+                {language === 'es' ? 'Hola. ¿Cómo puedo ayudarte hoy?' : 'Hello. How can I assist you today?'}
               </h2>
-              <p className="text-gray-600">{t.subtitle}</p>
             </div>
-            <div className="w-full max-w-md space-y-2">
-              <p className="text-sm font-medium text-gray-700 mb-3">
-                {t.quickQuestions}
+            <div className="w-full max-w-md space-y-2.5">
+              <p className="text-sm font-medium text-[#64748B] mb-3">
+                {language === 'es' ? 'Temas sugeridos:' : 'Suggested topics:'}
               </p>
               {suggestedQuestions.map((question: string, idx: number) => (
                 <button
                   type="button"
                   key={idx}
                   onClick={() => setInput(question)}
-                  className="w-full text-left px-4 py-3 bg-white border border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all text-sm text-gray-700 hover:text-blue-700"
+                  className="w-full text-left px-4 py-3 bg-white border border-[#E2E8F0] rounded-xl hover:border-[#C2A45F] hover:bg-[#FFFDF5] transition-all text-sm text-[#0F172A] font-medium shadow-sm hover:shadow-md hover:-translate-y-0.5"
                 >
                   {question}
                 </button>
@@ -364,19 +371,18 @@ function EmbedChatContent() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <form onSubmit={handleSubmit} className="p-4 border-t bg-white shadow-lg">
-        <div className="flex gap-3">
+      {/* Input - Modern pill-shaped design with gold accent */}
+      <form onSubmit={handleSubmit} className="px-5 py-4 bg-white border-t border-[#E2E8F0]">
+        <div className="flex gap-2.5 items-center bg-[#F8FAFC] px-4 py-2 rounded-full border border-[#E2E8F0] focus-within:border-[#C2A45F] transition-colors">
           <input
             ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={placeholder}
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 bg-white"
+            className="flex-1 bg-transparent border-none outline-none text-sm text-[#334155] placeholder-[#A0AEC0]"
             disabled={isLoading}
             onFocus={(e) => {
-              // Prevent scroll when input receives focus
               e.preventDefault();
               if (isEmbedded && inputRef.current) {
                 inputRef.current.focus({ preventScroll: true });
@@ -386,22 +392,16 @@ function EmbedChatContent() {
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium shadow-sm hover:shadow-md"
+            className="w-9 h-9 bg-[#C2A45F] hover:bg-[#B09351] text-[#0F172A] rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 shrink-0"
+            aria-label={language === 'es' ? 'Enviar mensaje' : 'Send message'}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
               viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="inline-block"
+              fill="currentColor"
+              className="w-[18px] h-[18px] ml-0.5"
             >
-              <path d="m22 2-7 20-4-9-9-4Z" />
-              <path d="M22 2 11 13" />
+              <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
             </svg>
           </button>
         </div>
