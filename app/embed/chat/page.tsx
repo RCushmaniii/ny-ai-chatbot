@@ -47,9 +47,67 @@ function EmbedChatContent() {
   // Detect language from parent page URL or query param
   const [language, setLanguage] = useState<WidgetLocale>("es");
 
+  // Detect if we're embedded in an iframe
+  const isEmbedded = typeof window !== 'undefined' && window.self !== window.top;
+
   useEffect(() => {
     setLanguage(resolveWidgetLocale(searchParams));
   }, [searchParams]);
+
+  // Prevent autofocus behavior when embedded
+  useEffect(() => {
+    if (!isEmbedded) return;
+
+    // Remove any autofocus attributes
+    const removeAutofocus = () => {
+      document.querySelectorAll('[autofocus]').forEach((el) => {
+        el.removeAttribute('autofocus');
+      });
+    };
+
+    // Blur any focused element on load
+    const preventInitialFocus = () => {
+      if (document.activeElement && document.activeElement !== document.body) {
+        (document.activeElement as HTMLElement).blur();
+      }
+    };
+
+    // Override scrollIntoView to prevent iframe from scrolling parent
+    const originalScrollIntoView = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = function(arg?: boolean | ScrollIntoViewOptions) {
+      // Only allow scrolling within the iframe, not the parent
+      if (typeof arg === 'object') {
+        arg = { ...arg, block: 'nearest', inline: 'nearest' };
+      }
+      return originalScrollIntoView.call(this, arg);
+    };
+
+    // Prevent focus events from triggering scroll
+    const preventFocusScroll = (e: FocusEvent) => {
+      e.preventDefault();
+      // Allow focus but prevent scroll
+      if (e.target instanceof HTMLElement) {
+        e.target.focus({ preventScroll: true });
+      }
+    };
+
+    document.addEventListener('focus', preventFocusScroll, true);
+
+    removeAutofocus();
+    preventInitialFocus();
+
+    // Also prevent focus after a short delay (in case of async rendering)
+    const timeoutId = setTimeout(() => {
+      removeAutofocus();
+      preventInitialFocus();
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      Element.prototype.scrollIntoView = originalScrollIntoView;
+      document.removeEventListener('focus', preventFocusScroll, true);
+    };
+  }, [isEmbedded]);
 
   // Fetch embed settings from admin
   useEffect(() => {
@@ -79,10 +137,16 @@ function EmbedChatContent() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const chatId = useRef(nanoid());
 
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Only scroll within iframe, don't affect parent page
+    messagesEndRef.current?.scrollIntoView({ 
+      behavior: "smooth",
+      block: "nearest",
+      inline: "nearest"
+    });
   }, []);
 
   useEffect(() => {
@@ -304,14 +368,20 @@ function EmbedChatContent() {
       <form onSubmit={handleSubmit} className="p-4 border-t bg-white shadow-lg">
         <div className="flex gap-3">
           <input
+            ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={placeholder}
             className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 bg-white"
             disabled={isLoading}
-            tabIndex={-1}
-            autoFocus={false}
+            onFocus={(e) => {
+              // Prevent scroll when input receives focus
+              e.preventDefault();
+              if (isEmbedded && inputRef.current) {
+                inputRef.current.focus({ preventScroll: true });
+              }
+            }}
           />
           <button
             type="submit"
