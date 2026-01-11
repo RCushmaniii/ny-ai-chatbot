@@ -288,26 +288,11 @@ export async function POST(request: Request) {
       detectedLang = detectLanguage(latestUserText);
       learnMoreText = getLearnMoreText(detectedLang);
       translateUrlFn = translateUrl;
-      console.log(
-        `🌐 Detected language: ${detectedLang} for message: "${latestUserText.substring(0, 50)}..."`,
-      );
     } catch (error) {
-      console.error(
-        "⚠️  Language detection failed, defaulting to English:",
-        error,
-      );
-    }
-
-    // Debug: Log knowledge results
-    if (knowledgeResults.length > 0) {
-      console.log(
-        `📚 Found ${knowledgeResults.length} knowledge results for: "${latestUserText}"`,
-      );
-      knowledgeResults.forEach((r, idx) => {
-        console.log(`  ${idx + 1}. URL: ${r.url}, Similarity: ${r.similarity}`);
-      });
-    } else {
-      console.log(`⚠️  No knowledge results found for: "${latestUserText}"`);
+      // Language detection failed - continue with English default
+      if (!isProductionEnvironment) {
+        console.warn("Language detection failed, using English:", error);
+      }
     }
 
     // Extract unique URLs from knowledge results and translate them based on detected language
@@ -316,9 +301,7 @@ export async function POST(request: Request) {
           new Set(knowledgeResults.map((r) => r.url).filter(Boolean)),
         ).map((url) => {
           if (translateUrlFn) {
-            const translated = translateUrlFn(url as string, detectedLang);
-            console.log(`🔗 Translating URL: ${url} -> ${translated}`);
-            return translated;
+            return translateUrlFn(url as string, detectedLang);
           }
           return url as string;
         })
@@ -526,16 +509,6 @@ ${uniqueUrls.map((url) => `- ${url}`).join("\n")}
         return streamErrorMessage;
       },
     });
-
-    // const streamContext = getStreamContext();
-
-    // if (streamContext) {
-    //   return new Response(
-    //     await streamContext.resumableStream(streamId, () =>
-    //       stream.pipeThrough(new JsonToSseTransformStream())
-    //     )
-    //   );
-    // }
 
     const response = new Response(
       stream.pipeThrough(new JsonToSseTransformStream()),

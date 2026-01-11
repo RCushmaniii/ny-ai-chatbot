@@ -1,12 +1,18 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { redirect, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { AdminHeader } from "@/components/admin-header";
 import { AdminTabs } from "@/components/admin-tabs";
 
+/**
+ * Admin Dashboard Page
+ *
+ * NOTE: Admin access is verified server-side in layout.tsx
+ * This page only renders for authenticated admin users
+ */
 export default function AdminPage() {
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
@@ -19,26 +25,13 @@ export default function AdminPage() {
     }
   }, [searchParams]);
 
-  // Show loading state
-  if (status === "loading") {
+  // Show loading state while session loads
+  if (status === "loading" || !session?.user) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
-  }
-
-  // Redirect if not authenticated
-  if (!session?.user) {
-    redirect("/login");
-  }
-
-  // Single-tenant: Only the owner can access admin
-  const ADMIN_EMAIL =
-    process.env.NEXT_PUBLIC_ADMIN_EMAIL || "info@nyenglishteacher.com";
-
-  if (session.user.email !== ADMIN_EMAIL) {
-    redirect("/");
   }
 
   const handleAccountClick = () => {
