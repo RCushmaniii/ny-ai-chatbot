@@ -147,7 +147,7 @@ async function populateKnowledgeBase() {
     `What levels and backgrounds does New York English Teacher work with?
     Robert works with intermediate and advanced learners—busy professionals in business, law, medicine, logistics, engineering, and other fields. 
     He does not teach absolute beginners. The coaching is designed for professionals who already have a foundation in English and want to improve their business communication skills.`,
-    "https://www.nyenglishteacher.com/faq",
+    "https://www.nyenglishteacher.com/en/faqs/",
     { type: "faq-levels", language: "en" },
   );
 
@@ -162,7 +162,7 @@ async function populateKnowledgeBase() {
     - General business communication skills
     
     All lessons are customized to your specific job and professional goals.`,
-    "https://www.nyenglishteacher.com/faq",
+    "https://www.nyenglishteacher.com/en/faqs/",
     { type: "faq-content", language: "en" },
   );
 
@@ -174,7 +174,7 @@ async function populateKnowledgeBase() {
     - Customized PDF notes are delivered after each class
     - Lessons are personalized to your job and specific professional needs
     - Flexible scheduling available`,
-    "https://www.nyenglishteacher.com/faq",
+    "https://www.nyenglishteacher.com/en/faqs/",
     { type: "faq-how-it-works", language: "en" },
   );
 
@@ -186,7 +186,7 @@ async function populateKnowledgeBase() {
     - Call directly
     
     Important: Please give at least 24 hours' notice to reschedule and avoid any fees.`,
-    "https://www.nyenglishteacher.com/faq",
+    "https://www.nyenglishteacher.com/en/faqs/",
     { type: "faq-scheduling", language: "en" },
   );
 
@@ -199,7 +199,7 @@ async function populateKnowledgeBase() {
     
     Payment (individuals): Due before each session via Zelle or bank transfer
     Companies: Monthly invoicing available`,
-    "https://www.nyenglishteacher.com/faq",
+    "https://www.nyenglishteacher.com/en/faqs/",
     { type: "faq-pricing-details", language: "en" },
   );
 
@@ -208,7 +208,7 @@ async function populateKnowledgeBase() {
     `Does New York English Teacher offer training for senior leadership?
     Yes! Robert designs custom workshops and private coaching sessions specifically for senior leaders and executives.
     Contact him directly for a customized proposal and pricing tailored to your organization's needs.`,
-    "https://www.nyenglishteacher.com/faq",
+    "https://www.nyenglishteacher.com/en/faqs/",
     { type: "faq-leadership", language: "en" },
   );
 
@@ -224,7 +224,7 @@ async function populateKnowledgeBase() {
     - Your personal goals
     
     The coaching is designed to deliver practical, real-world results quickly.`,
-    "https://www.nyenglishteacher.com/faq",
+    "https://www.nyenglishteacher.com/en/faqs/",
     { type: "faq-progress", language: "en" },
   );
 
@@ -242,7 +242,7 @@ async function populateKnowledgeBase() {
     Payment:
     - Individuals: Payment due before each session via Zelle or bank transfer
     - Companies: Monthly invoicing available`,
-    "https://www.nyenglishteacher.com/faq",
+    "https://www.nyenglishteacher.com/en/faqs/",
     { type: "faq-policy", language: "en" },
   );
 
