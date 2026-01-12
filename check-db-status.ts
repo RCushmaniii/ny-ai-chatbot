@@ -4,7 +4,8 @@ const sql = postgres(process.env.POSTGRES_URL || "");
 
 async function checkDatabase() {
   try {
-    const messages = await sql`SELECT COUNT(*) as count FROM "Message"`;
+    // Use Message_v2 (current) instead of deprecated Message table
+    const messages = await sql`SELECT COUNT(*) as count FROM "Message_v2"`;
     const chats = await sql`SELECT COUNT(*) as count FROM "Chat"`;
     const users = await sql`SELECT COUNT(*) as count FROM "User"`;
     const websiteContent =
@@ -13,7 +14,7 @@ async function checkDatabase() {
       await sql`SELECT COUNT(*) as count FROM "Document_Knowledge"`;
 
     console.log("\n📊 Production Database Status:\n");
-    console.log(`  Messages: ${messages[0].count}`);
+    console.log(`  Messages (v2): ${messages[0].count}`);
     console.log(`  Chats: ${chats[0].count}`);
     console.log(`  Users: ${users[0].count}`);
     console.log(`  Website Content: ${websiteContent[0].count}`);

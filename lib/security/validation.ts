@@ -2,9 +2,17 @@
  * Input validation and sanitization for production safety
  */
 
+import {
+  checkRateLimitRedis,
+  isRedisRateLimitingEnabled,
+} from "./rate-limit-redis";
+
 export const MAX_MESSAGE_LENGTH = 2000;
 export const MAX_MESSAGES_PER_MINUTE = 10;
 export const MAX_MESSAGES_PER_HOUR = 50;
+
+// Re-export Redis rate limiting functions
+export { checkRateLimitRedis, isRedisRateLimitingEnabled };
 
 /**
  * Validate user message input

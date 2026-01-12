@@ -3,7 +3,8 @@
     "allow": [
       "Bash(ls:*)",
       "Bash(pnpm lint:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(pnpm add:*)"
     ]
   }
 }

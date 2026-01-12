@@ -41,10 +41,10 @@ export async function getDailyUsageStats(
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
-    // Get total messages for the day
+    // Get total messages for the day (using Message_v2 table)
     const messageStats = await client`
       SELECT COUNT(*) as total_messages
-      FROM "Message"
+      FROM "Message_v2"
       WHERE "createdAt" >= ${startOfDay}
         AND "createdAt" <= ${endOfDay}
     `;
@@ -68,12 +68,13 @@ export async function getDailyUsageStats(
     const totalChats = Number(chatStats[0]?.total_chats || 0);
     const totalSessions = Number(chatStats[0]?.total_sessions || 0);
 
-    // Get language breakdown (estimate based on message content)
+    // Get language breakdown (estimate based on message content from parts JSON)
+    // Message_v2 uses parts (JSONB array) instead of content
     const languageStats = await client`
-      SELECT 
-        SUM(CASE WHEN content ~* '[áéíóúñ¿¡]' THEN 1 ELSE 0 END) as spanish_messages,
-        COUNT(*) - SUM(CASE WHEN content ~* '[áéíóúñ¿¡]' THEN 1 ELSE 0 END) as english_messages
-      FROM "Message"
+      SELECT
+        SUM(CASE WHEN parts::text ~* '[áéíóúñ¿¡]' THEN 1 ELSE 0 END) as spanish_messages,
+        COUNT(*) - SUM(CASE WHEN parts::text ~* '[áéíóúñ¿¡]' THEN 1 ELSE 0 END) as english_messages
+      FROM "Message_v2"
       WHERE "createdAt" >= ${startOfDay}
         AND "createdAt" <= ${endOfDay}
         AND role = 'user'
@@ -83,18 +84,26 @@ export async function getDailyUsageStats(
     const englishMessages = Number(languageStats[0]?.english_messages || 0);
 
     // Get top questions (first user message in each chat)
+    // Extract text from parts JSONB array
     const topQuestionsResult = await client`
-      SELECT content, COUNT(*) as count
+      SELECT parts_text as content, COUNT(*) as count
       FROM (
-        SELECT DISTINCT ON (m."chatId") m.content
-        FROM "Message" m
+        SELECT DISTINCT ON (m."chatId")
+          COALESCE(
+            (SELECT string_agg(elem->>'text', ' ')
+             FROM jsonb_array_elements(m.parts::jsonb) elem
+             WHERE elem->>'type' = 'text'),
+            m.parts::text
+          ) as parts_text
+        FROM "Message_v2" m
         INNER JOIN "Chat" c ON m."chatId" = c.id
         WHERE m."createdAt" >= ${startOfDay}
           AND m."createdAt" <= ${endOfDay}
           AND m.role = 'user'
         ORDER BY m."chatId", m."createdAt" ASC
       ) first_messages
-      GROUP BY content
+      WHERE parts_text IS NOT NULL AND parts_text != ''
+      GROUP BY parts_text
       ORDER BY count DESC
       LIMIT 5
     `;

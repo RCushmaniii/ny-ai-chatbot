@@ -55,6 +55,28 @@ const OPTIONAL_ENV_VARS: EnvVar[] = [
     required: false,
     description: "Redis URL for resumable streams",
   },
+  // Upstash Redis for rate limiting
+  {
+    name: "UPSTASH_REDIS_REST_URL",
+    required: false,
+    description: "Upstash Redis REST URL for rate limiting",
+  },
+  {
+    name: "UPSTASH_REDIS_REST_TOKEN",
+    required: false,
+    description: "Upstash Redis REST token for rate limiting",
+  },
+  // Sentry error monitoring
+  {
+    name: "SENTRY_DSN",
+    required: false,
+    description: "Sentry DSN for error monitoring",
+  },
+  {
+    name: "NEXT_PUBLIC_SENTRY_DSN",
+    required: false,
+    description: "Sentry DSN for client-side error monitoring",
+  },
 ];
 
 export type ValidationResult = {

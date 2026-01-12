@@ -48,7 +48,7 @@ import {
   setCorsHeaders,
 } from "@/lib/security/cors";
 import {
-  checkRateLimit,
+  checkRateLimitRedis,
   getClientIdentifier,
   validateMessage,
 } from "@/lib/security/validation";
@@ -123,9 +123,9 @@ export async function POST(request: Request) {
     return setCorsHeaders(errorResponse, origin);
   }
 
-  // Rate limiting check
+  // Rate limiting check (Redis with in-memory fallback)
   const clientId = getClientIdentifier(request);
-  const rateLimitResult = checkRateLimit(clientId);
+  const rateLimitResult = await checkRateLimitRedis(clientId);
 
   if (!rateLimitResult.allowed) {
     const errorResponse = new Response(
