@@ -246,8 +246,116 @@ async function populateKnowledgeBase() {
     { type: "faq-policy", language: "en" },
   );
 
+  // ===========================================
+  // SPANISH FAQs
+  // ===========================================
+
+  // FAQ ES - Niveles y experiencia
+  await addDocument(
+    `¿Con qué niveles y perfiles trabaja New York English Teacher?
+    Robert trabaja con estudiantes de nivel intermedio y avanzado: profesionales ocupados en negocios, derecho, medicina, logística, ingeniería y otros campos.
+    No enseña a principiantes absolutos. El coaching está diseñado para profesionales que ya tienen una base en inglés y quieren mejorar sus habilidades de comunicación empresarial.`,
+    "https://www.nyenglishteacher.com/es/faqs/",
+    { type: "faq-levels", language: "es" },
+  );
+
+  // FAQ ES - Contenido de las clases
+  await addDocument(
+    `¿Qué cubren las clases de New York English Teacher?
+    Las lecciones se enfocan en:
+    - Hablar inglés con confianza en entornos profesionales
+    - Escenarios de trabajo: reuniones, presentaciones, llamadas con clientes
+    - Pronunciación, frases y tono profesional
+    - Preparación para entrevistas
+    - Habilidades generales de comunicación empresarial
+
+    Todas las lecciones están personalizadas según tu trabajo y objetivos profesionales específicos.`,
+    "https://www.nyenglishteacher.com/es/faqs/",
+    { type: "faq-content", language: "es" },
+  );
+
+  // FAQ ES - Cómo funcionan las clases
+  await addDocument(
+    `¿Cómo funcionan las clases de New York English Teacher?
+    - Sesiones privadas de 60 minutos realizadas en línea por Google Meet
+    - Cada sesión incluye: calentamiento, práctica dirigida, retroalimentación inmediata y conversación
+    - Se entregan notas personalizadas en PDF después de cada clase
+    - Las lecciones están personalizadas para tu trabajo y necesidades profesionales específicas
+    - Horarios flexibles disponibles`,
+    "https://www.nyenglishteacher.com/es/faqs/",
+    { type: "faq-how-it-works", language: "es" },
+  );
+
+  // FAQ ES - Programación
+  await addDocument(
+    `¿Cómo programar o reprogramar clases con New York English Teacher?
+    - Envía un mensaje por WhatsApp
+    - Escribe un correo electrónico directamente a Robert
+    - Llama directamente
+
+    Importante: Por favor avisa con al menos 24 horas de anticipación para reprogramar y evitar cargos.`,
+    "https://www.nyenglishteacher.com/es/faqs/",
+    { type: "faq-scheduling", language: "es" },
+  );
+
+  // FAQ ES - Precios detallados
+  await addDocument(
+    `Precios de New York English Teacher:
+    - Estudiantes en México: 500 MXN por hora
+    - Estudiantes en Estados Unidos: 25 USD por hora
+    - Capacitación para liderazgo senior: Precios personalizados (contactar para propuesta)
+
+    Pago (individuos): Se paga antes de cada sesión por Zelle o transferencia bancaria
+    Empresas: Facturación mensual disponible`,
+    "https://www.nyenglishteacher.com/es/faqs/",
+    { type: "faq-pricing-details", language: "es" },
+  );
+
+  // FAQ ES - Liderazgo Senior
+  await addDocument(
+    `¿New York English Teacher ofrece capacitación para liderazgo senior?
+    ¡Sí! Robert diseña talleres personalizados y sesiones de coaching privadas específicamente para líderes senior y ejecutivos.
+    Contáctalo directamente para una propuesta personalizada y precios adaptados a las necesidades de tu organización.`,
+    "https://www.nyenglishteacher.com/es/faqs/",
+    { type: "faq-leadership", language: "es" },
+  );
+
+  // FAQ ES - Tiempo de progreso
+  await addDocument(
+    `¿Qué tan rápido mejoraré con el coaching de New York English Teacher?
+    La mayoría de los estudiantes ven progreso claro en 3-5 sesiones.
+
+    La mejora depende de:
+    - Práctica fuera de clase
+    - Frecuencia de las lecciones
+    - Autodisciplina
+    - Tus metas personales
+
+    El coaching está diseñado para entregar resultados prácticos y del mundo real rápidamente.`,
+    "https://www.nyenglishteacher.com/es/faqs/",
+    { type: "faq-progress", language: "es" },
+  );
+
+  // FAQ ES - Política de cancelación
+  await addDocument(
+    `Política de cancelación y pago de New York English Teacher:
+
+    Asistencia:
+    - Robert espera hasta 15 minutos después de la hora de inicio
+    - Después de 15 minutos, la lección se considera inasistencia y se aplica el cargo
+
+    Cancelaciones:
+    - Requieren aviso de 24 horas para evitar cargos
+
+    Pago:
+    - Individuos: Pago antes de cada sesión por Zelle o transferencia bancaria
+    - Empresas: Facturación mensual disponible`,
+    "https://www.nyenglishteacher.com/es/faqs/",
+    { type: "faq-policy", language: "es" },
+  );
+
   console.log("\n✅ Knowledge base populated successfully!");
-  console.log("📊 Total documents added: 15");
+  console.log("📊 Total documents added: 23");
 
   await client.end();
 }

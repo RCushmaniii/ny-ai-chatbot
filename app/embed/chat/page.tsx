@@ -128,7 +128,7 @@ function EmbedChatContent() {
 
   // Use language-specific defaults, don't let embedSettings override language
   const placeholder = t.placeholder;
-  const botIcon = embedSettings?.botIcon || "🎓";
+  const botIconUrl = "/images/chatbot-icon.jpg";
   const suggestedQuestions = t.suggestedQuestions;
 
   const [messages, setMessages] = useState<
@@ -202,8 +202,8 @@ function EmbedChatContent() {
       {/* Unified Header - NY Navy with professional styling */}
       <div className="flex items-center justify-between px-5 py-4 bg-[#0F172A] text-white">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-full bg-white flex items-center justify-center p-1.5 shrink-0">
-            <span className="text-2xl">{botIcon}</span>
+          <div className="w-11 h-11 rounded-full bg-white flex items-center justify-center overflow-hidden shrink-0">
+            <img src={botIconUrl} alt="NY English Teacher" className="w-full h-full object-cover" />
           </div>
           <div>
             <h1 className="text-base font-semibold leading-tight">NY English AI Coach</h1>

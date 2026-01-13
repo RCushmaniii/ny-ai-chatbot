@@ -58,7 +58,7 @@ export async function GET(request: Request) {
   const buildConfig = (serverSettings = {}) => ({
     welcomeMessage: getAttr('welcome-message') || getAttr('welcomeMessage') || serverSettings.welcomeMessage || defaultWelcomeMessage,
     welcomeGif: getAttr('welcome-gif') || getAttr('welcomeGif') || serverSettings.welcomeGif || '',
-    showWelcomeMessage: (getAttr('show-welcome-message') || getAttr('showWelcomeMessage') || 'true') !== 'false',
+    showWelcomeMessage: (getAttr('show-welcome-message') || getAttr('showWelcomeMessage') || 'false') === 'true',
     buttonColor: getAttr('button-color') || getAttr('buttonColor') || serverSettings.buttonColor || '#4f46e5',
     buttonSize: parseFloat(getAttr('button-size') || getAttr('buttonSize') || serverSettings.buttonSize || '1'),
     position: getAttr('position') || serverSettings.position || 'bottom-right',
@@ -288,12 +288,9 @@ export async function GET(request: Request) {
     button.setAttribute('role', 'button');
     button.setAttribute('aria-expanded', 'false');
     
-    // Use custom icon (emoji or text) if provided, otherwise use default chat SVG
-    if (config.botIcon) {
-      button.innerHTML = '<span style="font-size:32px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1));">' + config.botIcon + '</span>';
-    } else {
-      button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1));"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>';
-    }
+    // Use custom image icon
+    const iconUrl = CHAT_APP_URL + '/images/chatbot-icon.jpg';
+    button.innerHTML = '<img src="' + iconUrl + '" alt="Chat" style="width:40px;height:40px;border-radius:50%;object-fit:cover;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1));" />';
     
     button.style.cssText = 'display:flex;align-items:center;justify-content:center;opacity:0;position:fixed;z-index:2147483647;width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,' + config.buttonColor + ' 0%,' + config.buttonColor + 'dd 100%);color:white;border:none;cursor:pointer;box-shadow:0 8px 16px rgba(0,0,0,0.15),0 0 0 0 ' + config.buttonColor + '40;transition:all 300ms cubic-bezier(0.4,0,0.2,1);transform:scale(' + config.buttonSize + ') translateY(20px);transform-origin:bottom ' + (config.position === 'bottom-right' ? 'right' : 'left') + ';bottom:20px;padding:0;animation:slideInRight 500ms ease-out forwards;will-change:transform;';
     button.style[config.position === 'bottom-right' ? 'right' : 'left'] = '20px';
