@@ -339,7 +339,7 @@ export async function GET(request: Request) {
   return new NextResponse(embedScript, {
     headers: {
       "Content-Type": "application/javascript",
-      "Cache-Control": "public, max-age=3600",
+      "Cache-Control": "public, max-age=300",
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET",
     },
