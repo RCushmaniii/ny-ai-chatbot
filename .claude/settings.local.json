@@ -4,7 +4,8 @@
       "Bash(ls:*)",
       "Bash(pnpm lint:*)",
       "Bash(npx tsc:*)",
-      "Bash(pnpm add:*)"
+      "Bash(pnpm add:*)",
+      "WebFetch(domain:www.nyenglishteacher.com)"
     ]
   }
 }
