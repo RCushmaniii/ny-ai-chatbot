@@ -8,7 +8,7 @@ export async function GET(request: Request) {
 (function() {
   'use strict';
   
-  const CHAT_APP_URL = '${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}';
+  const CHAT_APP_URL = '${process.env.NEXT_PUBLIC_APP_URL || "https://ny-ai-chatbot.vercel.app"}';
   const BOT_ID = '${botId}';
   
   const scriptTag = document.currentScript;
