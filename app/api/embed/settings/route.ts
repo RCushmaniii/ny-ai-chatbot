@@ -4,7 +4,8 @@ import { NextResponse } from "next/server";
 import postgres from "postgres";
 import { botSettings } from "@/lib/db/schema";
 
-// Default embed settings
+// Default embed settings - use absolute URL for icon
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://ny-ai-chatbot.vercel.app";
 const DEFAULT_EMBED_SETTINGS = {
   buttonColor: "#4f46e5",
   buttonSize: 1.0,
@@ -12,7 +13,7 @@ const DEFAULT_EMBED_SETTINGS = {
   welcomeMessage: "",
   showWelcomeMessage: false,
   placeholder: "Type your message...",
-  botIcon: "/images/chatbot-icon.jpg",
+  botIcon: `${APP_URL}/images/chatbot-icon.jpg`,
   suggestedQuestions: [
     "What are the prices for classes?",
     "What services do you offer?",

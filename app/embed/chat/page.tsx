@@ -128,7 +128,9 @@ function EmbedChatContent() {
 
   // Use language-specific defaults, don't let embedSettings override language
   const placeholder = t.placeholder;
-  const botIconUrl = "/images/chatbot-icon.jpg";
+  // Use absolute URL for the icon (works in iframe context)
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ny-ai-chatbot.vercel.app";
+  const botIconUrl = `${appUrl}/images/chatbot-icon.jpg`;
   const suggestedQuestions = t.suggestedQuestions;
 
   const [messages, setMessages] = useState<

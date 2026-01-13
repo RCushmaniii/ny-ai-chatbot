@@ -76,7 +76,10 @@ export async function GET(request: Request) {
       autoOpen: (getAttr('open') || 'false') === 'true',
       language,
       placeholder: getAttr('placeholder') || serverSettings.placeholder || defaultPlaceholder,
-      botIcon: getAttr('botIcon') || getAttr('bot-icon') || serverSettings.botIcon || '/images/chatbot-icon.jpg',
+      // Prefer image URL over emoji - ignore database emoji icons
+      botIcon: getAttr('botIcon') || getAttr('bot-icon') ||
+        (serverSettings.botIcon && (serverSettings.botIcon.startsWith('/') || serverSettings.botIcon.startsWith('http')) ? serverSettings.botIcon : null) ||
+        '/images/chatbot-icon.jpg',
     };
   };
 
