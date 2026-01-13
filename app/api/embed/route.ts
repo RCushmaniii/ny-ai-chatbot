@@ -55,19 +55,30 @@ export async function GET(request: Request) {
     : 'Type your message...';
 
   // Build config with script attributes and defaults (settings will be fetched async)
-  const buildConfig = (serverSettings = {}) => ({
-    welcomeMessage: getAttr('welcome-message') || getAttr('welcomeMessage') || serverSettings.welcomeMessage || defaultWelcomeMessage,
-    welcomeGif: getAttr('welcome-gif') || getAttr('welcomeGif') || serverSettings.welcomeGif || '',
-    showWelcomeMessage: (getAttr('show-welcome-message') || getAttr('showWelcomeMessage') || 'false') === 'true',
-    buttonColor: getAttr('button-color') || getAttr('buttonColor') || serverSettings.buttonColor || '#4f46e5',
-    buttonSize: parseFloat(getAttr('button-size') || getAttr('buttonSize') || serverSettings.buttonSize || '1'),
-    position: getAttr('position') || serverSettings.position || 'bottom-right',
-    openDelay: parseInt(getAttr('open-delay') || getAttr('openDelay') || '5000'),
-    autoOpen: (getAttr('open') || 'false') === 'true',
-    language,
-    placeholder: getAttr('placeholder') || serverSettings.placeholder || defaultPlaceholder,
-    botIcon: getAttr('botIcon') || getAttr('bot-icon') || serverSettings.botIcon || '💬',
-  });
+  const buildConfig = (serverSettings = {}) => {
+    // Check for explicit attribute override first, then server settings, then default to false
+    const attrShowWelcome = getAttr('show-welcome-message') || getAttr('showWelcomeMessage');
+    let showWelcome = false;
+    if (attrShowWelcome !== null) {
+      showWelcome = attrShowWelcome === 'true';
+    } else if (serverSettings.showWelcomeMessage !== undefined) {
+      showWelcome = serverSettings.showWelcomeMessage === true;
+    }
+
+    return {
+      welcomeMessage: getAttr('welcome-message') || getAttr('welcomeMessage') || serverSettings.welcomeMessage || defaultWelcomeMessage,
+      welcomeGif: getAttr('welcome-gif') || getAttr('welcomeGif') || serverSettings.welcomeGif || '',
+      showWelcomeMessage: showWelcome,
+      buttonColor: getAttr('button-color') || getAttr('buttonColor') || serverSettings.buttonColor || '#4f46e5',
+      buttonSize: parseFloat(getAttr('button-size') || getAttr('buttonSize') || serverSettings.buttonSize || '1'),
+      position: getAttr('position') || serverSettings.position || 'bottom-right',
+      openDelay: parseInt(getAttr('open-delay') || getAttr('openDelay') || '5000'),
+      autoOpen: (getAttr('open') || 'false') === 'true',
+      language,
+      placeholder: getAttr('placeholder') || serverSettings.placeholder || defaultPlaceholder,
+      botIcon: getAttr('botIcon') || getAttr('bot-icon') || serverSettings.botIcon || '/images/chatbot-icon.jpg',
+    };
+  };
 
   // Start with config from attributes and defaults
   let config = buildConfig();
@@ -288,9 +299,15 @@ export async function GET(request: Request) {
     button.setAttribute('role', 'button');
     button.setAttribute('aria-expanded', 'false');
     
-    // Use custom image icon
-    const iconUrl = CHAT_APP_URL + '/images/chatbot-icon.jpg';
-    button.innerHTML = '<img src="' + iconUrl + '" alt="Chat" style="width:40px;height:40px;border-radius:50%;object-fit:cover;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1));" />';
+    // Use custom image icon - check if it's a URL/path or emoji
+    const iconValue = config.botIcon || '/images/chatbot-icon.jpg';
+    const isImagePath = iconValue.startsWith('/') || iconValue.startsWith('http');
+    if (isImagePath) {
+      const iconUrl = iconValue.startsWith('http') ? iconValue : CHAT_APP_URL + iconValue;
+      button.innerHTML = '<img src="' + iconUrl + '" alt="Chat" style="width:40px;height:40px;border-radius:50%;object-fit:cover;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1));" />';
+    } else {
+      button.innerHTML = '<span style="font-size:32px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1));">' + iconValue + '</span>';
+    }
     
     button.style.cssText = 'display:flex;align-items:center;justify-content:center;opacity:0;position:fixed;z-index:2147483647;width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,' + config.buttonColor + ' 0%,' + config.buttonColor + 'dd 100%);color:white;border:none;cursor:pointer;box-shadow:0 8px 16px rgba(0,0,0,0.15),0 0 0 0 ' + config.buttonColor + '40;transition:all 300ms cubic-bezier(0.4,0,0.2,1);transform:scale(' + config.buttonSize + ') translateY(20px);transform-origin:bottom ' + (config.position === 'bottom-right' ? 'right' : 'left') + ';bottom:20px;padding:0;animation:slideInRight 500ms ease-out forwards;will-change:transform;';
     button.style[config.position === 'bottom-right' ? 'right' : 'left'] = '20px';

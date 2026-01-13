@@ -9,9 +9,10 @@ const DEFAULT_EMBED_SETTINGS = {
   buttonColor: "#4f46e5",
   buttonSize: 1.0,
   position: "bottom-right" as const,
-  welcomeMessage: "Hello! How can I help you today?",
+  welcomeMessage: "",
+  showWelcomeMessage: false,
   placeholder: "Type your message...",
-  botIcon: "🎓",
+  botIcon: "/images/chatbot-icon.jpg",
   suggestedQuestions: [
     "What are the prices for classes?",
     "What services do you offer?",
