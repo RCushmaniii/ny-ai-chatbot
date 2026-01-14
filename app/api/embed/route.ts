@@ -307,12 +307,12 @@ export async function GET(request: Request) {
     const isImagePath = iconValue.startsWith('/') || iconValue.startsWith('http');
     if (isImagePath) {
       const iconUrl = iconValue.startsWith('http') ? iconValue : CHAT_APP_URL + iconValue;
-      button.innerHTML = '<img src="' + iconUrl + '" alt="Chat" style="width:40px;height:40px;border-radius:50%;object-fit:cover;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1));" />';
+      button.innerHTML = '<img src="' + iconUrl + '" alt="Chat" style="width:100%;height:100%;object-fit:cover;object-position:center;" />';
     } else {
       button.innerHTML = '<span style="font-size:32px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1));">' + iconValue + '</span>';
     }
     
-    button.style.cssText = 'display:flex;align-items:center;justify-content:center;opacity:0;position:fixed;z-index:2147483647;width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,' + config.buttonColor + ' 0%,' + config.buttonColor + 'dd 100%);color:white;border:none;cursor:pointer;box-shadow:0 8px 16px rgba(0,0,0,0.15),0 0 0 0 ' + config.buttonColor + '40;transition:all 300ms cubic-bezier(0.4,0,0.2,1);transform:scale(' + config.buttonSize + ') translateY(20px);transform-origin:bottom ' + (config.position === 'bottom-right' ? 'right' : 'left') + ';bottom:20px;padding:0;animation:slideInRight 500ms ease-out forwards;will-change:transform;';
+    button.style.cssText = 'display:flex;align-items:center;justify-content:center;opacity:0;position:fixed;z-index:2147483647;width:64px;height:64px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,' + config.buttonColor + ' 0%,' + config.buttonColor + 'dd 100%);color:white;border:none;cursor:pointer;box-shadow:0 8px 16px rgba(0,0,0,0.15),0 0 0 0 ' + config.buttonColor + '40;transition:all 300ms cubic-bezier(0.4,0,0.2,1);transform:scale(' + config.buttonSize + ') translateY(20px);transform-origin:bottom ' + (config.position === 'bottom-right' ? 'right' : 'left') + ';bottom:20px;padding:0;animation:slideInRight 500ms ease-out forwards;will-change:transform;';
     button.style[config.position === 'bottom-right' ? 'right' : 'left'] = '20px';
     
     button.onmouseenter = () => { 
