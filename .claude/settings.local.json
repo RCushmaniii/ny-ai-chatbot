@@ -5,7 +5,8 @@
       "Bash(pnpm lint:*)",
       "Bash(npx tsc:*)",
       "Bash(pnpm add:*)",
-      "WebFetch(domain:www.nyenglishteacher.com)"
+      "WebFetch(domain:www.nyenglishteacher.com)",
+      "WebFetch(domain:ny-ai-chatbot.vercel.app)"
     ]
   }
 }
