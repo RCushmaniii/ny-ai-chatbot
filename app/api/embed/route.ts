@@ -306,6 +306,7 @@ export async function GET(request: Request) {
     const iconValue = config.botIcon || '/images/chatbot-icon.jpg';
     const isImagePath = iconValue.startsWith('/') || iconValue.startsWith('http');
     if (isImagePath) {
+      // Load icon from chatbot server (prepend CHAT_APP_URL for relative paths)
       const iconUrl = iconValue.startsWith('http') ? iconValue : CHAT_APP_URL + iconValue;
       button.innerHTML = '<img src="' + iconUrl + '" alt="Chat" style="width:100%;height:100%;object-fit:cover;object-position:center;" />';
     } else {
