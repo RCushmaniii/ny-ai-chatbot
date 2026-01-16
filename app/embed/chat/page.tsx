@@ -48,7 +48,8 @@ function EmbedChatContent() {
   const [language, setLanguage] = useState<WidgetLocale>("es");
 
   // Detect if we're embedded in an iframe
-  const isEmbedded = typeof window !== 'undefined' && window.self !== window.top;
+  const isEmbedded =
+    typeof window !== "undefined" && window.self !== window.top;
 
   useEffect(() => {
     setLanguage(resolveWidgetLocale(searchParams));
@@ -60,8 +61,8 @@ function EmbedChatContent() {
 
     // Remove any autofocus attributes
     const removeAutofocus = () => {
-      document.querySelectorAll('[autofocus]').forEach((el) => {
-        el.removeAttribute('autofocus');
+      document.querySelectorAll("[autofocus]").forEach((el) => {
+        el.removeAttribute("autofocus");
       });
     };
 
@@ -74,10 +75,12 @@ function EmbedChatContent() {
 
     // Override scrollIntoView to prevent iframe from scrolling parent
     const originalScrollIntoView = Element.prototype.scrollIntoView;
-    Element.prototype.scrollIntoView = function(arg?: boolean | ScrollIntoViewOptions) {
+    Element.prototype.scrollIntoView = function (
+      arg?: boolean | ScrollIntoViewOptions,
+    ) {
       // Only allow scrolling within the iframe, not the parent
-      if (typeof arg === 'object') {
-        arg = { ...arg, block: 'nearest', inline: 'nearest' };
+      if (typeof arg === "object") {
+        arg = { ...arg, block: "nearest", inline: "nearest" };
       }
       return originalScrollIntoView.call(this, arg);
     };
@@ -91,7 +94,7 @@ function EmbedChatContent() {
       }
     };
 
-    document.addEventListener('focus', preventFocusScroll, true);
+    document.addEventListener("focus", preventFocusScroll, true);
 
     removeAutofocus();
     preventInitialFocus();
@@ -105,7 +108,7 @@ function EmbedChatContent() {
     return () => {
       clearTimeout(timeoutId);
       Element.prototype.scrollIntoView = originalScrollIntoView;
-      document.removeEventListener('focus', preventFocusScroll, true);
+      document.removeEventListener("focus", preventFocusScroll, true);
     };
   }, [isEmbedded]);
 
@@ -143,10 +146,10 @@ function EmbedChatContent() {
 
   const scrollToBottom = useCallback(() => {
     // Only scroll within iframe, don't affect parent page
-    messagesEndRef.current?.scrollIntoView({ 
+    messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
       block: "nearest",
-      inline: "nearest"
+      inline: "nearest",
     });
   }, []);
 
@@ -204,12 +207,20 @@ function EmbedChatContent() {
       <div className="flex items-center justify-between px-5 py-4 bg-[#0F172A] text-white">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-full bg-white flex items-center justify-center overflow-hidden shrink-0">
-            <img src={botIconUrl} alt="NY English Teacher" className="w-full h-full object-cover" />
+            <img
+              src={botIconUrl}
+              alt="NY English Teacher"
+              className="w-full h-full object-cover"
+            />
           </div>
           <div>
-            <h1 className="text-base font-semibold leading-tight">NY English AI Coach</h1>
+            <h1 className="text-base font-semibold leading-tight">
+              NY English AI Coach
+            </h1>
             <p className="text-[13px] opacity-80 leading-tight mt-0.5">
-              {language === 'es' ? 'Tu asistente académico 24/7' : 'Your 24/7 academic assistant'}
+              {language === "es"
+                ? "Tu asistente académico 24/7"
+                : "Your 24/7 academic assistant"}
             </p>
           </div>
         </div>
@@ -245,12 +256,14 @@ function EmbedChatContent() {
           <div className="flex flex-col items-center justify-center h-full space-y-6 px-4">
             <div className="text-center">
               <h2 className="text-xl font-semibold text-[#334155] mb-2">
-                {language === 'es' ? 'Hola. ¿Cómo puedo ayudarte hoy?' : 'Hello. How can I assist you today?'}
+                {language === "es"
+                  ? "Hola. ¿Cómo puedo ayudarte hoy?"
+                  : "Hello. How can I assist you today?"}
               </h2>
             </div>
             <div className="w-full max-w-md space-y-2.5">
               <p className="text-sm font-medium text-[#64748B] mb-3">
-                {language === 'es' ? 'Temas sugeridos:' : 'Suggested topics:'}
+                {language === "es" ? "Temas sugeridos:" : "Suggested topics:"}
               </p>
               {suggestedQuestions.map((question: string, idx: number) => (
                 <button
@@ -373,7 +386,10 @@ function EmbedChatContent() {
       </div>
 
       {/* Input - Modern pill-shaped design with gold accent */}
-      <form onSubmit={handleSubmit} className="px-5 py-4 bg-white border-t border-[#E2E8F0]">
+      <form
+        onSubmit={handleSubmit}
+        className="px-5 py-4 bg-white border-t border-[#E2E8F0]"
+      >
         <div className="flex gap-2.5 items-center bg-[#F8FAFC] px-4 py-2 rounded-full border border-[#E2E8F0] focus-within:border-[#C2A45F] transition-colors">
           <input
             ref={inputRef}
@@ -394,7 +410,7 @@ function EmbedChatContent() {
             type="submit"
             disabled={isLoading || !input.trim()}
             className="w-9 h-9 bg-[#C2A45F] hover:bg-[#B09351] text-[#0F172A] rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 shrink-0"
-            aria-label={language === 'es' ? 'Enviar mensaje' : 'Send message'}
+            aria-label={language === "es" ? "Enviar mensaje" : "Send message"}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

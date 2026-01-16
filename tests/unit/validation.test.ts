@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateMessage, MAX_MESSAGE_LENGTH } from "@/lib/security/validation";
+import { MAX_MESSAGE_LENGTH, validateMessage } from "@/lib/security/validation";
 
 describe("validateMessage", () => {
   it("should accept valid messages", () => {

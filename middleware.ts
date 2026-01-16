@@ -18,16 +18,25 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/embed")
   ) {
     const response = NextResponse.next();
-    
+
     // Add CORS headers for local development
     const origin = request.headers.get("origin");
-    if (origin && (origin.includes("localhost") || origin.includes("127.0.0.1"))) {
+    if (
+      origin &&
+      (origin.includes("localhost") || origin.includes("127.0.0.1"))
+    ) {
       response.headers.set("Access-Control-Allow-Origin", origin);
-      response.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-      response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      response.headers.set(
+        "Access-Control-Allow-Methods",
+        "GET, POST, OPTIONS",
+      );
+      response.headers.set(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization",
+      );
       response.headers.set("Access-Control-Allow-Credentials", "true");
     }
-    
+
     return response;
   }
 

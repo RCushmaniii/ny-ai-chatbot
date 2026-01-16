@@ -132,10 +132,7 @@ export function validateEnvOrThrow(): void {
   }
 
   // Log warnings for missing optional variables (only in development)
-  if (
-    result.warnings.length > 0 &&
-    process.env.NODE_ENV === "development"
-  ) {
+  if (result.warnings.length > 0 && process.env.NODE_ENV === "development") {
     console.warn(
       "[ENV] Missing optional environment variables:",
       result.warnings.map((w) => `\n  - ${w}`).join(""),

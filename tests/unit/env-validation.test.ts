@@ -1,5 +1,5 @@
-import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
-import { validateEnv, getEnvSummary } from "@/lib/env-validation";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { getEnvSummary, validateEnv } from "@/lib/env-validation";
 
 describe("validateEnv", () => {
   const originalEnv = process.env;
