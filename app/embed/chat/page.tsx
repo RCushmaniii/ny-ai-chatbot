@@ -153,8 +153,16 @@ function EmbedChatContent() {
     });
   }, []);
 
+  // Track if we should scroll (only after user sends a message)
+  const shouldScrollRef = useRef(false);
+
   useEffect(() => {
-    scrollToBottom();
+    // Only scroll when user sends a message, not when AI responds
+    // This lets users read AI responses from the beginning
+    if (shouldScrollRef.current) {
+      scrollToBottom();
+      shouldScrollRef.current = false;
+    }
   }, [messages, scrollToBottom]);
 
   const handleClose = () => {
@@ -167,6 +175,8 @@ function EmbedChatContent() {
 
     const userMessage = input.trim();
     setInput("");
+    // Scroll to show user's message, but not when AI responds
+    shouldScrollRef.current = true;
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setIsLoading(true);
 
