@@ -1,6 +1,6 @@
-import { readdir, readFile } from "fs/promises";
+import { readdir, readFile } from "node:fs/promises";
+import { join } from "node:path";
 import type { Metadata } from "next";
-import { join } from "path";
 import { Documentation } from "@/components/documentation";
 
 export const metadata: Metadata = {

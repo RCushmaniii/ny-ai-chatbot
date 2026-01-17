@@ -23,7 +23,11 @@ export function validateMessage(message: string): {
   sanitized?: string;
 } {
   // Check if message exists
-  if (!message || typeof message !== "string") {
+  if (
+    message === null ||
+    message === undefined ||
+    typeof message !== "string"
+  ) {
     return { valid: false, error: "Message is required" };
   }
 

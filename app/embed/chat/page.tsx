@@ -41,7 +41,7 @@ function resolveWidgetLocale(searchParams: URLSearchParams): WidgetLocale {
 
 function EmbedChatContent() {
   const searchParams = useSearchParams();
-  const [embedSettings, setEmbedSettings] = useState<any>(null);
+  const [_embedSettings, setEmbedSettings] = useState<any>(null);
   const [_isLoadingSettings, setIsLoadingSettings] = useState(true);
 
   // Detect language from parent page URL or query param
@@ -217,6 +217,7 @@ function EmbedChatContent() {
       <div className="flex items-center justify-between px-5 py-4 bg-[#0F172A] text-white">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-full bg-white flex items-center justify-center overflow-hidden shrink-0">
+            {/* biome-ignore lint/performance/noImgElement: External URL in embed iframe, Next Image not suitable */}
             <img
               src={botIconUrl}
               alt="NY English Teacher"

@@ -9,7 +9,14 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./tests/setup.ts"],
     include: ["**/*.test.{ts,tsx}"],
-    exclude: ["node_modules", ".next", "tests/e2e/**"],
+    exclude: [
+      "node_modules",
+      ".next",
+      "tests/e2e/**",
+      "tests/routes/**",
+      "tests/simple-chat.test.ts",
+      "lib/ai/models.test.ts",
+    ],
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],

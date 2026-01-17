@@ -108,10 +108,37 @@ const createMockModel = (
             getLatestUserText(options),
             kind,
           );
+          const textId = "mock-text-id";
+
+          // Emit text-start event (required by AI SDK v5)
           controller.enqueue({
-            type: "text-delta",
-            id: "mock-id",
-            delta: responseText,
+            type: "text-start",
+            id: textId,
+          });
+
+          // Split response into words and stream word by word like real API
+          const words = responseText.split(/(\s+)/);
+          for (const word of words) {
+            if (word) {
+              controller.enqueue({
+                type: "text-delta",
+                id: textId,
+                delta: word,
+              });
+            }
+          }
+
+          // Emit text-end event
+          controller.enqueue({
+            type: "text-end",
+            id: textId,
+          });
+
+          // Signal finish with proper AI SDK v5 format
+          controller.enqueue({
+            type: "finish",
+            finishReason: "stop",
+            usage: { inputTokens: 10, outputTokens: 20 },
           });
           controller.close();
         },

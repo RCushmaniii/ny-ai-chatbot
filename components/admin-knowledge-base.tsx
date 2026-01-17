@@ -138,7 +138,7 @@ export function AdminKnowledgeBase() {
               if (errorData.error) {
                 errorMessage = errorData.error;
               }
-            } catch (e) {
+            } catch {
               // If JSON parsing fails, use the default error message
             }
 
@@ -183,7 +183,7 @@ export function AdminKnowledgeBase() {
               if (errorData.error) {
                 errorMessage = errorData.error;
               }
-            } catch (e) {
+            } catch {
               // If JSON parsing fails, use the default error message
             }
 
@@ -245,7 +245,7 @@ export function AdminKnowledgeBase() {
               if (errorData.error) {
                 errorMessage = errorData.error;
               }
-            } catch (e) {
+            } catch {
               // If JSON parsing fails, use the default error message
             }
 

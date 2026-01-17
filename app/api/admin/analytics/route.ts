@@ -15,7 +15,7 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const period = searchParams.get("period") || "30";
-    const days = parseInt(period, 10);
+    const _days = parseInt(period, 10);
 
     // Get all analytics data in parallel
     const [stats7, stats30, statsAll, topQuestions, dailyStats] =

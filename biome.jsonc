@@ -12,6 +12,7 @@
       "!**/node_modules",
       "!**/playwright-report",
       "!**/playwright",
+      "!**/test-results",
       "!components/ui",
       "!lib/utils.ts",
       "!hooks/use-mobile.ts"

@@ -969,7 +969,7 @@ export async function getTopSources({
           .from(knowledgeEvents)
           .where(
             and(
-              eq(knowledgeEvents.sourceId, source.sourceId!),
+              eq(knowledgeEvents.sourceId, source.sourceId ?? ""),
               eq(knowledgeEvents.hit, true),
             ),
           )

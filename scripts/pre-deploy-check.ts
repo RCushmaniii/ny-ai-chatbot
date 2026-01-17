@@ -7,8 +7,8 @@
  * Run with: pnpm pre-deploy
  */
 
-import { existsSync, readFileSync, statSync } from "fs";
-import { join } from "path";
+import { existsSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
 
 interface CheckResult {
   name: string;
@@ -57,7 +57,7 @@ function checkFileExists(
   return exists;
 }
 
-function checkFileNotEmpty(filePath: string, description: string) {
+function _checkFileNotEmpty(filePath: string, description: string) {
   const fullPath = join(rootDir, filePath);
 
   if (!existsSync(fullPath)) {
@@ -371,9 +371,9 @@ function checkReleaseNotes() {
 }
 
 function printResults() {
-  console.log("\n" + colors.cyan + "═".repeat(70) + colors.reset);
-  console.log(colors.cyan + "  Pre-Deployment Checklist" + colors.reset);
-  console.log(colors.cyan + "═".repeat(70) + colors.reset + "\n");
+  console.log(`\n${colors.cyan}${"═".repeat(70)}${colors.reset}`);
+  console.log(`${colors.cyan}  Pre-Deployment Checklist${colors.reset}`);
+  console.log(`${colors.cyan + "═".repeat(70) + colors.reset}\n`);
 
   const errors = results.filter((r) => !r.passed && r.severity === "error");
   const warnings = results.filter((r) => !r.passed && r.severity === "warning");
@@ -382,11 +382,9 @@ function printResults() {
 
   // Print errors
   if (errors.length > 0) {
-    console.log(
-      colors.red + "✗ ERRORS (" + errors.length + "):" + colors.reset,
-    );
+    console.log(`${colors.red}✗ ERRORS (${errors.length}):${colors.reset}`);
     for (const result of errors) {
-      console.log(colors.red + "  " + result.message + colors.reset);
+      console.log(`${colors.red}  ${result.message}${colors.reset}`);
     }
     console.log("");
   }
@@ -394,37 +392,37 @@ function printResults() {
   // Print warnings
   if (warnings.length > 0) {
     console.log(
-      colors.yellow + "⚠ WARNINGS (" + warnings.length + "):" + colors.reset,
+      `${colors.yellow}⚠ WARNINGS (${warnings.length}):${colors.reset}`,
     );
     for (const result of warnings) {
-      console.log(colors.yellow + "  " + result.message + colors.reset);
+      console.log(`${colors.yellow}  ${result.message}${colors.reset}`);
     }
     console.log("");
   }
 
   // Print info
   if (infos.length > 0) {
-    console.log(colors.blue + "ℹ INFO (" + infos.length + "):" + colors.reset);
+    console.log(`${colors.blue}ℹ INFO (${infos.length}):${colors.reset}`);
     for (const result of infos) {
-      console.log(colors.blue + "  " + result.message + colors.reset);
+      console.log(`${colors.blue}  ${result.message}${colors.reset}`);
     }
     console.log("");
   }
 
   // Print summary
   console.log(colors.cyan + "─".repeat(70) + colors.reset);
-  console.log(colors.green + `✓ Passed: ${passed.length}` + colors.reset);
-  console.log(colors.red + `✗ Errors: ${errors.length}` + colors.reset);
-  console.log(colors.yellow + `⚠ Warnings: ${warnings.length}` + colors.reset);
-  console.log(colors.blue + `ℹ Info: ${infos.length}` + colors.reset);
-  console.log(colors.cyan + "─".repeat(70) + colors.reset + "\n");
+  console.log(`${colors.green}✓ Passed: ${passed.length}${colors.reset}`);
+  console.log(`${colors.red}✗ Errors: ${errors.length}${colors.reset}`);
+  console.log(`${colors.yellow}⚠ Warnings: ${warnings.length}${colors.reset}`);
+  console.log(`${colors.blue}ℹ Info: ${infos.length}${colors.reset}`);
+  console.log(`${colors.cyan + "─".repeat(70) + colors.reset}\n`);
 
   // Final verdict
   if (errors.length === 0) {
-    console.log(colors.green + "✓ READY FOR DEPLOYMENT!" + colors.reset + "\n");
+    console.log(`${colors.green}✓ READY FOR DEPLOYMENT!${colors.reset}\n`);
     return 0;
   } else {
-    console.log(colors.red + "✗ NOT READY FOR DEPLOYMENT" + colors.reset);
+    console.log(`${colors.red}✗ NOT READY FOR DEPLOYMENT${colors.reset}`);
     console.log(
       colors.red +
         `  Fix ${errors.length} error(s) before deploying.` +
@@ -438,7 +436,7 @@ function printResults() {
 // Run all checks
 async function main() {
   console.log(
-    colors.cyan + "\nRunning pre-deployment checks...\n" + colors.reset,
+    `${colors.cyan}\nRunning pre-deployment checks...\n${colors.reset}`,
   );
 
   // Core files
@@ -473,7 +471,7 @@ async function main() {
 
 main().catch((error) => {
   console.error(
-    colors.red + "Error running pre-deployment checks:" + colors.reset,
+    `${colors.red}Error running pre-deployment checks:${colors.reset}`,
     error,
   );
   process.exit(1);

@@ -119,7 +119,6 @@ export async function POST(request: Request) {
       );
       // Fallback to pdf-parse (load dynamically to avoid module-level require issues)
       try {
-        // biome-ignore lint: Dynamic require needed for CommonJS fallback
         const pdfParse = require("pdf-parse");
         console.log("[PDF Upload] Attempting extraction with pdf-parse...");
         const data = await pdfParse(buffer);

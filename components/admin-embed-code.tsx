@@ -222,7 +222,7 @@ export function AdminEmbedCode() {
                   onChange={(e) =>
                     setSettings({
                       ...settings,
-                      openDelay: parseInt(e.target.value),
+                      openDelay: parseInt(e.target.value, 10),
                     })
                   }
                   placeholder="5000"

@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE() {
   // SINGLE-TENANT: Delete all chats for this session
-  const sessionId = await getOrCreateSessionId();
+  const _sessionId = await getOrCreateSessionId();
 
   // For now, we'll implement this later if needed
   // Deleting all chats for a session is less common in anonymous mode

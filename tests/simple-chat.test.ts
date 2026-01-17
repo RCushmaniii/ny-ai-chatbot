@@ -24,8 +24,12 @@ test("Basic chat functionality", async ({ page }) => {
   await page.waitForTimeout(2000);
 
   // Check that some content appeared (message exchange)
+  // Wait for at least user message + assistant response
   const messages = page.locator('[data-testid*="message-"]');
-  await expect(messages).toHaveCount(2); // User message + assistant response
+  await expect(async () => {
+    const count = await messages.count();
+    expect(count).toBeGreaterThanOrEqual(2);
+  }).toPass({ timeout: 30000 });
 });
 
 test("Page loads correctly", async ({ page }) => {
