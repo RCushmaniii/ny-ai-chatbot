@@ -39,7 +39,9 @@ export async function GET() {
   try {
     const postgresUrl = process.env.POSTGRES_URL;
     if (!postgresUrl) {
-      return NextResponse.json(DEFAULT_EMBED_SETTINGS, { headers: corsHeaders });
+      return NextResponse.json(DEFAULT_EMBED_SETTINGS, {
+        headers: corsHeaders,
+      });
     }
 
     const client = postgres(postgresUrl);
@@ -54,7 +56,9 @@ export async function GET() {
 
     if (settings.length === 0 || !settings[0].embedSettings) {
       // Return defaults if no settings found
-      return NextResponse.json(DEFAULT_EMBED_SETTINGS, { headers: corsHeaders });
+      return NextResponse.json(DEFAULT_EMBED_SETTINGS, {
+        headers: corsHeaders,
+      });
     }
 
     // Merge with defaults to ensure all fields are present
