@@ -70,7 +70,10 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
       - name: Enable pgvector extension
-        run: psql $POSTGRES_URL -c "CREATE EXTENSION IF NOT EXISTS vector;"
+        run: |
+          psql $POSTGRES_URL -c "CREATE EXTENSION IF NOT EXISTS vector;"
+          psql $POSTGRES_URL -c "SELECT extname FROM pg_extension WHERE extname = 'vector';" | grep -q vector || (echo "ERROR: pgvector extension not created!" && exit 1)
+          echo "✅ pgvector extension enabled"
 
       - name: Create .env.local for test environment
         run: |
