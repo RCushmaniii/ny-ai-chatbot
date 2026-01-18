@@ -17,7 +17,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_USER: postgres
@@ -66,8 +66,32 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Enable pgvector extension
+        run: |
+          psql $POSTGRES_URL -c "CREATE EXTENSION IF NOT EXISTS vector;"
+          psql $POSTGRES_URL -c "SELECT extname FROM pg_extension WHERE extname = 'vector';" | grep -q vector || (echo "ERROR: pgvector extension not created!" && exit 1)
+          echo "✅ pgvector extension enabled"
+
+      - name: Create .env.local for test environment
+        run: |
+          cat > .env.local << EOF
+          PLAYWRIGHT=true
+          AUTH_SECRET=$AUTH_SECRET
+          POSTGRES_URL=$POSTGRES_URL
+          OPENAI_API_KEY=$OPENAI_API_KEY
+          EOF
+
       - name: Run DB migrations
         run: pnpm db:migrate
+
+      - name: Apply additional schema changes
+        run: |
+          psql $POSTGRES_URL -c 'ALTER TABLE "Chat" ADD COLUMN IF NOT EXISTS "sessionId" varchar(64);'
+          psql $POSTGRES_URL -c 'ALTER TABLE "Chat" ADD COLUMN IF NOT EXISTS "lastContext" jsonb;'
+          echo "✅ Additional schema changes applied"
 
       - name: Cache Playwright browsers
         uses: actions/cache@v3

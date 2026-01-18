@@ -20,11 +20,28 @@ const DEFAULT_EMBED_SETTINGS = {
   ],
 };
 
+// CORS headers for embed widget (public endpoint)
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+// Handle OPTIONS preflight request
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: corsHeaders,
+  });
+}
+
 export async function GET() {
   try {
     const postgresUrl = process.env.POSTGRES_URL;
     if (!postgresUrl) {
-      return NextResponse.json(DEFAULT_EMBED_SETTINGS);
+      return NextResponse.json(DEFAULT_EMBED_SETTINGS, {
+        headers: corsHeaders,
+      });
     }
 
     const client = postgres(postgresUrl);
@@ -39,7 +56,9 @@ export async function GET() {
 
     if (settings.length === 0 || !settings[0].embedSettings) {
       // Return defaults if no settings found
-      return NextResponse.json(DEFAULT_EMBED_SETTINGS);
+      return NextResponse.json(DEFAULT_EMBED_SETTINGS, {
+        headers: corsHeaders,
+      });
     }
 
     // Merge with defaults to ensure all fields are present
@@ -48,10 +67,10 @@ export async function GET() {
       ...settings[0].embedSettings,
     };
 
-    return NextResponse.json(embedSettings);
+    return NextResponse.json(embedSettings, { headers: corsHeaders });
   } catch (error) {
     console.error("Error fetching embed settings:", error);
     // Return defaults on error
-    return NextResponse.json(DEFAULT_EMBED_SETTINGS);
+    return NextResponse.json(DEFAULT_EMBED_SETTINGS, { headers: corsHeaders });
   }
 }

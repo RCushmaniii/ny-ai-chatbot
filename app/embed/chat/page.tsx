@@ -230,8 +230,8 @@ function EmbedChatContent() {
             </h1>
             <p className="text-[13px] opacity-80 leading-tight mt-0.5">
               {language === "es"
-                ? "Tu asistente académico 24/7"
-                : "Your 24/7 academic assistant"}
+                ? "Tu Asistente de Inglés — Siempre Disponible"
+                : "Your English Learning Assistant — Always Available"}
             </p>
           </div>
         </div>
@@ -399,16 +399,16 @@ function EmbedChatContent() {
       {/* Input - Modern pill-shaped design with gold accent */}
       <form
         onSubmit={handleSubmit}
-        className="px-5 py-4 bg-white border-t border-[#E2E8F0]"
+        className="px-5 py-4 bg-white border-t border-[#E2E8F0] shadow-[0_-2px_10px_rgba(0,0,0,0.04)]"
       >
-        <div className="flex gap-2.5 items-center bg-[#F8FAFC] px-4 py-2 rounded-full border border-[#E2E8F0] focus-within:border-[#C2A45F] transition-colors">
+        <div className="flex gap-2.5 items-center bg-white px-4 py-2 rounded-full border-2 border-[#E2E8F0] shadow-sm focus-within:border-[#C2A45F] focus-within:shadow-[0_0_0_4px_rgba(194,164,95,0.15)] transition-all">
           <input
             ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={placeholder}
-            className="flex-1 bg-transparent border-none outline-none text-sm text-[#334155] placeholder-[#A0AEC0]"
+            className="flex-1 bg-transparent border-none outline-none text-sm text-[#1F2937] placeholder-[#94A3B8]"
             disabled={isLoading}
             onFocus={(e) => {
               e.preventDefault();
@@ -420,7 +420,7 @@ function EmbedChatContent() {
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="w-9 h-9 bg-[#C2A45F] hover:bg-[#B09351] text-[#0F172A] rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 shrink-0"
+            className="w-9 h-9 bg-[#C2A45F] hover:bg-[#B09351] text-[#0F172A] rounded-full flex items-center justify-center disabled:bg-[#E5E7EB] disabled:text-[#9CA3AF] disabled:cursor-not-allowed transition-all active:scale-95 shrink-0 shadow-md"
             aria-label={language === "es" ? "Enviar mensaje" : "Send message"}
           >
             <svg
