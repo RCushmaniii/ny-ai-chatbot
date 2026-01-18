@@ -87,6 +87,12 @@ jobs:
       - name: Run DB migrations
         run: pnpm db:migrate
 
+      - name: Apply additional schema changes
+        run: |
+          psql $POSTGRES_URL -c 'ALTER TABLE "Chat" ADD COLUMN IF NOT EXISTS "sessionId" varchar(64);'
+          psql $POSTGRES_URL -c 'ALTER TABLE "Chat" ADD COLUMN IF NOT EXISTS "lastContext" jsonb;'
+          echo "✅ Additional schema changes applied"
+
       - name: Cache Playwright browsers
         uses: actions/cache@v3
         id: playwright-cache
