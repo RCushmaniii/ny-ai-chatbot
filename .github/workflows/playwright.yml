@@ -72,6 +72,15 @@ jobs:
       - name: Enable pgvector extension
         run: psql $POSTGRES_URL -c "CREATE EXTENSION IF NOT EXISTS vector;"
 
+      - name: Create .env.local for test environment
+        run: |
+          cat > .env.local << EOF
+          PLAYWRIGHT=true
+          AUTH_SECRET=$AUTH_SECRET
+          POSTGRES_URL=$POSTGRES_URL
+          OPENAI_API_KEY=$OPENAI_API_KEY
+          EOF
+
       - name: Run DB migrations
         run: pnpm db:migrate
 
