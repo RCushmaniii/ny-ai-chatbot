@@ -1,5 +1,5 @@
-import { auth } from "@/app/(auth)/auth";
 import { type NextRequest, NextResponse } from "next/server";
+import { auth } from "@/app/(auth)/auth";
 import { guestRegex } from "./lib/constants";
 
 export async function middleware(request: NextRequest) {
@@ -10,9 +10,34 @@ export async function middleware(request: NextRequest) {
     return new Response("pong", { status: 200 });
   }
 
-  // Skip auth routes
-  if (pathname.startsWith("/api/auth")) {
-    return NextResponse.next();
+  // Skip auth routes, cron jobs, and embed endpoints (no auth needed)
+  if (
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/cron") ||
+    pathname.startsWith("/api/embed") ||
+    pathname.startsWith("/embed")
+  ) {
+    const response = NextResponse.next();
+
+    // Add CORS headers for local development
+    const origin = request.headers.get("origin");
+    if (
+      origin &&
+      (origin.includes("localhost") || origin.includes("127.0.0.1"))
+    ) {
+      response.headers.set("Access-Control-Allow-Origin", origin);
+      response.headers.set(
+        "Access-Control-Allow-Methods",
+        "GET, POST, OPTIONS",
+      );
+      response.headers.set(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization",
+      );
+      response.headers.set("Access-Control-Allow-Credentials", "true");
+    }
+
+    return response;
   }
 
   // Get the session using the new `auth()` helper
@@ -22,7 +47,7 @@ export async function middleware(request: NextRequest) {
   if (!session) {
     const redirectUrl = encodeURIComponent(request.url);
     return NextResponse.redirect(
-      new URL(`/api/auth/guest?redirectUrl=${redirectUrl}`, request.url)
+      new URL(`/api/auth/guest?redirectUrl=${redirectUrl}`, request.url),
     );
   }
 
@@ -38,13 +63,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/",
-    "/chat/:id",
-    "/api/:path*",
-    "/login",
-    "/register",
-
-    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
-  ],
+  matcher: ["/", "/chat/:id", "/api/:path*", "/login", "/register"],
 };

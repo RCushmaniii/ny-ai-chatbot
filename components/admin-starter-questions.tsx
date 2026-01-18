@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { GripVertical, Loader2, Plus, Save, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -12,7 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2, Plus, Trash2, Save, GripVertical } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type StarterQuestion = {
   id: string;
@@ -106,9 +106,13 @@ export function AdminStarterQuestions() {
     setHasChanges(true);
   };
 
-  const updateQuestion = (id: string, field: keyof StarterQuestion, value: string) => {
+  const updateQuestion = (
+    id: string,
+    field: keyof StarterQuestion,
+    value: string,
+  ) => {
     setQuestions(
-      questions.map((q) => (q.id === id ? { ...q, [field]: value } : q))
+      questions.map((q) => (q.id === id ? { ...q, [field]: value } : q)),
     );
     setHasChanges(true);
   };
@@ -121,7 +125,7 @@ export function AdminStarterQuestions() {
   const resetToDefault = () => {
     if (
       confirm(
-        "Are you sure you want to reset to default questions? This will overwrite your current questions."
+        "Are you sure you want to reset to default questions? This will overwrite your current questions.",
       )
     ) {
       setQuestions(DEFAULT_QUESTIONS);
@@ -241,7 +245,9 @@ export function AdminStarterQuestions() {
                 className="flex items-center gap-2 p-3 rounded-lg border bg-background hover:bg-muted/50 transition-colors cursor-pointer"
               >
                 {q.emoji && <span className="text-xl">{q.emoji}</span>}
-                <span className="text-sm">{q.question || "(Empty question)"}</span>
+                <span className="text-sm">
+                  {q.question || "(Empty question)"}
+                </span>
               </div>
             ))}
             {questions.length === 0 && (
@@ -259,19 +265,24 @@ export function AdminStarterQuestions() {
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <p>
-            • <strong>Be specific:</strong> Ask clear questions that showcase your bot's knowledge
+            • <strong>Be specific:</strong> Ask clear questions that showcase
+            your bot's knowledge
           </p>
           <p>
-            • <strong>Use both languages:</strong> Include questions in English and Spanish
+            • <strong>Use both languages:</strong> Include questions in English
+            and Spanish
           </p>
           <p>
-            • <strong>Cover key topics:</strong> Services, pricing, booking, testimonials
+            • <strong>Cover key topics:</strong> Services, pricing, booking,
+            testimonials
           </p>
           <p>
-            • <strong>Add emojis:</strong> Make questions visually appealing and easy to scan
+            • <strong>Add emojis:</strong> Make questions visually appealing and
+            easy to scan
           </p>
           <p>
-            • <strong>Keep it short:</strong> 3-5 questions work best to avoid overwhelming users
+            • <strong>Keep it short:</strong> 3-5 questions work best to avoid
+            overwhelming users
           </p>
         </CardContent>
       </Card>

@@ -1,5 +1,8 @@
 import { auth } from "@/app/(auth)/auth";
-import { getGlobalBotSettings, updateGlobalBotSettings } from "@/lib/db/queries";
+import {
+  getGlobalBotSettings,
+  updateGlobalBotSettings,
+} from "@/lib/db/queries";
 
 export async function GET() {
   try {
@@ -20,7 +23,7 @@ export async function GET() {
     console.error("Error fetching settings:", error);
     return Response.json(
       { error: "Failed to fetch settings" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -55,9 +58,6 @@ export async function POST(request: Request) {
     return Response.json({ success: true });
   } catch (error) {
     console.error("Error saving settings:", error);
-    return Response.json(
-      { error: "Failed to save settings" },
-      { status: 500 }
-    );
+    return Response.json({ error: "Failed to save settings" }, { status: 500 });
   }
 }

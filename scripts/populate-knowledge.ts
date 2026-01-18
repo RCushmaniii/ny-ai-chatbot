@@ -1,9 +1,9 @@
 import { openai } from "@ai-sdk/openai";
 import { embed } from "ai";
+import { config } from "dotenv";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { documents } from "../lib/db/schema";
-import { config } from "dotenv";
 
 // Load environment variables
 config({ path: ".env.development.local" });
@@ -14,11 +14,7 @@ config({ path: ".env" });
 const client = postgres(process.env.POSTGRES_URL!);
 const db = drizzle(client);
 
-async function addDocument(
-  content: string,
-  url: string,
-  metadata: any = {}
-) {
+async function addDocument(content: string, url: string, metadata: any = {}) {
   try {
     // Create embedding
     const { embedding } = await embed({
@@ -47,7 +43,7 @@ async function populateKnowledgeBase() {
   try {
     await client.unsafe("CREATE EXTENSION IF NOT EXISTS vector");
     console.log("✅ pgvector extension enabled\n");
-  } catch (error) {
+  } catch (_error) {
     console.log("⚠️  pgvector extension may already exist\n");
   }
 
@@ -62,7 +58,7 @@ async function populateKnowledgeBase() {
     
     A free 30-minute coaching session is available to start.`,
     "https://www.nyenglishteacher.com",
-    { type: "services-overview", language: "en" }
+    { type: "services-overview", language: "en" },
   );
 
   // Target Audience
@@ -76,7 +72,7 @@ async function populateKnowledgeBase() {
     
     The coaching is NOT academic English - it's focused on practical business communication.`,
     "https://www.nyenglishteacher.com",
-    { type: "target-audience", language: "en" }
+    { type: "target-audience", language: "en" },
   );
 
   // Coaching Approach
@@ -91,7 +87,7 @@ async function populateKnowledgeBase() {
     
     Proven results with executives from companies like CEVA Logistics, Driscoll's, and Smarttie.`,
     "https://www.nyenglishteacher.com",
-    { type: "coaching-approach", language: "en" }
+    { type: "coaching-approach", language: "en" },
   );
 
   // Pricing Information
@@ -104,7 +100,7 @@ async function populateKnowledgeBase() {
     
     To learn about pricing, book a free 30-minute coaching session to discuss your needs.`,
     "https://www.nyenglishteacher.com",
-    { type: "pricing", language: "en" }
+    { type: "pricing", language: "en" },
   );
 
   // Spanish Version - Services
@@ -118,7 +114,7 @@ async function populateKnowledgeBase() {
     
     Hay disponible una sesión de coaching gratuita de 30 minutos para comenzar.`,
     "https://www.nyenglishteacher.com",
-    { type: "services-overview", language: "es" }
+    { type: "services-overview", language: "es" },
   );
 
   // Spanish Version - Target Audience
@@ -131,7 +127,7 @@ async function populateKnowledgeBase() {
     
     El coaching NO es inglés académico - está enfocado en comunicación empresarial práctica del mundo real.`,
     "https://www.nyenglishteacher.com",
-    { type: "target-audience", language: "es" }
+    { type: "target-audience", language: "es" },
   );
 
   // Spanish Version - Pricing
@@ -143,7 +139,7 @@ async function populateKnowledgeBase() {
     
     Para conocer los precios, reserve una sesión de coaching gratuita de 30 minutos.`,
     "https://www.nyenglishteacher.com",
-    { type: "pricing", language: "es" }
+    { type: "pricing", language: "es" },
   );
 
   // FAQ - Levels and Backgrounds
@@ -151,8 +147,8 @@ async function populateKnowledgeBase() {
     `What levels and backgrounds does New York English Teacher work with?
     Robert works with intermediate and advanced learners—busy professionals in business, law, medicine, logistics, engineering, and other fields. 
     He does not teach absolute beginners. The coaching is designed for professionals who already have a foundation in English and want to improve their business communication skills.`,
-    "https://www.nyenglishteacher.com/faq",
-    { type: "faq-levels", language: "en" }
+    "https://www.nyenglishteacher.com/en/faqs/",
+    { type: "faq-levels", language: "en" },
   );
 
   // FAQ - Lesson Content
@@ -166,8 +162,8 @@ async function populateKnowledgeBase() {
     - General business communication skills
     
     All lessons are customized to your specific job and professional goals.`,
-    "https://www.nyenglishteacher.com/faq",
-    { type: "faq-content", language: "en" }
+    "https://www.nyenglishteacher.com/en/faqs/",
+    { type: "faq-content", language: "en" },
   );
 
   // FAQ - How Classes Work
@@ -178,8 +174,8 @@ async function populateKnowledgeBase() {
     - Customized PDF notes are delivered after each class
     - Lessons are personalized to your job and specific professional needs
     - Flexible scheduling available`,
-    "https://www.nyenglishteacher.com/faq",
-    { type: "faq-how-it-works", language: "en" }
+    "https://www.nyenglishteacher.com/en/faqs/",
+    { type: "faq-how-it-works", language: "en" },
   );
 
   // FAQ - Scheduling
@@ -190,8 +186,8 @@ async function populateKnowledgeBase() {
     - Call directly
     
     Important: Please give at least 24 hours' notice to reschedule and avoid any fees.`,
-    "https://www.nyenglishteacher.com/faq",
-    { type: "faq-scheduling", language: "en" }
+    "https://www.nyenglishteacher.com/en/faqs/",
+    { type: "faq-scheduling", language: "en" },
   );
 
   // FAQ - Pricing Details
@@ -203,8 +199,8 @@ async function populateKnowledgeBase() {
     
     Payment (individuals): Due before each session via Zelle or bank transfer
     Companies: Monthly invoicing available`,
-    "https://www.nyenglishteacher.com/faq",
-    { type: "faq-pricing-details", language: "en" }
+    "https://www.nyenglishteacher.com/en/faqs/",
+    { type: "faq-pricing-details", language: "en" },
   );
 
   // FAQ - Senior Leadership
@@ -212,8 +208,8 @@ async function populateKnowledgeBase() {
     `Does New York English Teacher offer training for senior leadership?
     Yes! Robert designs custom workshops and private coaching sessions specifically for senior leaders and executives.
     Contact him directly for a customized proposal and pricing tailored to your organization's needs.`,
-    "https://www.nyenglishteacher.com/faq",
-    { type: "faq-leadership", language: "en" }
+    "https://www.nyenglishteacher.com/en/faqs/",
+    { type: "faq-leadership", language: "en" },
   );
 
   // FAQ - Progress Timeline
@@ -228,8 +224,8 @@ async function populateKnowledgeBase() {
     - Your personal goals
     
     The coaching is designed to deliver practical, real-world results quickly.`,
-    "https://www.nyenglishteacher.com/faq",
-    { type: "faq-progress", language: "en" }
+    "https://www.nyenglishteacher.com/en/faqs/",
+    { type: "faq-progress", language: "en" },
   );
 
   // FAQ - Cancellation Policy
@@ -246,12 +242,120 @@ async function populateKnowledgeBase() {
     Payment:
     - Individuals: Payment due before each session via Zelle or bank transfer
     - Companies: Monthly invoicing available`,
-    "https://www.nyenglishteacher.com/faq",
-    { type: "faq-policy", language: "en" }
+    "https://www.nyenglishteacher.com/en/faqs/",
+    { type: "faq-policy", language: "en" },
+  );
+
+  // ===========================================
+  // SPANISH FAQs
+  // ===========================================
+
+  // FAQ ES - Niveles y experiencia
+  await addDocument(
+    `¿Con qué niveles y perfiles trabaja New York English Teacher?
+    Robert trabaja con estudiantes de nivel intermedio y avanzado: profesionales ocupados en negocios, derecho, medicina, logística, ingeniería y otros campos.
+    No enseña a principiantes absolutos. El coaching está diseñado para profesionales que ya tienen una base en inglés y quieren mejorar sus habilidades de comunicación empresarial.`,
+    "https://www.nyenglishteacher.com/es/faqs/",
+    { type: "faq-levels", language: "es" },
+  );
+
+  // FAQ ES - Contenido de las clases
+  await addDocument(
+    `¿Qué cubren las clases de New York English Teacher?
+    Las lecciones se enfocan en:
+    - Hablar inglés con confianza en entornos profesionales
+    - Escenarios de trabajo: reuniones, presentaciones, llamadas con clientes
+    - Pronunciación, frases y tono profesional
+    - Preparación para entrevistas
+    - Habilidades generales de comunicación empresarial
+
+    Todas las lecciones están personalizadas según tu trabajo y objetivos profesionales específicos.`,
+    "https://www.nyenglishteacher.com/es/faqs/",
+    { type: "faq-content", language: "es" },
+  );
+
+  // FAQ ES - Cómo funcionan las clases
+  await addDocument(
+    `¿Cómo funcionan las clases de New York English Teacher?
+    - Sesiones privadas de 60 minutos realizadas en línea por Google Meet
+    - Cada sesión incluye: calentamiento, práctica dirigida, retroalimentación inmediata y conversación
+    - Se entregan notas personalizadas en PDF después de cada clase
+    - Las lecciones están personalizadas para tu trabajo y necesidades profesionales específicas
+    - Horarios flexibles disponibles`,
+    "https://www.nyenglishteacher.com/es/faqs/",
+    { type: "faq-how-it-works", language: "es" },
+  );
+
+  // FAQ ES - Programación
+  await addDocument(
+    `¿Cómo programar o reprogramar clases con New York English Teacher?
+    - Envía un mensaje por WhatsApp
+    - Escribe un correo electrónico directamente a Robert
+    - Llama directamente
+
+    Importante: Por favor avisa con al menos 24 horas de anticipación para reprogramar y evitar cargos.`,
+    "https://www.nyenglishteacher.com/es/faqs/",
+    { type: "faq-scheduling", language: "es" },
+  );
+
+  // FAQ ES - Precios detallados
+  await addDocument(
+    `Precios de New York English Teacher:
+    - Estudiantes en México: 500 MXN por hora
+    - Estudiantes en Estados Unidos: 25 USD por hora
+    - Capacitación para liderazgo senior: Precios personalizados (contactar para propuesta)
+
+    Pago (individuos): Se paga antes de cada sesión por Zelle o transferencia bancaria
+    Empresas: Facturación mensual disponible`,
+    "https://www.nyenglishteacher.com/es/faqs/",
+    { type: "faq-pricing-details", language: "es" },
+  );
+
+  // FAQ ES - Liderazgo Senior
+  await addDocument(
+    `¿New York English Teacher ofrece capacitación para liderazgo senior?
+    ¡Sí! Robert diseña talleres personalizados y sesiones de coaching privadas específicamente para líderes senior y ejecutivos.
+    Contáctalo directamente para una propuesta personalizada y precios adaptados a las necesidades de tu organización.`,
+    "https://www.nyenglishteacher.com/es/faqs/",
+    { type: "faq-leadership", language: "es" },
+  );
+
+  // FAQ ES - Tiempo de progreso
+  await addDocument(
+    `¿Qué tan rápido mejoraré con el coaching de New York English Teacher?
+    La mayoría de los estudiantes ven progreso claro en 3-5 sesiones.
+
+    La mejora depende de:
+    - Práctica fuera de clase
+    - Frecuencia de las lecciones
+    - Autodisciplina
+    - Tus metas personales
+
+    El coaching está diseñado para entregar resultados prácticos y del mundo real rápidamente.`,
+    "https://www.nyenglishteacher.com/es/faqs/",
+    { type: "faq-progress", language: "es" },
+  );
+
+  // FAQ ES - Política de cancelación
+  await addDocument(
+    `Política de cancelación y pago de New York English Teacher:
+
+    Asistencia:
+    - Robert espera hasta 15 minutos después de la hora de inicio
+    - Después de 15 minutos, la lección se considera inasistencia y se aplica el cargo
+
+    Cancelaciones:
+    - Requieren aviso de 24 horas para evitar cargos
+
+    Pago:
+    - Individuos: Pago antes de cada sesión por Zelle o transferencia bancaria
+    - Empresas: Facturación mensual disponible`,
+    "https://www.nyenglishteacher.com/es/faqs/",
+    { type: "faq-policy", language: "es" },
   );
 
   console.log("\n✅ Knowledge base populated successfully!");
-  console.log("📊 Total documents added: 15");
+  console.log("📊 Total documents added: 23");
 
   await client.end();
 }

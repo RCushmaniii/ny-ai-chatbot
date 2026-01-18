@@ -2,7 +2,6 @@
 
 import type { Session } from "next-auth";
 import { startTransition, useMemo, useOptimistic, useState } from "react";
-import { saveChatModelAsCookie } from "@/app/(chat)/actions";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -31,15 +30,15 @@ export function ModelSelector({
   const { availableChatModelIds } = entitlementsByUserType[userType];
 
   const availableChatModels = chatModels.filter((chatModel) =>
-    availableChatModelIds.includes(chatModel.id)
+    availableChatModelIds.includes(chatModel.id),
   );
 
   const selectedChatModel = useMemo(
     () =>
       availableChatModels.find(
-        (chatModel) => chatModel.id === optimisticModelId
+        (chatModel) => chatModel.id === optimisticModelId,
       ),
-    [optimisticModelId, availableChatModels]
+    [optimisticModelId, availableChatModels],
   );
 
   return (
@@ -48,7 +47,7 @@ export function ModelSelector({
         asChild
         className={cn(
           "w-fit data-[state=open]:bg-accent data-[state=open]:text-accent-foreground",
-          className
+          className,
         )}
       >
         <Button
@@ -78,7 +77,6 @@ export function ModelSelector({
 
                 startTransition(() => {
                   setOptimisticModelId(id);
-                  saveChatModelAsCookie(id);
                 });
               }}
             >

@@ -96,7 +96,7 @@ export const voteDeprecated = pgTable(
     return {
       pk: primaryKey({ columns: [table.chatId, table.messageId] }),
     };
-  }
+  },
 );
 
 export type VoteDeprecated = InferSelectModel<typeof voteDeprecated>;
@@ -116,7 +116,7 @@ export const vote = pgTable(
     return {
       pk: primaryKey({ columns: [table.chatId, table.messageId] }),
     };
-  }
+  },
 );
 
 export type Vote = InferSelectModel<typeof vote>;
@@ -139,7 +139,7 @@ export const document = pgTable(
     return {
       pk: primaryKey({ columns: [table.id, table.createdAt] }),
     };
-  }
+  },
 );
 
 export type Document = InferSelectModel<typeof document>;
@@ -165,7 +165,7 @@ export const suggestion = pgTable(
       columns: [table.documentId, table.documentCreatedAt],
       foreignColumns: [document.id, document.createdAt],
     }),
-  })
+  }),
 );
 
 export type Suggestion = InferSelectModel<typeof suggestion>;
@@ -183,7 +183,7 @@ export const stream = pgTable(
       columns: [table.chatId],
       foreignColumns: [chat.id],
     }),
-  })
+  }),
 );
 
 export type Stream = InferSelectModel<typeof stream>;
@@ -206,9 +206,10 @@ export const botSettings = pgTable("bot_settings", {
   is_active: boolean("is_active").default(true), // Singleton pattern - only one active row
   botName: varchar("botName", { length: 100 }),
   customInstructions: text("customInstructions"),
-  starterQuestions: jsonb("starterQuestions").$type<
-    Array<{ id: string; question: string; emoji?: string }>
-  >(),
+  starterQuestions:
+    jsonb("starterQuestions").$type<
+      Array<{ id: string; question: string; emoji?: string }>
+    >(),
   colors: jsonb("colors").$type<{
     primary?: string;
     background?: string;

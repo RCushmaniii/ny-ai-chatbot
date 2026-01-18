@@ -53,7 +53,7 @@ export default defineConfig({
   projects: [
     {
       name: "e2e",
-      testMatch: /e2e\/.*.test.ts/,
+      testMatch: /simple-chat.*.test.ts/,
       use: {
         ...devices["Desktop Chrome"],
       },
@@ -99,9 +99,15 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: "pnpm dev",
+    command:
+      process.platform === "win32"
+        ? "set PLAYWRIGHT=true && pnpm dev"
+        : "PLAYWRIGHT=true pnpm dev",
     url: `${baseURL}/ping`,
     timeout: 120 * 1000,
     reuseExistingServer: !process.env.CI,
+    env: {
+      PLAYWRIGHT: "true",
+    },
   },
 });

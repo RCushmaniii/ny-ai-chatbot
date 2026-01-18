@@ -1,12 +1,18 @@
 "use client";
 
-import { redirect, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
-import { AdminTabs } from "@/components/admin-tabs";
-import { AdminHeader } from "@/components/admin-header";
 import { Loader2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { AdminHeader } from "@/components/admin-header";
+import { AdminTabs } from "@/components/admin-tabs";
 
+/**
+ * Admin Dashboard Page
+ *
+ * NOTE: Admin access is verified server-side in layout.tsx
+ * This page only renders for authenticated admin users
+ */
 export default function AdminPage() {
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
@@ -19,25 +25,13 @@ export default function AdminPage() {
     }
   }, [searchParams]);
 
-  // Show loading state
-  if (status === "loading") {
+  // Show loading state while session loads
+  if (status === "loading" || !session?.user) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
-  }
-
-  // Redirect if not authenticated
-  if (!session?.user) {
-    redirect("/login");
-  }
-
-  // Single-tenant: Only the owner can access admin
-  const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "info@nyenglishteacher.com";
-  
-  if (session.user.email !== ADMIN_EMAIL) {
-    redirect("/");
   }
 
   const handleAccountClick = () => {
@@ -46,8 +40,8 @@ export default function AdminPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <AdminHeader 
-        userEmail={session.user.email || ""} 
+      <AdminHeader
+        userEmail={session.user.email || ""}
         onAccountClick={handleAccountClick}
       />
       <div className="flex-1 overflow-y-auto">
@@ -58,8 +52,8 @@ export default function AdminPage() {
               Manage your AI chatbot's knowledge base and settings
             </p>
           </div>
-          <AdminTabs 
-            userEmail={session.user.email || ""} 
+          <AdminTabs
+            userEmail={session.user.email || ""}
             userId={session.user.id}
             activeTab={activeTab}
           />

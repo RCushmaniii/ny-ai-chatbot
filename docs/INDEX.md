@@ -11,6 +11,9 @@
 
 - **[02-rag-architecture.md](02-rag-architecture.md)** - RAG system design and flow
 - **[03-knowledge-base.md](03-knowledge-base.md)** - Knowledge base structure
+- **[ROADMAP.md](ROADMAP.md)** - Product roadmap and next milestones
+- **[RAG_CLIENT_PLAYBOOK.md](RAG_CLIENT_PLAYBOOK.md)** - Client-ready RAG standards, testing, and operational checklist
+- **[LESSONS_LEARNED.md](LESSONS_LEARNED.md)** - Practical learnings from troubleshooting RAG, Insights, and hydration
 - **[CODE_CHANGES_SUMMARY.md](CODE_CHANGES_SUMMARY.md)** - Summary of all code changes
 
 ### Knowledge Base Management
@@ -24,12 +27,14 @@
 
 - **[ADMIN_GUIDE.md](ADMIN_GUIDE.md)** - Complete admin panel guide
 - **[ADMIN_PANEL_ANALYSIS.md](ADMIN_PANEL_ANALYSIS.md)** - Analysis and recommendations
+- **[ADMIN_AUDIT.md](ADMIN_AUDIT.md)** - Admin audit notes and checklist
 - **[PRIORITY_4_STATUS.md](PRIORITY_4_STATUS.md)** - Knowledge Insights feature status
 
 ### Deployment & Production
 
 - **[PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md)** - Complete deployment guide
 - **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Deployment instructions
+- **[VERCEL_ENV_SETUP.md](VERCEL_ENV_SETUP.md)** - Vercel environment variable setup
 - **[PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md)** - Pre-production checklist
 
 ### Website Integration
@@ -66,6 +71,9 @@
 **Understand the RAG system**
 → Read: [02-rag-architecture.md](02-rag-architecture.md)
 
+**Ship RAG reliably for clients (playbook)**
+→ Read: [RAG_CLIENT_PLAYBOOK.md](RAG_CLIENT_PLAYBOOK.md)
+
 **Upload knowledge base content**
 → Read: [04-file-upload.md](04-file-upload.md)
 
@@ -90,6 +98,7 @@ docs/
 ├── 04-file-upload.md               # File management
 ├── 05-customization.md             # Customization options
 ├── 06-faq.md                       # FAQ
+├── ADMIN_AUDIT.md                  # Admin audit notes
 ├── ADMIN_GUIDE.md                  # Admin panel guide
 ├── ADMIN_PANEL_ANALYSIS.md         # Panel analysis
 ├── ADMIN_SETUP.md                  # Admin setup
@@ -100,11 +109,14 @@ docs/
 ├── EMBED_INSTRUCTIONS.md           # Embedding guide
 ├── EMBED_WIDGET.md                 # Widget docs
 ├── KNOWLEDGE_BASE.md               # KB docs
+├── RAG_CLIENT_PLAYBOOK.md          # Client-ready RAG playbook
 ├── MIGRATION_SUMMARY.md            # Migrations
 ├── PRIORITY_4_STATUS.md            # Insights feature
 ├── PRODUCTION_CHECKLIST.md         # Pre-prod checklist
 ├── PRODUCTION_DEPLOYMENT_GUIDE.md  # Production guide
+├── ROADMAP.md                      # Roadmap
 ├── TESTING_CHECKLIST.md            # Testing guide
+├── VERCEL_ENV_SETUP.md             # Vercel env setup
 ├── README.md                       # Folder overview
 └── INDEX.md                        # This file
 ```
@@ -130,5 +142,5 @@ For issues or questions, refer to:
 
 ---
 
-**Last Updated**: December 9, 2025
+**Last Updated**: December 18, 2025
 **Status**: All 4 Priorities Complete ✅

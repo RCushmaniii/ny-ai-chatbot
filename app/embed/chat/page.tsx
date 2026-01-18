@@ -1,107 +1,169 @@
 "use client";
 
-import { useState, useRef, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import { nanoid } from "nanoid";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import {
+  detectWidgetLocaleFromNavigatorLanguage,
+  detectWidgetLocaleFromUrl,
+  normalizeWidgetLocale,
+  type WidgetLocale,
+  widgetMessages,
+} from "@/lib/i18n/widget-messages";
 
 // Translations
-const translations = {
-  en: {
-    title: "NY English Teacher",
-    welcome: "Welcome! 👋",
-    subtitle: "How can I help you today?",
-    quickQuestions: "Quick questions:",
-    placeholder: "Type your message...",
-    error: "Sorry, I encountered an error. Please try again.",
-    close: "Close chat",
-    suggestedQuestions: [
-      "What are the prices for classes?",
-      "What services do you offer?",
-      "How do I book a session?"
-    ]
-  },
-  es: {
-    title: "NY English Teacher",
-    welcome: "¡Bienvenido! 👋",
-    subtitle: "¿Cómo puedo ayudarte hoy?",
-    quickQuestions: "Preguntas rápidas:",
-    placeholder: "Escribe tu mensaje...",
-    error: "Lo siento, ocurrió un error. Por favor, inténtalo de nuevo.",
-    close: "Cerrar chat",
-    suggestedQuestions: [
-      "¿Cuáles son los precios de las clases?",
-      "¿Qué servicios ofreces?",
-      "¿Cómo reservo una sesión?"
-    ]
+function resolveWidgetLocale(searchParams: URLSearchParams): WidgetLocale {
+  const explicit = normalizeWidgetLocale(
+    searchParams.get("lang") ?? searchParams.get("locale"),
+  );
+  if (explicit) return explicit;
+
+  try {
+    const parentUrl = document.referrer || window.location.href;
+    const fromUrl = detectWidgetLocaleFromUrl(parentUrl);
+    if (fromUrl) return fromUrl;
+  } catch {
+    // ignore
   }
-};
+
+  try {
+    const fromNavigator = detectWidgetLocaleFromNavigatorLanguage(
+      navigator.language,
+    );
+    if (fromNavigator) return fromNavigator;
+  } catch {
+    // ignore
+  }
+
+  return "es";
+}
 
 function EmbedChatContent() {
   const searchParams = useSearchParams();
-  const [embedSettings, setEmbedSettings] = useState<any>(null);
-  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
-  
+  const [_embedSettings, setEmbedSettings] = useState<any>(null);
+  const [_isLoadingSettings, setIsLoadingSettings] = useState(true);
+
   // Detect language from parent page URL or query param
-  const [language, setLanguage] = useState<'en' | 'es'>('en');
-  
+  const [language, setLanguage] = useState<WidgetLocale>("es");
+
+  // Detect if we're embedded in an iframe
+  const isEmbedded =
+    typeof window !== "undefined" && window.self !== window.top;
+
   useEffect(() => {
-    // Try to get language from query param first
-    const langParam = searchParams.get('lang');
-    if (langParam === 'es' || langParam === 'en') {
-      setLanguage(langParam);
-      return;
-    }
-    
-    // Try to detect from parent page URL
-    try {
-      const parentUrl = document.referrer || window.location.href;
-      if (parentUrl.includes('/es/')) {
-        setLanguage('es');
-      } else {
-        setLanguage('en');
-      }
-    } catch (e) {
-      // Default to English if detection fails
-      setLanguage('en');
-    }
+    setLanguage(resolveWidgetLocale(searchParams));
   }, [searchParams]);
-  
+
+  // Prevent autofocus behavior when embedded
+  useEffect(() => {
+    if (!isEmbedded) return;
+
+    // Remove any autofocus attributes
+    const removeAutofocus = () => {
+      document.querySelectorAll("[autofocus]").forEach((el) => {
+        el.removeAttribute("autofocus");
+      });
+    };
+
+    // Blur any focused element on load
+    const preventInitialFocus = () => {
+      if (document.activeElement && document.activeElement !== document.body) {
+        (document.activeElement as HTMLElement).blur();
+      }
+    };
+
+    // Override scrollIntoView to prevent iframe from scrolling parent
+    const originalScrollIntoView = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = function (
+      arg?: boolean | ScrollIntoViewOptions,
+    ) {
+      // Only allow scrolling within the iframe, not the parent
+      if (typeof arg === "object") {
+        arg = { ...arg, block: "nearest", inline: "nearest" };
+      }
+      return originalScrollIntoView.call(this, arg);
+    };
+
+    // Prevent focus events from triggering scroll
+    const preventFocusScroll = (e: FocusEvent) => {
+      e.preventDefault();
+      // Allow focus but prevent scroll
+      if (e.target instanceof HTMLElement) {
+        e.target.focus({ preventScroll: true });
+      }
+    };
+
+    document.addEventListener("focus", preventFocusScroll, true);
+
+    removeAutofocus();
+    preventInitialFocus();
+
+    // Also prevent focus after a short delay (in case of async rendering)
+    const timeoutId = setTimeout(() => {
+      removeAutofocus();
+      preventInitialFocus();
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      Element.prototype.scrollIntoView = originalScrollIntoView;
+      document.removeEventListener("focus", preventFocusScroll, true);
+    };
+  }, [isEmbedded]);
+
   // Fetch embed settings from admin
   useEffect(() => {
     fetch("/api/embed/settings")
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         setEmbedSettings(data);
         setIsLoadingSettings(false);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Failed to load embed settings:", err);
         setIsLoadingSettings(false);
       });
   }, []);
-  
+
   // Get translations for current language
-  const t = translations[language];
-  
+  const t = widgetMessages[language];
+
   // Use language-specific defaults, don't let embedSettings override language
   const placeholder = t.placeholder;
-  const botIcon = embedSettings?.botIcon || "🎓";
+  // Load icon from chatbot server
+  const botIconUrl = "https://ny-ai-chatbot.vercel.app/images/chatbot-icon.jpg";
   const suggestedQuestions = t.suggestedQuestions;
-  
-  const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([]);
+
+  const [messages, setMessages] = useState<
+    Array<{ role: string; content: string }>
+  >([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const chatId = useRef(nanoid());
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const scrollToBottom = useCallback(() => {
+    // Only scroll within iframe, don't affect parent page
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "nearest",
+    });
+  }, []);
+
+  // Track if we should scroll (only after user sends a message)
+  const shouldScrollRef = useRef(false);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    // Only scroll when user sends a message, not when AI responds
+    // This lets users read AI responses from the beginning
+    if (shouldScrollRef.current) {
+      scrollToBottom();
+      shouldScrollRef.current = false;
+    }
+  }, [messages, scrollToBottom]);
 
   const handleClose = () => {
     window.parent.postMessage("close-chat", "*");
@@ -113,7 +175,9 @@ function EmbedChatContent() {
 
     const userMessage = input.trim();
     setInput("");
-    setMessages(prev => [...prev, { role: "user", content: userMessage }]);
+    // Scroll to show user's message, but not when AI responds
+    shouldScrollRef.current = true;
+    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setIsLoading(true);
 
     try {
@@ -129,13 +193,19 @@ function EmbedChatContent() {
       if (!response.ok) throw new Error("Failed to send message");
 
       const data = await response.json();
-      setMessages(prev => [...prev, { role: "assistant", content: data.response }]);
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: data.response },
+      ]);
     } catch (error) {
       console.error("Error:", error);
-      setMessages(prev => [...prev, { 
-        role: "assistant", 
-        content: t.error
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: t.error,
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -143,51 +213,75 @@ function EmbedChatContent() {
 
   return (
     <div className="flex flex-col h-screen bg-white">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-white shadow-sm">
+      {/* Unified Header - NY Navy with professional styling */}
+      <div className="flex items-center justify-between px-5 py-4 bg-[#0F172A] text-white">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-2xl">
-            {botIcon}
+          <div className="w-11 h-11 rounded-full bg-white flex items-center justify-center overflow-hidden shrink-0">
+            {/* biome-ignore lint/performance/noImgElement: External URL in embed iframe, Next Image not suitable */}
+            <img
+              src={botIconUrl}
+              alt="NY English Teacher"
+              className="w-full h-full object-cover"
+            />
           </div>
-          <h1 className="text-lg font-semibold text-gray-900">{t.title}</h1>
+          <div>
+            <h1 className="text-base font-semibold leading-tight">
+              NY English AI Coach
+            </h1>
+            <p className="text-[13px] opacity-80 leading-tight mt-0.5">
+              {language === "es"
+                ? "Tu asistente académico 24/7"
+                : "Your 24/7 academic assistant"}
+            </p>
+          </div>
         </div>
-        <button
-          onClick={handleClose}
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-700"
-          aria-label={t.close}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+        {/* Hide close button when embedded on a page, show only in popup widget */}
+        {!isEmbedded && (
+          <button
+            type="button"
+            onClick={handleClose}
+            className="p-1 opacity-70 hover:opacity-100 transition-opacity"
+            aria-label={t.close}
           >
-            <path d="M18 6 6 18" />
-            <path d="m6 6 12 12" />
-          </svg>
-        </button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </button>
+        )}
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+      {/* Messages - Professional light background */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#F8FAFC]">
         {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full space-y-4 px-4">
-            <div className="text-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-2">{t.welcome}</h2>
-              <p className="text-gray-600">{t.subtitle}</p>
+          <div className="flex flex-col items-center justify-center h-full space-y-6 px-4">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-[#334155] mb-2">
+                {language === "es"
+                  ? "Hola. ¿Cómo puedo ayudarte hoy?"
+                  : "Hello. How can I assist you today?"}
+              </h2>
             </div>
-            <div className="w-full max-w-md space-y-2">
-              <p className="text-sm font-medium text-gray-700 mb-3">{t.quickQuestions}</p>
+            <div className="w-full max-w-md space-y-2.5">
+              <p className="text-sm font-medium text-[#64748B] mb-3">
+                {language === "es" ? "Temas sugeridos:" : "Suggested topics:"}
+              </p>
               {suggestedQuestions.map((question: string, idx: number) => (
                 <button
+                  type="button"
                   key={idx}
                   onClick={() => setInput(question)}
-                  className="w-full text-left px-4 py-3 bg-white border border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all text-sm text-gray-700 hover:text-blue-700"
+                  className="w-full text-left px-4 py-3 bg-white border border-[#E2E8F0] rounded-xl hover:border-[#C2A45F] hover:bg-[#FFFDF5] transition-all text-sm text-[#0F172A] font-medium shadow-sm hover:shadow-md hover:-translate-y-0.5"
                 >
                   {question}
                 </button>
@@ -206,44 +300,71 @@ function EmbedChatContent() {
                   ? "bg-blue-600"
                   : "bg-white border border-gray-200"
               }`}
-              style={msg.role === "user" ? { color: "#ffffff", wordBreak: "break-word", overflowWrap: "break-word" } : { wordBreak: "break-word", overflowWrap: "break-word" }}
+              style={
+                msg.role === "user"
+                  ? {
+                      color: "#ffffff",
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                    }
+                  : { wordBreak: "break-word", overflowWrap: "break-word" }
+              }
             >
               <div className="text-sm leading-relaxed">
                 <ReactMarkdown
                   components={{
                     p: ({ children }) => (
-                      <p className="mb-2 last:mb-0 wrap-break-word" style={msg.role === "user" ? { color: "#ffffff" } : {}}>
+                      <p
+                        className="mb-2 last:mb-0 wrap-break-word"
+                        style={msg.role === "user" ? { color: "#ffffff" } : {}}
+                      >
                         {children}
                       </p>
                     ),
                     strong: ({ children }) => (
-                      <strong className="font-semibold wrap-break-word" style={msg.role === "user" ? { color: "#ffffff" } : {}}>
+                      <strong
+                        className="font-semibold wrap-break-word"
+                        style={msg.role === "user" ? { color: "#ffffff" } : {}}
+                      >
                         {children}
                       </strong>
                     ),
                     a: ({ href, children }) => (
-                      <a 
-                        href={href} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className={msg.role === "user" ? "underline hover:opacity-80 break-all" : "text-blue-600 hover:underline break-all"}
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={
+                          msg.role === "user"
+                            ? "underline hover:opacity-80 break-all"
+                            : "text-blue-600 hover:underline break-all"
+                        }
                         style={msg.role === "user" ? { color: "#ffffff" } : {}}
                       >
                         {children}
                       </a>
                     ),
                     ul: ({ children }) => (
-                      <ul className="list-disc pl-4 mb-2" style={msg.role === "user" ? { color: "#ffffff" } : {}}>
+                      <ul
+                        className="list-disc pl-4 mb-2"
+                        style={msg.role === "user" ? { color: "#ffffff" } : {}}
+                      >
                         {children}
                       </ul>
                     ),
                     ol: ({ children }) => (
-                      <ol className="list-decimal pl-4 mb-2" style={msg.role === "user" ? { color: "#ffffff" } : {}}>
+                      <ol
+                        className="list-decimal pl-4 mb-2"
+                        style={msg.role === "user" ? { color: "#ffffff" } : {}}
+                      >
                         {children}
                       </ol>
                     ),
                     li: ({ children }) => (
-                      <li className="mb-1" style={msg.role === "user" ? { color: "#ffffff" } : {}}>
+                      <li
+                        className="mb-1"
+                        style={msg.role === "user" ? { color: "#ffffff" } : {}}
+                      >
                         {children}
                       </li>
                     ),
@@ -260,8 +381,14 @@ function EmbedChatContent() {
             <div className="bg-gray-100 rounded-lg px-4 py-2">
               <div className="flex space-x-2">
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                <div
+                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                  style={{ animationDelay: "0.1s" }}
+                ></div>
+                <div
+                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                  style={{ animationDelay: "0.2s" }}
+                ></div>
               </div>
             </div>
           </div>
@@ -269,37 +396,40 @@ function EmbedChatContent() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <form onSubmit={handleSubmit} className="p-4 border-t bg-white shadow-lg">
-        <div className="flex gap-3">
+      {/* Input - Modern pill-shaped design with gold accent */}
+      <form
+        onSubmit={handleSubmit}
+        className="px-5 py-4 bg-white border-t border-[#E2E8F0]"
+      >
+        <div className="flex gap-2.5 items-center bg-[#F8FAFC] px-4 py-2 rounded-full border border-[#E2E8F0] focus-within:border-[#C2A45F] transition-colors">
           <input
+            ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={placeholder}
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 bg-white"
+            className="flex-1 bg-transparent border-none outline-none text-sm text-[#334155] placeholder-[#A0AEC0]"
             disabled={isLoading}
-            autoFocus
+            onFocus={(e) => {
+              e.preventDefault();
+              if (isEmbedded && inputRef.current) {
+                inputRef.current.focus({ preventScroll: true });
+              }
+            }}
           />
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium shadow-sm hover:shadow-md"
+            className="w-9 h-9 bg-[#C2A45F] hover:bg-[#B09351] text-[#0F172A] rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 shrink-0"
+            aria-label={language === "es" ? "Enviar mensaje" : "Send message"}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
               viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="inline-block"
+              fill="currentColor"
+              className="w-[18px] h-[18px] ml-0.5"
             >
-              <path d="m22 2-7 20-4-9-9-4Z" />
-              <path d="M22 2 11 13" />
+              <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
             </svg>
           </button>
         </div>
@@ -310,7 +440,13 @@ function EmbedChatContent() {
 
 export default function EmbedChatPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-screen">
+          Loading...
+        </div>
+      }
+    >
       <EmbedChatContent />
     </Suspense>
   );

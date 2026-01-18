@@ -3,7 +3,7 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
 import { ChatHeader } from "@/components/chat-header";
@@ -36,7 +36,6 @@ import type { VisibilityType } from "./visibility-selector";
 export function Chat({
   id,
   initialMessages,
-  initialChatModel,
   initialVisibilityType,
   isReadonly,
   autoResume,
@@ -44,7 +43,6 @@ export function Chat({
 }: {
   id: string;
   initialMessages: ChatMessage[];
-  initialChatModel: string;
   initialVisibilityType: VisibilityType;
   isReadonly: boolean;
   autoResume: boolean;
@@ -61,12 +59,6 @@ export function Chat({
   const [input, setInput] = useState<string>("");
   const [usage, setUsage] = useState<AppUsage | undefined>(initialLastContext);
   const [showCreditCardAlert, setShowCreditCardAlert] = useState(false);
-  const [currentModelId, setCurrentModelId] = useState(initialChatModel);
-  const currentModelIdRef = useRef(currentModelId);
-
-  useEffect(() => {
-    currentModelIdRef.current = currentModelId;
-  }, [currentModelId]);
 
   const {
     messages,
@@ -89,7 +81,6 @@ export function Chat({
           body: {
             id: request.id,
             message: request.messages.at(-1),
-            selectedChatModel: currentModelIdRef.current,
             selectedVisibilityType: visibilityType,
             ...request.body,
           },
@@ -141,7 +132,7 @@ export function Chat({
 
   const { data: votes } = useSWR<Vote[]>(
     messages.length >= 2 ? `/api/vote?chatId=${id}` : null,
-    fetcher
+    fetcher,
   );
 
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -169,7 +160,6 @@ export function Chat({
           isReadonly={isReadonly}
           messages={messages}
           regenerate={regenerate}
-          selectedModelId={initialChatModel}
           setMessages={setMessages}
           status={status}
           votes={votes}
@@ -182,8 +172,6 @@ export function Chat({
               chatId={id}
               input={input}
               messages={messages}
-              onModelChange={setCurrentModelId}
-              selectedModelId={currentModelId}
               selectedVisibilityType={visibilityType}
               sendMessage={sendMessage}
               setAttachments={setAttachments}
@@ -204,7 +192,6 @@ export function Chat({
         isReadonly={isReadonly}
         messages={messages}
         regenerate={regenerate}
-        selectedModelId={currentModelId}
         selectedVisibilityType={visibilityType}
         sendMessage={sendMessage}
         setAttachments={setAttachments}
@@ -234,7 +221,7 @@ export function Chat({
               onClick={() => {
                 window.open(
                   "https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai%3Fmodal%3Dadd-credit-card",
-                  "_blank"
+                  "_blank",
                 );
                 window.location.href = "/";
               }}

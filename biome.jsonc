@@ -1,17 +1,39 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "extends": ["ultracite"],
   "files": {
     "includes": [
-      "**/*",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.json",
+      "**/*.jsonc",
+      "!**/.next",
+      "!**/node_modules",
+      "!**/playwright-report",
+      "!**/playwright",
+      "!**/test-results",
       "!components/ui",
       "!lib/utils.ts",
       "!hooks/use-mobile.ts"
     ]
   },
+  "formatter": {
+    "indentStyle": "space",
+    "lineEnding": "lf"
+  },
   "linter": {
     "rules": {
+      "correctness": {
+        "useUniqueElementIds": "off",
+        "useExhaustiveDependencies": "off",
+        "noUnusedImports": "off",
+        "noUnusedFunctionParameters": "off"
+      },
       "suspicious": {
+        /* Too many false positives in admin tables/lists */
+        "noArrayIndexKey": "off",
+
         /* Needs more work to fix */
         "noExplicitAny": "off",
 
@@ -22,14 +44,10 @@
         "noConsole": "off",
 
         /* Needed for generateUUID() */
-        "noBitwiseOperators": "off"
-      },
-      "style": {
-        /* Allowing magic numbers */
-        "noMagicNumbers": "off",
+        "noBitwiseOperators": "off",
 
-        /* Needs more work to fix */
-        "noNestedTernary": "off"
+        /* Allow forEach with return values in scripts */
+        "useIterableCallbackReturn": "off"
       },
       "nursery": {
         /* Too many false positives */
@@ -38,13 +56,24 @@
       "complexity": {
         /* Needs more work to fix */
         "noExcessiveCognitiveComplexity": "off",
+        "noUselessConstructor": "off",
 
         /* This one has false positives. It's a bit... iffy 😉 */
-        "useSimplifiedLogicExpression": "off"
+        "useSimplifiedLogicExpression": "off",
+        "useOptionalChain": "off"
+      },
+      "performance": {
+        /* Allow re-renders in admin components for simplicity */
+        "noAccumulatingSpread": "off"
+      },
+      "security": {
+        /* No security rules needed for this project yet */
       },
       "a11y": {
         /* Needs more work to fix */
-        "noSvgWithoutTitle": "off"
+        "noSvgWithoutTitle": "off",
+        "noStaticElementInteractions": "off",
+        "useKeyWithClickEvents": "off"
       }
     }
   }

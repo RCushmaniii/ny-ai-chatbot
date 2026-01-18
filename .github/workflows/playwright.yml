@@ -10,10 +10,25 @@ jobs:
     timeout-minutes: 30
     runs-on: ubuntu-latest
     env:
-      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-      POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
-      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
-      REDIS_URL: ${{ secrets.REDIS_URL }}
+      AUTH_SECRET: "playwright-test-secret"
+      POSTGRES_URL: "postgresql://postgres:postgres@localhost:5432/postgres"
+      OPENAI_API_KEY: "test"
+      PLAYWRIGHT: "true"
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
       - uses: actions/checkout@v4
@@ -51,6 +66,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Run DB migrations
+        run: pnpm db:migrate
+
       - name: Cache Playwright browsers
         uses: actions/cache@v3
         id: playwright-cache
@@ -63,7 +81,9 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Run Playwright tests
-        run: pnpm test
+        run: |
+          mkdir -p playwright-report
+          pnpm exec playwright test
 
       - uses: actions/upload-artifact@v4
         if: always() && !cancelled()

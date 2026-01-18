@@ -44,17 +44,19 @@ interface Chunk {
 
 async function fetchSitemapUrls(): Promise<string[]> {
   console.log("📥 Fetching sitemap...");
-  
+
   try {
     const response = await fetch(CONFIG.sitemapUrl);
-    
+
     if (!response.ok) {
-      console.warn(`⚠️  Sitemap not found at ${CONFIG.sitemapUrl}, using fallback URLs`);
+      console.warn(
+        `⚠️  Sitemap not found at ${CONFIG.sitemapUrl}, using fallback URLs`,
+      );
       return getFallbackUrls();
     }
 
     const xmlText = await response.text();
-    
+
     // Debug: Log first 500 chars to see what we got
     console.log("📄 Sitemap preview:", xmlText.substring(0, 500));
 
@@ -75,7 +77,7 @@ async function fetchSitemapUrls(): Promise<string[]> {
 
     console.log(`✅ Found ${urls.length} URLs in sitemap (English + Spanish)`);
     return urls.length > 0 ? urls : getFallbackUrls();
-  } catch (error) {
+  } catch (_error) {
     console.warn("⚠️  Failed to parse sitemap, using fallback URLs");
     return getFallbackUrls();
   }
@@ -132,8 +134,8 @@ function splitIntoChunks(page: PageData): Chunk[] {
     const chunkContent = content.slice(start, end);
 
     // Detect language from URL
-    const language = url.includes('/es/') ? 'es' : 'en';
-    
+    const language = url.includes("/es/") ? "es" : "en";
+
     chunks.push({
       content: chunkContent,
       metadata: {

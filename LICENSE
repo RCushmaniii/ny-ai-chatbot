@@ -1,13 +1,58 @@
-Copyright 2024 Vercel, Inc.
+New York English Educational License v1.0
+Copyright (c) 2025 Robert Cushman. All rights reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Permission is hereby granted to any person obtaining a copy of this software
+and associated documentation files (the "Software") to use, copy, and modify
+the Software for personal, academic, or non-commercial educational purposes,
+subject to the following conditions:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+1. Non-Commercial Use Only
+   You may not use the Software, in whole or in part, for any commercial
+   purpose. "Commercial purpose" includes (but is not limited to):
+   - selling the Software or any derivative work,
+   - using the Software or any derivative work as part of a paid product
+     or service,
+   - using the Software or any derivative work to promote or deliver
+     paid courses, trainings, or consulting,
+   - using the Software or any derivative work within a business or
+     organization in a way that generates revenue, reduces costs,
+     or supports commercial operations.
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+2. Redistribution
+   You may redistribute the Software, or modified versions of it, only if:
+   - the redistribution is non-commercial and for educational or learning
+     purposes, and
+   - this License text is included in full and remains clearly visible, and
+   - you clearly indicate any changes you have made.
+
+3. No Sublicensing
+   You may not sublicense the Software or grant additional rights to third
+   parties beyond those granted in this License.
+
+4. Attribution
+   Any use or redistribution of the Software, with or without modification,
+   must include the following attribution in a reasonably visible place
+   (such as documentation, "About" page, or repository README):
+
+   "Based on 'New York English' by Robert Cushman (https://newyorkenglishteacher.com)."
+
+5. No Trademark License
+   This License does not grant permission to use the names "New York English",
+   "New York English Teacher", "CushLabs", or any related logos or trademarks.
+
+6. No Warranty
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+
+7. Termination
+   Any violation of this License will automatically terminate your rights
+   under it. Upon termination, you must cease all use and distribution of
+   the Software and destroy any copies in your possession or control.
+
+For commercial use, licensing, or partnership inquiries, please contact:
+info@nyenglishteacher.com

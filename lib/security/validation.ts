@@ -2,9 +2,17 @@
  * Input validation and sanitization for production safety
  */
 
+import {
+  checkRateLimitRedis,
+  isRedisRateLimitingEnabled,
+} from "./rate-limit-redis";
+
 export const MAX_MESSAGE_LENGTH = 2000;
 export const MAX_MESSAGES_PER_MINUTE = 10;
 export const MAX_MESSAGES_PER_HOUR = 50;
+
+// Re-export Redis rate limiting functions
+export { checkRateLimitRedis, isRedisRateLimitingEnabled };
 
 /**
  * Validate user message input
@@ -15,7 +23,11 @@ export function validateMessage(message: string): {
   sanitized?: string;
 } {
   // Check if message exists
-  if (!message || typeof message !== "string") {
+  if (
+    message === null ||
+    message === undefined ||
+    typeof message !== "string"
+  ) {
     return { valid: false, error: "Message is required" };
   }
 
@@ -131,7 +143,7 @@ export function getClientIdentifier(request: Request): string {
   // Try to get IP from headers (Vercel provides this)
   const forwardedFor = request.headers.get("x-forwarded-for");
   const realIp = request.headers.get("x-real-ip");
-  
+
   return forwardedFor?.split(",")[0] || realIp || "unknown";
 }
 

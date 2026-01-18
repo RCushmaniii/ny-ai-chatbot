@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   if (startingAfter && endingBefore) {
     return new ChatSDKError(
       "bad_request:api",
-      "Only one of starting_after or ending_before can be provided."
+      "Only one of starting_after or ending_before can be provided.",
     ).toResponse();
   }
 
@@ -32,12 +32,12 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE() {
   // SINGLE-TENANT: Delete all chats for this session
-  const sessionId = await getOrCreateSessionId();
+  const _sessionId = await getOrCreateSessionId();
 
   // For now, we'll implement this later if needed
   // Deleting all chats for a session is less common in anonymous mode
   return new ChatSDKError(
     "bad_request:history",
-    "Bulk delete not available for anonymous sessions"
+    "Bulk delete not available for anonymous sessions",
   ).toResponse();
 }

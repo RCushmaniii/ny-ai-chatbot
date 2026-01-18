@@ -1,5 +1,8 @@
 import { auth } from "@/app/(auth)/auth";
-import { getAllChatsWithMessages, getChatWithFullTranscript } from "@/lib/db/queries";
+import {
+  getAllChatsWithMessages,
+  getChatWithFullTranscript,
+} from "@/lib/db/queries";
 
 export async function GET(request: Request) {
   try {
@@ -41,7 +44,7 @@ export async function GET(request: Request) {
     console.error("Error fetching chat logs:", error);
     return Response.json(
       { error: "Failed to fetch chat logs" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

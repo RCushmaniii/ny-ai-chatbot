@@ -8,11 +8,25 @@ export default function DemoEmbedPage() {
         <header className="bg-white shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold text-blue-600">NY English Teacher</h1>
+              <h1 className="text-3xl font-bold text-blue-600">
+                NY English Teacher
+              </h1>
               <nav className="hidden md:flex space-x-8">
-                <a href="#services" className="text-gray-700 hover:text-blue-600">Services</a>
-                <a href="#about" className="text-gray-700 hover:text-blue-600">About</a>
-                <a href="#contact" className="text-gray-700 hover:text-blue-600">Contact</a>
+                <a
+                  href="#services"
+                  className="text-gray-700 hover:text-blue-600"
+                >
+                  Services
+                </a>
+                <a href="#about" className="text-gray-700 hover:text-blue-600">
+                  About
+                </a>
+                <a
+                  href="#contact"
+                  className="text-gray-700 hover:text-blue-600"
+                >
+                  Contact
+                </a>
               </nav>
             </div>
           </div>
@@ -25,14 +39,21 @@ export default function DemoEmbedPage() {
               Master English for Your Startup Journey
             </h2>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Personalized English coaching for startup founders. Perfect your pitch, 
-              communicate with investors, and lead your team with confidence.
+              Personalized English coaching for startup founders. Perfect your
+              pitch, communicate with investors, and lead your team with
+              confidence.
             </p>
             <div className="flex justify-center gap-4">
-              <button className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+              <button
+                type="button"
+                className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+              >
                 Get Started
               </button>
-              <button className="border-2 border-blue-600 text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition">
+              <button
+                type="button"
+                className="border-2 border-blue-600 text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition"
+              >
                 Learn More
               </button>
             </div>
@@ -50,21 +71,24 @@ export default function DemoEmbedPage() {
                 <div className="text-4xl mb-4">🚀</div>
                 <h4 className="text-xl font-semibold mb-2">Startup Founders</h4>
                 <p className="text-gray-600">
-                  Perfect your pitch and communicate effectively with investors and teams.
+                  Perfect your pitch and communicate effectively with investors
+                  and teams.
                 </p>
               </div>
               <div className="p-6 border rounded-lg hover:shadow-lg transition">
                 <div className="text-4xl mb-4">💼</div>
                 <h4 className="text-xl font-semibold mb-2">Business English</h4>
                 <p className="text-gray-600">
-                  Professional communication skills for meetings, presentations, and negotiations.
+                  Professional communication skills for meetings, presentations,
+                  and negotiations.
                 </p>
               </div>
               <div className="p-6 border rounded-lg hover:shadow-lg transition">
                 <div className="text-4xl mb-4">🎯</div>
                 <h4 className="text-xl font-semibold mb-2">1-on-1 Coaching</h4>
                 <p className="text-gray-600">
-                  Personalized lessons tailored to your specific goals and challenges.
+                  Personalized lessons tailored to your specific goals and
+                  challenges.
                 </p>
               </div>
             </div>
@@ -80,12 +104,14 @@ export default function DemoEmbedPage() {
                   Why Choose NY English Teacher?
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  With over 10 years of experience coaching startup founders and business professionals, 
-                  I understand the unique challenges you face when communicating in English.
+                  With over 10 years of experience coaching startup founders and
+                  business professionals, I understand the unique challenges you
+                  face when communicating in English.
                 </p>
                 <p className="text-gray-600 mb-4">
-                  My personalized approach focuses on your specific needs, whether it's perfecting 
-                  your investor pitch, leading team meetings, or negotiating deals.
+                  My personalized approach focuses on your specific needs,
+                  whether it's perfecting your investor pitch, leading team
+                  meetings, or negotiating deals.
                 </p>
                 <ul className="space-y-2">
                   <li className="flex items-center text-gray-700">
@@ -104,7 +130,9 @@ export default function DemoEmbedPage() {
               </div>
               <div className="bg-blue-100 rounded-lg p-8 text-center">
                 <p className="text-6xl mb-4">👨‍🏫</p>
-                <h4 className="text-2xl font-bold text-gray-900 mb-2">Robert Cushman</h4>
+                <h4 className="text-2xl font-bold text-gray-900 mb-2">
+                  Robert Cushman
+                </h4>
                 <p className="text-gray-600">English Coach & Startup Mentor</p>
               </div>
             </div>
@@ -120,7 +148,10 @@ export default function DemoEmbedPage() {
             <p className="text-xl text-blue-100 mb-8">
               Book a free consultation and let's discuss your goals.
             </p>
-            <button className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition">
+            <button
+              type="button"
+              className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition"
+            >
               Schedule Free Consultation
             </button>
           </div>
@@ -129,7 +160,9 @@ export default function DemoEmbedPage() {
         {/* Footer */}
         <footer className="bg-gray-900 text-white py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <p className="text-gray-400">© 2025 NY English Teacher. All rights reserved.</p>
+            <p className="text-gray-400">
+              © 2025 NY English Teacher. All rights reserved.
+            </p>
           </div>
         </footer>
       </div>

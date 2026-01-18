@@ -11,8 +11,8 @@ import {
   inArray,
   isNotNull,
   lt,
-  sql,
   type SQL,
+  sql,
 } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
@@ -22,19 +22,19 @@ import { ChatSDKError } from "../errors";
 import type { AppUsage } from "../usage";
 import { generateUUID } from "../utils";
 import {
+  type BotSettings,
   botSettings,
   chat,
+  type DBMessage,
   document,
   knowledgeEvents,
   message,
+  type Suggestion,
   stream,
   suggestion,
+  type User,
   user,
   vote,
-  type User,
-  type DBMessage,
-  type Suggestion,
-  type BotSettings,
 } from "./schema";
 import { generateHashedPassword } from "./utils";
 
@@ -52,7 +52,7 @@ export async function getUser(email: string): Promise<User[]> {
   } catch (_error) {
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to get user by email"
+      "Failed to get user by email",
     );
   }
 }
@@ -79,7 +79,7 @@ export async function createGuestUser() {
   } catch (_error) {
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to create guest user"
+      "Failed to create guest user",
     );
   }
 }
@@ -125,7 +125,7 @@ export async function deleteChatById({ id }: { id: string }) {
   } catch (_error) {
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to delete chat by id"
+      "Failed to delete chat by id",
     );
   }
 }
@@ -162,7 +162,7 @@ export async function getMessagesByChatId({ id }: { id: string }) {
   } catch (_error) {
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to get messages by chat id"
+      "Failed to get messages by chat id",
     );
   }
 }
@@ -204,7 +204,7 @@ export async function getVotesByChatId({ id }: { id: string }) {
   } catch (_error) {
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to get votes by chat id"
+      "Failed to get votes by chat id",
     );
   }
 }
@@ -251,7 +251,7 @@ export async function getDocumentsById({ id }: { id: string }) {
   } catch (_error) {
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to get documents by id"
+      "Failed to get documents by id",
     );
   }
 }
@@ -268,7 +268,7 @@ export async function getDocumentById({ id }: { id: string }) {
   } catch (_error) {
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to get document by id"
+      "Failed to get document by id",
     );
   }
 }
@@ -286,8 +286,8 @@ export async function deleteDocumentsByIdAfterTimestamp({
       .where(
         and(
           eq(suggestion.documentId, id),
-          gt(suggestion.documentCreatedAt, timestamp)
-        )
+          gt(suggestion.documentCreatedAt, timestamp),
+        ),
       );
 
     return await db
@@ -297,7 +297,7 @@ export async function deleteDocumentsByIdAfterTimestamp({
   } catch (_error) {
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to delete documents by id after timestamp"
+      "Failed to delete documents by id after timestamp",
     );
   }
 }
@@ -312,7 +312,7 @@ export async function saveSuggestions({
   } catch (_error) {
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to save suggestions"
+      "Failed to save suggestions",
     );
   }
 }
@@ -330,7 +330,7 @@ export async function getSuggestionsByDocumentId({
   } catch (_error) {
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to get suggestions by document id"
+      "Failed to get suggestions by document id",
     );
   }
 }
@@ -341,7 +341,7 @@ export async function getMessageById({ id }: { id: string }) {
   } catch (_error) {
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to get message by id"
+      "Failed to get message by id",
     );
   }
 }
@@ -358,30 +358,30 @@ export async function deleteMessagesByChatIdAfterTimestamp({
       .select({ id: message.id })
       .from(message)
       .where(
-        and(eq(message.chatId, chatId), gte(message.createdAt, timestamp))
+        and(eq(message.chatId, chatId), gte(message.createdAt, timestamp)),
       );
 
     const messageIds = messagesToDelete.map(
-      (currentMessage) => currentMessage.id
+      (currentMessage) => currentMessage.id,
     );
 
     if (messageIds.length > 0) {
       await db
         .delete(vote)
         .where(
-          and(eq(vote.chatId, chatId), inArray(vote.messageId, messageIds))
+          and(eq(vote.chatId, chatId), inArray(vote.messageId, messageIds)),
         );
 
       return await db
         .delete(message)
         .where(
-          and(eq(message.chatId, chatId), inArray(message.id, messageIds))
+          and(eq(message.chatId, chatId), inArray(message.id, messageIds)),
         );
     }
   } catch (_error) {
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to delete messages by chat id after timestamp"
+      "Failed to delete messages by chat id after timestamp",
     );
   }
 }
@@ -398,7 +398,7 @@ export async function updateChatVisibilityById({
   } catch (_error) {
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to update chat visibility by id"
+      "Failed to update chat visibility by id",
     );
   }
 }
@@ -450,12 +450,7 @@ export async function getAnalyticsData(days: number = 30) {
     const uniqueSessions = await db
       .selectDistinct({ sessionId: chat.sessionId })
       .from(chat)
-      .where(
-        and(
-          gte(chat.createdAt, startDate),
-          isNotNull(chat.sessionId)
-        )
-      );
+      .where(and(gte(chat.createdAt, startDate), isNotNull(chat.sessionId)));
 
     // Messages per chat (average)
     const messagesPerChat = await db
@@ -468,9 +463,11 @@ export async function getAnalyticsData(days: number = 30) {
       .where(gte(chat.createdAt, startDate))
       .groupBy(message.chatId);
 
-    const avgMessagesPerChat = messagesPerChat.length > 0
-      ? messagesPerChat.reduce((sum, c) => sum + Number(c.count), 0) / messagesPerChat.length
-      : 0;
+    const avgMessagesPerChat =
+      messagesPerChat.length > 0
+        ? messagesPerChat.reduce((sum, c) => sum + Number(c.count), 0) /
+          messagesPerChat.length
+        : 0;
 
     return {
       totalChats: totalChats[0]?.count || 0,
@@ -482,7 +479,7 @@ export async function getAnalyticsData(days: number = 30) {
     console.error("Error getting analytics data:", error);
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to get analytics data"
+      "Failed to get analytics data",
     );
   }
 }
@@ -504,18 +501,21 @@ export async function getTopQuestions(limit: number = 10) {
 
     // Count occurrences of similar questions (simple text matching)
     const questionCounts = new Map<string, number>();
-    
+
     questions.forEach((q) => {
       // Extract text from parts (which is a JSON array)
       const parts = q.parts as any[];
       const text = parts
-        .filter((p: any) => p.type === 'text')
+        .filter((p: any) => p.type === "text")
         .map((p: any) => p.text)
-        .join(' ');
-      
+        .join(" ");
+
       if (text) {
         const normalized = text.toLowerCase().trim().slice(0, 100);
-        questionCounts.set(normalized, (questionCounts.get(normalized) || 0) + 1);
+        questionCounts.set(
+          normalized,
+          (questionCounts.get(normalized) || 0) + 1,
+        );
       }
     });
 
@@ -530,7 +530,7 @@ export async function getTopQuestions(limit: number = 10) {
     console.error("Error getting top questions:", error);
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to get top questions"
+      "Failed to get top questions",
     );
   }
 }
@@ -556,10 +556,7 @@ export async function getDailyStats(days: number = 14) {
     }));
   } catch (error) {
     console.error("Error getting daily stats:", error);
-    throw new ChatSDKError(
-      "bad_request:database",
-      "Failed to get daily stats"
-    );
+    throw new ChatSDKError("bad_request:database", "Failed to get daily stats");
   }
 }
 
@@ -623,7 +620,7 @@ export async function getAllChatsWithMessages({
     // If search query, filter by message content
     if (searchQuery && chats.length > 0) {
       const chatIds = chats.map((c) => c.id);
-      
+
       const messagesWithSearch = await db
         .select({
           chatId: message.chatId,
@@ -632,13 +629,13 @@ export async function getAllChatsWithMessages({
         .where(
           and(
             inArray(message.chatId, chatIds),
-            sql`${message.parts}::text ILIKE ${`%${searchQuery}%`}`
-          )
+            sql`${message.parts}::text ILIKE ${`%${searchQuery}%`}`,
+          ),
         )
         .groupBy(message.chatId);
 
       const matchingChatIds = new Set(messagesWithSearch.map((m) => m.chatId));
-      
+
       return {
         chats: chats.filter((c) => matchingChatIds.has(c.id)),
         total: matchingChatIds.size,
@@ -653,19 +650,13 @@ export async function getAllChatsWithMessages({
     };
   } catch (error) {
     console.error("Error getting all chats:", error);
-    throw new ChatSDKError(
-      "bad_request:database",
-      "Failed to get all chats"
-    );
+    throw new ChatSDKError("bad_request:database", "Failed to get all chats");
   }
 }
 
 export async function getChatWithFullTranscript(chatId: string) {
   try {
-    const [chatData] = await db
-      .select()
-      .from(chat)
-      .where(eq(chat.id, chatId));
+    const [chatData] = await db.select().from(chat).where(eq(chat.id, chatId));
 
     if (!chatData) {
       throw new ChatSDKError("not_found:database", "Chat not found");
@@ -685,7 +676,7 @@ export async function getChatWithFullTranscript(chatId: string) {
     console.error("Error getting chat transcript:", error);
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to get chat transcript"
+      "Failed to get chat transcript",
     );
   }
 }
@@ -704,7 +695,7 @@ export async function createStreamId({
   } catch (_error) {
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to create stream id"
+      "Failed to create stream id",
     );
   }
 }
@@ -722,7 +713,7 @@ export async function getStreamIdsByChatId({ chatId }: { chatId: string }) {
   } catch (_error) {
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to get stream ids by chat id"
+      "Failed to get stream ids by chat id",
     );
   }
 }
@@ -748,7 +739,7 @@ export async function getGlobalBotSettings(): Promise<BotSettings | null> {
     console.error("Error fetching global bot settings:", error);
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to get global bot settings"
+      "Failed to get global bot settings",
     );
   }
 }
@@ -758,7 +749,9 @@ export async function getGlobalBotSettings(): Promise<BotSettings | null> {
  * Creates settings if none exist, updates if they do
  */
 export async function updateGlobalBotSettings(
-  data: Partial<Omit<BotSettings, "id" | "createdAt" | "updatedAt" | "is_active">>
+  data: Partial<
+    Omit<BotSettings, "id" | "createdAt" | "updatedAt" | "is_active">
+  >,
 ): Promise<void> {
   try {
     const existing = await getGlobalBotSettings();
@@ -785,7 +778,7 @@ export async function updateGlobalBotSettings(
     console.error("Error updating global bot settings:", error);
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to update global bot settings"
+      "Failed to update global bot settings",
     );
   }
 }
@@ -818,7 +811,7 @@ export async function getChatsBySessionId({
     console.error("Error in getChatsBySessionId:", error);
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to get chats by session id"
+      "Failed to get chats by session id",
     );
   }
 }
@@ -845,10 +838,7 @@ export async function getAllChats({
     return chats;
   } catch (error) {
     console.error("Error in getAllChats:", error);
-    throw new ChatSDKError(
-      "bad_request:database",
-      "Failed to get all chats"
-    );
+    throw new ChatSDKError("bad_request:database", "Failed to get all chats");
   }
 }
 
@@ -863,9 +853,7 @@ export async function getMessageCountBySessionId({
   differenceInHours: number;
 }) {
   try {
-    const hoursAgo = new Date(
-      Date.now() - differenceInHours * 60 * 60 * 1000
-    );
+    const hoursAgo = new Date(Date.now() - differenceInHours * 60 * 60 * 1000);
 
     const [stats] = await db
       .select({ count: count(message.id) })
@@ -875,8 +863,8 @@ export async function getMessageCountBySessionId({
         and(
           eq(chat.sessionId, sessionId),
           gte(message.createdAt, hoursAgo),
-          eq(message.role, "user")
-        )
+          eq(message.role, "user"),
+        ),
       )
       .execute();
 
@@ -885,7 +873,7 @@ export async function getMessageCountBySessionId({
     console.error("Error in getMessageCountBySessionId:", error);
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to get message count by session id"
+      "Failed to get message count by session id",
     );
   }
 }
@@ -910,8 +898,8 @@ export async function getRagHitRatio(days: number = 30) {
       .where(
         and(
           gte(knowledgeEvents.createdAt, startDate),
-          eq(knowledgeEvents.hit, true)
-        )
+          eq(knowledgeEvents.hit, true),
+        ),
       );
 
     const total = Number(totalEvents) || 0;
@@ -928,12 +916,28 @@ export async function getRagHitRatio(days: number = 30) {
     console.error("Error getting RAG hit ratio:", error);
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to get RAG hit ratio"
+      "Failed to get RAG hit ratio",
     );
   }
 }
 
-export async function getTopSources({ days = 30, limit = 50 }: { days?: number; limit?: number }) {
+function toIsoStringOrEmpty(value: unknown) {
+  if (!value) return "";
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "string" || typeof value === "number") {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? "" : d.toISOString();
+  }
+  return "";
+}
+
+export async function getTopSources({
+  days = 30,
+  limit = 50,
+}: {
+  days?: number;
+  limit?: number;
+}) {
   try {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
@@ -950,8 +954,8 @@ export async function getTopSources({ days = 30, limit = 50 }: { days?: number; 
       .where(
         and(
           eq(knowledgeEvents.hit, true),
-          gte(knowledgeEvents.createdAt, startDate)
-        )
+          gte(knowledgeEvents.createdAt, startDate),
+        ),
       )
       .groupBy(knowledgeEvents.sourceId, knowledgeEvents.sourceType)
       .orderBy(desc(count(knowledgeEvents.id)))
@@ -965,9 +969,9 @@ export async function getTopSources({ days = 30, limit = 50 }: { days?: number; 
           .from(knowledgeEvents)
           .where(
             and(
-              eq(knowledgeEvents.sourceId, source.sourceId!),
-              eq(knowledgeEvents.hit, true)
-            )
+              eq(knowledgeEvents.sourceId, source.sourceId ?? ""),
+              eq(knowledgeEvents.hit, true),
+            ),
           )
           .limit(1);
 
@@ -975,30 +979,29 @@ export async function getTopSources({ days = 30, limit = 50 }: { days?: number; 
           sourceId: source.sourceId || "",
           sourceType: source.sourceType || "",
           hits: Number(source.hits),
-          avgRelevance: source.avgRelevance ? Math.round(Number(source.avgRelevance) * 1000) / 1000 : 0,
+          avgRelevance: source.avgRelevance
+            ? Math.round(Number(source.avgRelevance) * 1000) / 1000
+            : 0,
           exampleQuery: example?.query || "",
-          lastHit: source.lastHit?.toISOString() || "",
+          lastHit: toIsoStringOrEmpty(source.lastHit),
         };
-      })
+      }),
     );
 
     return sourcesWithExamples;
   } catch (error) {
     console.error("Error getting top sources:", error);
-    throw new ChatSDKError(
-      "bad_request:database",
-      "Failed to get top sources"
-    );
+    throw new ChatSDKError("bad_request:database", "Failed to get top sources");
   }
 }
 
-export async function getMissingKnowledge({ 
-  days = 30, 
-  limit = 50, 
-  includeRaw = false 
-}: { 
-  days?: number; 
-  limit?: number; 
+export async function getMissingKnowledge({
+  days = 30,
+  limit = 50,
+  includeRaw = false,
+}: {
+  days?: number;
+  limit?: number;
   includeRaw?: boolean;
 }) {
   try {
@@ -1016,8 +1019,8 @@ export async function getMissingKnowledge({
       .where(
         and(
           eq(knowledgeEvents.hit, false),
-          gte(knowledgeEvents.createdAt, startDate)
-        )
+          gte(knowledgeEvents.createdAt, startDate),
+        ),
       )
       .groupBy(knowledgeEvents.query)
       .orderBy(desc(count(knowledgeEvents.id)))
@@ -1033,7 +1036,7 @@ export async function getMissingKnowledge({
     const raw = includeRaw
       ? missedQueries.map((q) => ({
           query: q.query,
-          date: q.lastAsked?.toISOString().split('T')[0] || "",
+          date: q.lastAsked?.toISOString().split("T")[0] || "",
         }))
       : [];
 
@@ -1042,12 +1045,18 @@ export async function getMissingKnowledge({
     console.error("Error getting missing knowledge:", error);
     throw new ChatSDKError(
       "bad_request:database",
-      "Failed to get missing knowledge"
+      "Failed to get missing knowledge",
     );
   }
 }
 
-export async function getTopChunks({ days = 30, limit = 50 }: { days?: number; limit?: number }) {
+export async function getTopChunks({
+  days = 30,
+  limit = 50,
+}: {
+  days?: number;
+  limit?: number;
+}) {
   try {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
@@ -1065,10 +1074,14 @@ export async function getTopChunks({ days = 30, limit = 50 }: { days?: number; l
         and(
           eq(knowledgeEvents.hit, true),
           isNotNull(knowledgeEvents.chunkId),
-          gte(knowledgeEvents.createdAt, startDate)
-        )
+          gte(knowledgeEvents.createdAt, startDate),
+        ),
       )
-      .groupBy(knowledgeEvents.chunkId, knowledgeEvents.sourceId, knowledgeEvents.sourceType)
+      .groupBy(
+        knowledgeEvents.chunkId,
+        knowledgeEvents.sourceId,
+        knowledgeEvents.sourceType,
+      )
       .orderBy(desc(count(knowledgeEvents.id)))
       .limit(limit);
 
@@ -1077,14 +1090,13 @@ export async function getTopChunks({ days = 30, limit = 50 }: { days?: number; l
       sourceId: c.sourceId || "",
       sourceType: c.sourceType || "",
       hits: Number(c.hits),
-      avgRelevance: c.avgRelevance ? Math.round(Number(c.avgRelevance) * 1000) / 1000 : 0,
+      avgRelevance: c.avgRelevance
+        ? Math.round(Number(c.avgRelevance) * 1000) / 1000
+        : 0,
     }));
   } catch (error) {
     console.error("Error getting top chunks:", error);
-    throw new ChatSDKError(
-      "bad_request:database",
-      "Failed to get top chunks"
-    );
+    throw new ChatSDKError("bad_request:database", "Failed to get top chunks");
   }
 }
 
@@ -1115,9 +1127,6 @@ export async function getRagTrends(days: number = 30) {
     }));
   } catch (error) {
     console.error("Error getting RAG trends:", error);
-    throw new ChatSDKError(
-      "bad_request:database",
-      "Failed to get RAG trends"
-    );
+    throw new ChatSDKError("bad_request:database", "Failed to get RAG trends");
   }
 }

@@ -16,6 +16,7 @@ build
 # misc
 .DS_Store
 *.pem
+.windsurf/
 
 # debug
 npm-debug.log*
@@ -45,3 +46,12 @@ yarn-error.log*
 
 .vercel
 .env*.local
+
+# TypeScript build artifacts
+*.tsbuildinfo
+
+.vercel
+
+# Claude temp files
+tmpclaude-*
+nul

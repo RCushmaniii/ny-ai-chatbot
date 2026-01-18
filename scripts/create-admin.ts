@@ -3,11 +3,11 @@
  * Usage: npx tsx scripts/create-admin.ts
  */
 
-import { config as dotenvConfig } from "dotenv";
-import { drizzle } from "drizzle-orm/postgres-js";
-import { eq } from "drizzle-orm";
-import postgres from "postgres";
 import { hash } from "bcrypt-ts";
+import { config as dotenvConfig } from "dotenv";
+import { eq } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 
 // Load environment variables
 dotenvConfig({ path: ".env.development.local" });
@@ -45,7 +45,7 @@ async function createAdminUser() {
       .select()
       .from(user)
       .where(eq(user.email, email));
-    
+
     if (existingUsers.length > 0) {
       console.log("⚠️  Admin user already exists!");
       console.log("✅ You can login with this email at /login");
@@ -61,14 +61,14 @@ async function createAdminUser() {
       email,
       password: hashedPassword,
     });
-    
+
     console.log("✅ Admin user created successfully!");
     console.log("\n📋 Login credentials:");
     console.log(`   Email: ${email}`);
     console.log(`   Password: ${password}`);
     console.log("\n🔗 Login at: http://localhost:3000/login");
     console.log("\n⚠️  IMPORTANT: Change your password after first login!");
-    
+
     await client.end();
   } catch (error) {
     console.error("❌ Failed to create admin user:", error);

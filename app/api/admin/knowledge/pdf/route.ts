@@ -2,16 +2,22 @@ import { openai } from "@ai-sdk/openai";
 import { embed } from "ai";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { extractText } from "unpdf";
 import { auth } from "@/app/(auth)/auth";
 import { documents } from "@/lib/db/schema";
-import { extractText } from "unpdf";
 
 // Force Node.js runtime so pdf-parse and Buffer work correctly.
 export const runtime = "nodejs";
 
-// biome-ignore lint: Forbidden non-null assertion.
-const client = postgres(process.env.POSTGRES_URL!);
-const db = drizzle(client);
+function getAdminEmail() {
+  return (
+    process.env.ADMIN_EMAIL ||
+    process.env.NEXT_PUBLIC_ADMIN_EMAIL ||
+    "info@nyenglishteacher.com"
+  );
+}
+
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
 function chunkText(text: string, maxLength = 1500) {
   const chunks: string[] = [];
@@ -43,6 +49,18 @@ export async function POST(request: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  if (session.user.email !== getAdminEmail()) {
+    return Response.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const postgresUrl = process.env.POSTGRES_URL;
+  if (!postgresUrl) {
+    return Response.json({ error: "Database not configured" }, { status: 500 });
+  }
+
+  const client = postgres(postgresUrl);
+  const db = drizzle(client);
+
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
@@ -58,7 +76,7 @@ export async function POST(request: Request) {
     if (!file.name.toLowerCase().endsWith(".pdf")) {
       return Response.json(
         { error: "Invalid file type. Only PDF files are supported." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -71,11 +89,17 @@ export async function POST(request: Request) {
     if (buffer.length === 0) {
       return Response.json(
         { error: "PDF file is empty or corrupted" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    console.log(`[PDF Upload] Processing ${file.name} (${buffer.length} bytes)`);
+    if (buffer.length > MAX_FILE_BYTES) {
+      return Response.json({ error: "PDF file is too large" }, { status: 400 });
+    }
+
+    console.log(
+      `[PDF Upload] Processing ${file.name} (${buffer.length} bytes)`,
+    );
 
     // Extract text from PDF with error handling
     // Try unpdf first (modern, TypeScript-native), fallback to pdf-parse
@@ -84,32 +108,46 @@ export async function POST(request: Request) {
       // unpdf requires Uint8Array, not Buffer
       console.log("[PDF Upload] Attempting extraction with unpdf...");
       const result = await extractText(uint8Array);
-      text = Array.isArray(result.text) ? result.text.join('\n') : result.text;
-      console.log(`[PDF Upload] unpdf succeeded, extracted ${text.length} characters`);
+      text = Array.isArray(result.text) ? result.text.join("\n") : result.text;
+      console.log(
+        `[PDF Upload] unpdf succeeded, extracted ${text.length} characters`,
+      );
     } catch (unpdfError) {
-      console.warn("[PDF Upload] unpdf failed, falling back to pdf-parse:", unpdfError);
+      console.warn(
+        "[PDF Upload] unpdf failed, falling back to pdf-parse:",
+        unpdfError,
+      );
       // Fallback to pdf-parse (load dynamically to avoid module-level require issues)
       try {
-        // biome-ignore lint: Dynamic require needed for CommonJS fallback
         const pdfParse = require("pdf-parse");
         console.log("[PDF Upload] Attempting extraction with pdf-parse...");
         const data = await pdfParse(buffer);
         text = data.text;
-        console.log(`[PDF Upload] pdf-parse succeeded, extracted ${text.length} characters`);
+        console.log(
+          `[PDF Upload] pdf-parse succeeded, extracted ${text.length} characters`,
+        );
       } catch (parseError) {
         console.error("[PDF Upload] Both parsers failed:", parseError);
-        const errorMsg = parseError instanceof Error ? parseError.message : "Unknown parsing error";
+        const errorMsg =
+          parseError instanceof Error
+            ? parseError.message
+            : "Unknown parsing error";
         return Response.json(
-          { error: `PDF parsing failed: ${errorMsg}. The file may be corrupted, password-protected, or in an unsupported format.` },
-          { status: 400 }
+          {
+            error: `PDF parsing failed: ${errorMsg}. The file may be corrupted, password-protected, or in an unsupported format.`,
+          },
+          { status: 400 },
         );
       }
     }
 
     if (!text || text.trim().length === 0) {
       return Response.json(
-        { error: "No text content found in PDF. The file may be scanned images without OCR, or may be empty." },
-        { status: 400 }
+        {
+          error:
+            "No text could be extracted from this PDF. This usually means the PDF is scanned/flattened (image-only) or is protected/corrupted. For now this app only supports text-based PDFs (selectable text). Try exporting/saving the PDF with OCR/text, or upload the original document as .docx/.txt/.md instead.",
+        },
+        { status: 400 },
       );
     }
 
@@ -125,17 +163,23 @@ export async function POST(request: Request) {
         content: chunk,
         url,
         embedding: embedding as any,
-        metadata: JSON.stringify({ type, language, sourceFile: file.name }),
+        metadata: JSON.stringify({
+          type,
+          language,
+          sourceFile: file.name,
+          sourceType: "pdf",
+        }),
       });
     }
 
     return Response.json({ success: true }, { status: 200 });
   } catch (error) {
     console.error("Error processing PDF knowledge upload:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     return Response.json(
       { error: `Failed to process PDF: ${errorMessage}` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

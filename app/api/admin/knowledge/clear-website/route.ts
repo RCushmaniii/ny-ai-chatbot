@@ -1,10 +1,18 @@
-import { auth } from "@/app/(auth)/auth";
 import postgres from "postgres";
-
-const client = postgres(process.env.POSTGRES_URL!);
+import { auth } from "@/app/(auth)/auth";
 
 export async function DELETE() {
   try {
+    const postgresUrl = process.env.POSTGRES_URL;
+    if (!postgresUrl) {
+      return Response.json(
+        { error: "Database not configured" },
+        { status: 500 },
+      );
+    }
+
+    const client = postgres(postgresUrl);
+
     const session = await auth();
     if (!session?.user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -21,7 +29,7 @@ export async function DELETE() {
     console.error("Error clearing website content:", error);
     return Response.json(
       { error: "Failed to clear website content" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

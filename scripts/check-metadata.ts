@@ -69,7 +69,6 @@ async function checkMetadata() {
 
     console.log("\n🇺🇸 Sample English URLs:");
     englishSamples.forEach((row) => console.log(`  - ${row.url}`));
-
   } catch (error) {
     console.error("❌ Error:", error);
     throw error;

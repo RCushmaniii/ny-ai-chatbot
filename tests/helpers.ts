@@ -9,7 +9,6 @@ import {
 } from "@playwright/test";
 import { generateId } from "ai";
 import { getUnixTime } from "date-fns";
-import { ChatPage } from "./pages/chat";
 
 export type UserContext = {
   context: BrowserContext;
@@ -35,24 +34,17 @@ export async function createAuthenticatedContext({
   const context = await browser.newContext();
   const page = await context.newPage();
 
-  const email = `test-${name}@playwright.com`;
-  const password = generateId();
+  // Navigate to home - will auto-redirect to guest auth
+  await page.goto("http://localhost:3000/");
 
-  await page.goto("http://localhost:3000/register");
-  await page.getByPlaceholder("user@acme.com").click();
-  await page.getByPlaceholder("user@acme.com").fill(email);
-  await page.getByLabel("Password").click();
-  await page.getByLabel("Password").fill(password);
-  await page.getByRole("button", { name: "Sign Up" }).click();
+  // Wait for page to load (guest auth happens automatically via middleware)
+  await page.waitForURL("http://localhost:3000/");
+  await page.waitForLoadState("networkidle");
 
-  await expect(page.getByTestId("toast")).toContainText(
-    "Account created successfully!"
-  );
-
-  const chatPage = new ChatPage(page);
-  await chatPage.createNewChat();
-  await chatPage.chooseModelFromSelector("chat-model-reasoning");
-  await expect(chatPage.getSelectedModel()).resolves.toEqual("Reasoning model");
+  // Verify the chat interface loaded
+  await expect(page.getByTestId("multimodal-input")).toBeVisible({
+    timeout: 30000,
+  });
 
   await page.waitForTimeout(1000);
   await context.storageState({ path: storageFile });

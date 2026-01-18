@@ -1,14 +1,27 @@
 "use client";
 
+import { BookOpenCheck, Flame, Lightbulb, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Lightbulb, Flame, BookOpenCheck } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Overview = {
   hitRatio: { hits: number; misses: number; ratio: number; total: number };
-  trends: { date: string; hits: number; misses: number; totalQueries: number; avgScore: number }[];
+  trends: {
+    date: string;
+    hits: number;
+    misses: number;
+    totalQueries: number;
+    avgScore: number;
+  }[];
   topSources: {
     sourceId: string;
     sourceType: string;
@@ -31,17 +44,48 @@ export function AdminInsights() {
   const [days, setDays] = useState(30);
   const [data, setData] = useState<Overview | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let abort = false;
     setLoading(true);
+
+    setError(null);
+    setData(null);
+
     fetch(`/api/admin/insights/overview?days=${days}`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (!abort) setData(d);
+      .then(async (r) => {
+        if (r.ok) {
+          const d = (await r.json()) as Overview;
+          if (!abort) setData(d);
+          return;
+        }
+
+        let message = `Failed to load insights (${r.status})`;
+        let details: string | null = null;
+
+        try {
+          const d = (await r.json()) as { error?: string; details?: string };
+          if (d?.error) message = d.error;
+          if (d?.details) details = d.details;
+        } catch {
+          try {
+            const t = await r.text();
+            if (t) message = t;
+          } catch {
+            // ignore
+          }
+        }
+
+        if (details) {
+          message = `${message}\n\nDetails: ${details}`;
+        }
+
+        if (!abort) setError(message);
       })
       .catch((err) => {
         console.error("Failed to load insights:", err);
+        if (!abort) setError("Failed to load insights");
       })
       .finally(() => {
         if (!abort) setLoading(false);
@@ -70,6 +114,38 @@ export function AdminInsights() {
         <div className="flex items-center gap-2 text-muted-foreground">
           <Loader2 className="w-4 h-4 animate-spin" /> Loading…
         </div>
+      )}
+
+      {!loading && error && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Insights unavailable / Insights no disponibles
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">{error}</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Local tip: ensure ADMIN_EMAIL matches your login and generate a
+              few chats so there is data. / Consejo local: verifica ADMIN_EMAIL
+              y genera algunas conversaciones para crear datos.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {!loading && !error && !data && (
+        <Card>
+          <CardHeader>
+            <CardTitle>No insights yet / Aun sin insights</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              No insight data is available for this period yet. / Aun no hay
+              datos para este periodo.
+            </p>
+          </CardContent>
+        </Card>
       )}
 
       {!loading && data && (
@@ -143,19 +219,27 @@ export function AdminInsights() {
                 <TableBody>
                   {data.topSources.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-sm text-muted-foreground">
+                      <TableCell
+                        colSpan={6}
+                        className="text-sm text-muted-foreground"
+                      >
                         No source usage yet.
                       </TableCell>
                     </TableRow>
                   )}
                   {data.topSources.map((s) => (
                     <TableRow key={`${s.sourceType}:${s.sourceId}`}>
-                      <TableCell className="truncate max-w-[320px]" title={s.sourceId}>
+                      <TableCell
+                        className="truncate max-w-[320px]"
+                        title={s.sourceId}
+                      >
                         {s.sourceId}
                       </TableCell>
                       <TableCell>{s.sourceType}</TableCell>
                       <TableCell className="text-right">{s.hits}</TableCell>
-                      <TableCell className="text-right">{fmtPct(s.avgRelevance)}</TableCell>
+                      <TableCell className="text-right">
+                        {fmtPct(s.avgRelevance)}
+                      </TableCell>
                       <TableCell className="truncate max-w-[240px]">
                         {s.exampleQuery ?? "—"}
                       </TableCell>
@@ -187,7 +271,9 @@ export function AdminInsights() {
                     <li key={i} className="border rounded-lg p-3">
                       <div className="flex items-center justify-between gap-3">
                         <div className="font-medium">{g.topic}</div>
-                        <div className="text-sm text-muted-foreground">{g.count} queries</div>
+                        <div className="text-sm text-muted-foreground">
+                          {g.count} queries
+                        </div>
                       </div>
                       {g.examples?.length > 0 && (
                         <ul className="mt-2 list-disc list-inside text-sm text-muted-foreground">
@@ -221,19 +307,29 @@ export function AdminInsights() {
                 <TableBody>
                   {data.topChunks.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-sm text-muted-foreground">
+                      <TableCell
+                        colSpan={4}
+                        className="text-sm text-muted-foreground"
+                      >
                         No chunk data.
                       </TableCell>
                     </TableRow>
                   )}
                   {data.topChunks.map((c) => (
                     <TableRow key={c.chunkId}>
-                      <TableCell className="truncate max-w-[240px]">{c.chunkId}</TableCell>
-                      <TableCell className="truncate max-w-[320px]" title={c.sourceId}>
+                      <TableCell className="truncate max-w-[240px]">
+                        {c.chunkId}
+                      </TableCell>
+                      <TableCell
+                        className="truncate max-w-[320px]"
+                        title={c.sourceId}
+                      >
                         {c.sourceId}
                       </TableCell>
                       <TableCell className="text-right">{c.hits}</TableCell>
-                      <TableCell className="text-right">{fmtPct(c.avgRelevance)}</TableCell>
+                      <TableCell className="text-right">
+                        {fmtPct(c.avgRelevance)}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -260,7 +356,9 @@ function StatCard({
       <CardContent className="pt-6">
         <div className="text-sm text-muted-foreground">{title}</div>
         <div className="text-2xl font-semibold mt-1">{value}</div>
-        {subtitle && <div className="text-xs text-muted-foreground mt-1">{subtitle}</div>}
+        {subtitle && (
+          <div className="text-xs text-muted-foreground mt-1">{subtitle}</div>
+        )}
       </CardContent>
     </Card>
   );

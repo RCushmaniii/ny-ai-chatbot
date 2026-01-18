@@ -1,14 +1,36 @@
 /**
  * CORS configuration for production security
+ *
+ * Configure additional origins via ALLOWED_ORIGINS environment variable
+ * Example: ALLOWED_ORIGINS=https://ny-eng.vercel.app,https://staging.nyenglishteacher.com
  */
+
+// Parse additional origins from environment variable
+const envOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+  : [];
 
 // Allowed origins for embed widget
 const ALLOWED_ORIGINS = [
+  // Production domains
   "https://www.nyenglishteacher.com",
   "https://nyenglishteacher.com",
-  // Add staging/development as needed
+  // ny-eng integration (Vercel deployment)
+  "https://ny-eng.vercel.app",
+  "https://www.ny-eng.vercel.app",
+  // Custom domain variants
+  "https://chat.nyenglishteacher.com",
+  // Additional origins from environment
+  ...envOrigins,
+  // Development origins
   ...(process.env.NODE_ENV === "development"
-    ? ["http://localhost:3000", "http://localhost:3001"]
+    ? [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:4321", // Astro default port
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:4321",
+      ]
     : []),
 ];
 
@@ -25,7 +47,7 @@ export function isOriginAllowed(origin: string | null): boolean {
  */
 export function setCorsHeaders(
   response: Response,
-  origin: string | null
+  origin: string | null,
 ): Response {
   const headers = new Headers(response.headers);
 
@@ -36,11 +58,11 @@ export function setCorsHeaders(
 
   headers.set(
     "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS"
+    "GET, POST, PUT, DELETE, OPTIONS",
   );
   headers.set(
     "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, X-Requested-With"
+    "Content-Type, Authorization, X-Requested-With",
   );
   headers.set("Access-Control-Max-Age", "86400"); // 24 hours
 

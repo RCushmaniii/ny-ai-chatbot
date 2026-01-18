@@ -1,9 +1,13 @@
-import { NextResponse } from "next/server";
 import { generateText } from "ai";
+import { NextResponse } from "next/server";
+import { regularPrompt } from "@/lib/ai/prompts";
 import { myProvider } from "@/lib/ai/providers";
 import { searchKnowledgeDirect } from "@/lib/ai/tools/search-knowledge";
-import { detectLanguage, translateUrl, getLearnMoreText } from "@/lib/utils/language-detector";
-import { regularPrompt } from "@/lib/ai/prompts";
+import {
+  detectLanguage,
+  getLearnMoreText,
+  translateUrl,
+} from "@/lib/utils/language-detector";
 
 export async function POST(request: Request) {
   try {
@@ -25,15 +29,15 @@ export async function POST(request: Request) {
 
     if (knowledgeResults.length > 0) {
       const uniqueUrls = Array.from(
-        new Set(knowledgeResults.map(r => r.url).filter(Boolean))
-      ).map(url => translateUrl(url as string, detectedLang));
+        new Set(knowledgeResults.map((r) => r.url).filter(Boolean)),
+      ).map((url) => translateUrl(url as string, detectedLang));
 
       context += `\n\nKnowledge base results:\n${knowledgeResults
-        .map(r => r.content)
+        .map((r) => r.content)
         .join("\n\n")}`;
 
       if (uniqueUrls.length > 0) {
-        context += `\n\nInclude these links at the end of your response:\n${learnMoreText}\n${uniqueUrls.map(url => `- ${url}`).join("\n")}`;
+        context += `\n\nInclude these links at the end of your response:\n${learnMoreText}\n${uniqueUrls.map((url) => `- ${url}`).join("\n")}`;
       }
     }
 
@@ -52,7 +56,7 @@ export async function POST(request: Request) {
     console.error("Embed chat error:", error);
     return NextResponse.json(
       { error: "Failed to process message" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

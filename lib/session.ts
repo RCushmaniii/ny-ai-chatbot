@@ -1,7 +1,7 @@
 import "server-only";
 
-import { cookies } from "next/headers";
 import { randomUUID } from "node:crypto";
+import { cookies } from "next/headers";
 
 /**
  * Session management for anonymous chat users
@@ -32,7 +32,9 @@ export async function getOrCreateSessionId(): Promise<string> {
       path: "/", // Available across entire site
     });
 
-    console.log(`[Session] Created new session: ${sessionId.substring(0, 8)}...`);
+    console.log(
+      `[Session] Created new session: ${sessionId.substring(0, 8)}...`,
+    );
   }
 
   return sessionId;

@@ -17,16 +17,16 @@ You have **3 options** to get your local environment variables into Vercel:
 
 Add these variables one by one:
 
-| Variable Name         | Value                                            | Environment                      |
-| --------------------- | ------------------------------------------------ | -------------------------------- |
-| `OPENAI_API_KEY`      | `sk-proj-RDNRhcZzIHz1uXXXGt93u...`               | Production, Preview, Development |
-| `OPENAI_MODEL`        | `gpt-4o`                                         | Production, Preview, Development |
-| `AUTH_SECRET`         | `82cb742b323e5ae7c0fb0d79a29dbd26...`            | Production, Preview, Development |
-| `POSTGRES_URL`        | `postgresql://neondb_owner:npg_D04IgVMRBOsJ@...` | Production, Preview, Development |
-| `ADMIN_EMAIL`         | `info@nyenglishteacher.com`                      | Production, Preview, Development |
-| `ADMIN_PASSWORD`      | `Olverinen17!`                                   | Production, Preview, Development |
-| `NEXT_PUBLIC_APP_URL` | `https://ny-ai-chatbot.vercel.app`               | Production                       |
-| `NEXT_PUBLIC_APP_URL` | `http://localhost:3000`                          | Development                      |
+| Variable Name         | Value                              | Environment                      |
+| --------------------- | ---------------------------------- | -------------------------------- |
+| `OPENAI_API_KEY`      | `<YOUR_OPENAI_API_KEY>`            | Production, Preview, Development |
+| `OPENAI_MODEL`        | `gpt-4o`                           | Production, Preview, Development |
+| `AUTH_SECRET`         | `<YOUR_AUTH_SECRET>`               | Production, Preview, Development |
+| `POSTGRES_URL`        | `<YOUR_POSTGRES_URL>`              | Production, Preview, Development |
+| `ADMIN_EMAIL`         | `info@nyenglishteacher.com`        | Production, Preview, Development |
+| `ADMIN_PASSWORD`      | `<YOUR_ADMIN_PASSWORD>`            | Production, Preview, Development |
+| `NEXT_PUBLIC_APP_URL` | `https://ny-ai-chatbot.vercel.app` | Production                       |
+| `NEXT_PUBLIC_APP_URL` | `http://localhost:3000`            | Development                      |
 
 **For each variable:**
 
@@ -69,12 +69,12 @@ vercel env add OPENAI_API_KEY production
 Create `vercel-env.txt` with:
 
 ```bash
-OPENAI_API_KEY=sk-proj-RDNRhcZzIHz1uXXXGt93u...
+OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
 OPENAI_MODEL=gpt-4o
-AUTH_SECRET=82cb742b323e5ae7c0fb0d79a29dbd26...
-POSTGRES_URL=postgresql://neondb_owner:npg_D04IgVMRBOsJ@...
+AUTH_SECRET=<YOUR_AUTH_SECRET>
+POSTGRES_URL=<YOUR_POSTGRES_URL>
 ADMIN_EMAIL=info@nyenglishteacher.com
-ADMIN_PASSWORD=Olverinen17!
+ADMIN_PASSWORD=<YOUR_ADMIN_PASSWORD>
 NEXT_PUBLIC_APP_URL=https://ny-ai-chatbot.vercel.app
 ```
 

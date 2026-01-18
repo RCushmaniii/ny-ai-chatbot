@@ -12,10 +12,4 @@ export const chatModels: ChatModel[] = [
     name: "GPT-4o",
     description: "Advanced multimodal model with vision and text capabilities",
   },
-  {
-    id: "chat-model-reasoning",
-    name: "O1-Mini (Reasoning)",
-    description:
-      "Uses advanced chain-of-thought reasoning for complex problems",
-  },
 ];
