@@ -1,8 +1,8 @@
-import { openai } from "@ai-sdk/openai";
 import { embed } from "ai";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { auth } from "@/app/(auth)/auth";
+import { openai } from "@/lib/ai/openai";
 import { documents } from "@/lib/db/schema";
 
 function getAdminEmail() {

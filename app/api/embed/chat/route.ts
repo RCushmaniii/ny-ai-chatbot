@@ -54,9 +54,54 @@ export async function POST(request: Request) {
     return NextResponse.json({ response: text });
   } catch (error) {
     console.error("Embed chat error:", error);
-    return NextResponse.json(
-      { error: "Failed to process message" },
-      { status: 500 },
-    );
+
+    const rawMessage =
+      error instanceof Error ? error.message : String(error ?? "");
+    const normalized = rawMessage.toLowerCase();
+
+    // Surface actionable error details instead of generic 500
+    let userMessage =
+      "Failed to process message. Please try again in a moment.";
+    let status = 500;
+
+    if (
+      normalized.includes("ai gateway requires a valid credit card") ||
+      normalized.includes("activate_gateway")
+    ) {
+      userMessage =
+        "AI Gateway needs billing enabled. Please contact the site administrator.";
+      status = 502;
+    } else if (
+      normalized.includes("openai_api_key") ||
+      normalized.includes("api key") ||
+      normalized.includes("no api key") ||
+      normalized.includes("missing api key")
+    ) {
+      userMessage =
+        "The chatbot is not configured correctly (missing API key). Please contact the site administrator.";
+      status = 502;
+    } else if (
+      normalized.includes("401") ||
+      normalized.includes("unauthorized")
+    ) {
+      userMessage =
+        "The chatbot credentials were rejected. Please contact the site administrator.";
+      status = 502;
+    } else if (
+      normalized.includes("429") ||
+      normalized.includes("rate limit")
+    ) {
+      userMessage =
+        "The chatbot is temporarily rate-limited. Please wait a minute and try again.";
+      status = 429;
+    } else if (
+      normalized.includes("timeout") ||
+      normalized.includes("timed out")
+    ) {
+      userMessage = "The response took too long to generate. Please try again.";
+      status = 504;
+    }
+
+    return NextResponse.json({ error: userMessage }, { status });
   }
 }

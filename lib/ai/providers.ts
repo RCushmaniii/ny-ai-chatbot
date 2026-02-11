@@ -1,9 +1,9 @@
-import { openai } from "@ai-sdk/openai";
 import {
   customProvider,
   extractReasoningMiddleware,
   wrapLanguageModel,
 } from "ai";
+import { openai } from "@/lib/ai/openai";
 import { isTestEnvironment } from "../constants";
 
 export const myProvider = isTestEnvironment

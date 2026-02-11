@@ -1,9 +1,9 @@
-import { openai } from "@ai-sdk/openai";
 import { embed } from "ai";
 import * as cheerio from "cheerio";
 import { config as dotenvConfig } from "dotenv";
 import postgres from "postgres";
 import { parseStringPromise } from "xml2js";
+import { openai } from "@/lib/ai/openai";
 
 // Load environment variables
 dotenvConfig({ path: ".env.development.local" });

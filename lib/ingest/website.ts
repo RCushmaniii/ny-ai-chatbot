@@ -1,8 +1,8 @@
-import { openai } from "@ai-sdk/openai";
 import { embed } from "ai";
 import * as cheerio from "cheerio";
 import postgres from "postgres";
 import { parseStringPromise } from "xml2js";
+import { openai } from "@/lib/ai/openai";
 
 // Shared website ingestion logic for use in API routes and scripts
 

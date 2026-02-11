@@ -1,6 +1,6 @@
-import { openai } from "@ai-sdk/openai";
 import { embed } from "ai";
 import postgres from "postgres";
+import { openai } from "@/lib/ai/openai";
 
 export async function POST(req: Request) {
   try {

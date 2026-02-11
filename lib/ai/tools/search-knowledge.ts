@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
-import { openai } from "@ai-sdk/openai";
 import { embed, tool } from "ai";
 import postgres from "postgres";
 import { z } from "zod";
+import { openai } from "@/lib/ai/openai";
 import { logKnowledgeEvent } from "./log-knowledge-event";
 
 // Shared Postgres client for knowledge searches.

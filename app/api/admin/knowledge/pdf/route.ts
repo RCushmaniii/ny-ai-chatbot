@@ -1,9 +1,9 @@
-import { openai } from "@ai-sdk/openai";
 import { embed } from "ai";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { extractText } from "unpdf";
 import { auth } from "@/app/(auth)/auth";
+import { openai } from "@/lib/ai/openai";
 import { documents } from "@/lib/db/schema";
 
 // Force Node.js runtime so pdf-parse and Buffer work correctly.
