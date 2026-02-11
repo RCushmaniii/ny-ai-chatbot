@@ -1,10 +1,10 @@
 # NY AI Chatbot - Product Roadmap
 
-## 🎯 Current Status: v2.0.0 - Production Ready
+## 🎯 Current Status: v2.0.1 - Production Live
 
-**Last Updated:** December 10, 2025  
-**Production URL:** https://ny-ai-chatbot.vercel.app  
-**Status:** ✅ Live and deployed
+**Last Updated:** February 11, 2026
+**Production URL:** https://ny-ai-chatbot.vercel.app
+**Status:** ✅ Live and deployed on nyenglishteacher.com
 
 ---
 

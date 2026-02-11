@@ -1,8 +1,31 @@
 # Lessons Learned (RAG, Admin Insights, and SSR Stability)
 
-**Last Updated:** December 18, 2025
+**Last Updated:** February 11, 2026
 
 This document captures practical lessons learned while validating and troubleshooting the RAG knowledge upload/retrieval system and the Admin Insights dashboard.
+
+---
+
+## 9) Vercel AI Gateway bypass and API key validation
+
+### What went wrong
+
+- The embed chatbot returned "Sorry, I encountered an error" on all messages in production.
+- Root cause 1: `OPENAI_API_KEY` was set to placeholder value `sk-your-openai-api-key-here` in Vercel env vars.
+- Root cause 2: `@ai-sdk/openai` v2.x routes through Vercel AI Gateway by default when deployed on Vercel, which requires credit card setup even for free-tier usage.
+- Root cause 3: The embed chat endpoint (`/api/embed/chat`) had a generic catch-all that returned "Failed to process message" — hiding the actual error from both the user and the admin.
+
+### What we fixed
+
+- **Centralized OpenAI provider** (`lib/ai/openai.ts`): Created a shared provider using `createOpenAI()` with explicit `baseURL: "https://api.openai.com/v1"` to bypass Vercel AI Gateway. Updated all 10 files that imported directly from `@ai-sdk/openai`.
+- **Improved embed error handling**: The `/api/embed/chat` endpoint now differentiates between API key issues, 401 rejections, rate limits, timeouts, and gateway errors — surfacing actionable messages instead of a generic 500.
+- **Set real API key**: Updated Vercel env vars with a valid, funded OpenAI API key.
+
+### Lessons
+
+- **Never assume env vars are real** — placeholder values like `sk-your-openai-api-key-here` pass existence checks but fail at runtime. Validate key format, not just presence.
+- **AI SDK v2 breaking change**: `@ai-sdk/openai` v2.x silently routes through Vercel AI Gateway. If you don't want gateway dependency, explicitly set `baseURL` to `https://api.openai.com/v1`.
+- **Generic error handlers hide root causes** — every API endpoint should surface categorized error messages, especially in embed/widget contexts where there's no admin console to check.
 
 ---
 
