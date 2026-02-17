@@ -1,11 +1,21 @@
-import { auth } from "@/app/(auth)/auth";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import type { ArtifactKind } from "@/components/artifact";
+import { getDbUserId } from "@/lib/auth/admin";
 import {
   deleteDocumentsByIdAfterTimestamp,
   getDocumentsById,
   saveDocument,
 } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
+
+async function resolveDbUserId(): Promise<string | null> {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) return null;
+  const clerkUser = await currentUser();
+  const email = clerkUser?.primaryEmailAddress?.emailAddress;
+  if (!email) return null;
+  return getDbUserId(email);
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -18,9 +28,9 @@ export async function GET(request: Request) {
     ).toResponse();
   }
 
-  const session = await auth();
+  const dbUserId = await resolveDbUserId();
 
-  if (!session?.user) {
+  if (!dbUserId) {
     return new ChatSDKError("unauthorized:document").toResponse();
   }
 
@@ -32,7 +42,7 @@ export async function GET(request: Request) {
     return new ChatSDKError("not_found:document").toResponse();
   }
 
-  if (document.userId !== session.user.id) {
+  if (document.userId !== dbUserId) {
     return new ChatSDKError("forbidden:document").toResponse();
   }
 
@@ -50,9 +60,9 @@ export async function POST(request: Request) {
     ).toResponse();
   }
 
-  const session = await auth();
+  const dbUserId = await resolveDbUserId();
 
-  if (!session?.user) {
+  if (!dbUserId) {
     return new ChatSDKError("not_found:document").toResponse();
   }
 
@@ -68,7 +78,7 @@ export async function POST(request: Request) {
   if (documents.length > 0) {
     const [doc] = documents;
 
-    if (doc.userId !== session.user.id) {
+    if (doc.userId !== dbUserId) {
       return new ChatSDKError("forbidden:document").toResponse();
     }
   }
@@ -78,7 +88,7 @@ export async function POST(request: Request) {
     content,
     title,
     kind,
-    userId: session.user.id,
+    userId: dbUserId,
   });
 
   return Response.json(document, { status: 200 });
@@ -103,9 +113,9 @@ export async function DELETE(request: Request) {
     ).toResponse();
   }
 
-  const session = await auth();
+  const dbUserId = await resolveDbUserId();
 
-  if (!session?.user) {
+  if (!dbUserId) {
     return new ChatSDKError("unauthorized:document").toResponse();
   }
 
@@ -113,7 +123,7 @@ export async function DELETE(request: Request) {
 
   const [document] = documents;
 
-  if (document.userId !== session.user.id) {
+  if (document.userId !== dbUserId) {
     return new ChatSDKError("forbidden:document").toResponse();
   }
 

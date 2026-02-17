@@ -1,5 +1,4 @@
 import type { UIMessageStreamWriter } from "ai";
-import type { Session } from "next-auth";
 import { codeDocumentHandler } from "@/artifacts/code/server";
 import { sheetDocumentHandler } from "@/artifacts/sheet/server";
 import { textDocumentHandler } from "@/artifacts/text/server";
@@ -7,6 +6,9 @@ import type { ArtifactKind } from "@/components/artifact";
 import { saveDocument } from "../db/queries";
 import type { Document } from "../db/schema";
 import type { ChatMessage } from "../types";
+
+/** Minimal session shape used by document tools (replaces next-auth Session) */
+export type ToolSession = { user: { id: string } };
 
 export type SaveDocumentProps = {
   id: string;
@@ -20,14 +22,14 @@ export type CreateDocumentCallbackProps = {
   id: string;
   title: string;
   dataStream: UIMessageStreamWriter<ChatMessage>;
-  session: Session;
+  session: ToolSession;
 };
 
 export type UpdateDocumentCallbackProps = {
   document: Document;
   description: string;
   dataStream: UIMessageStreamWriter<ChatMessage>;
-  session: Session;
+  session: ToolSession;
 };
 
 export type DocumentHandler<T = ArtifactKind> = {

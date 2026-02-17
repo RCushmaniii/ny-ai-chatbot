@@ -16,9 +16,13 @@ import {
 import type { ModelCatalog } from "tokenlens/core";
 import { fetchModels } from "tokenlens/fetch";
 import { getUsage } from "tokenlens/helpers";
-import { auth, type UserType } from "@/app/(auth)/auth";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import type { VisibilityType } from "@/components/visibility-selector";
-import { entitlementsByUserType } from "@/lib/ai/entitlements";
+import {
+  type UserType,
+  entitlementsByUserType,
+} from "@/lib/ai/entitlements";
+import { getDbUserId } from "@/lib/auth/admin";
 import type { ChatModel } from "@/lib/ai/models";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
@@ -147,8 +151,21 @@ export async function POST(request: Request) {
     const effectiveChatModel: ChatModel["id"] = DEFAULT_CHAT_MODEL;
 
     // SINGLE-TENANT: Support both authenticated admin and anonymous sessions
-    const session = await auth();
+    const { userId: clerkUserId } = await auth();
     const sessionId = await getOrCreateSessionId();
+
+    // Resolve DB user ID for signed-in Clerk users
+    let dbUserId: string | undefined;
+    if (clerkUserId) {
+      const clerkUser = await currentUser();
+      const email = clerkUser?.primaryEmailAddress?.emailAddress;
+      if (email) {
+        dbUserId = (await getDbUserId(email)) ?? undefined;
+      }
+    }
+
+    // Build a minimal session object for document tools
+    const toolSession = dbUserId ? { user: { id: dbUserId } } : null;
 
     // Validate message content
     const messageText = getTextFromMessage(message);
@@ -169,7 +186,7 @@ export async function POST(request: Request) {
     });
 
     // Use guest entitlements for anonymous users (daily limit)
-    const userType: UserType = session?.user?.type || "guest";
+    const userType: UserType = clerkUserId ? "regular" : "guest";
     if (messageCount > entitlementsByUserType[userType].maxMessagesPerDay) {
       return new ChatSDKError("rate_limit:chat").toResponse();
     }
@@ -178,15 +195,15 @@ export async function POST(request: Request) {
     let messagesFromDb: DBMessage[] = [];
 
     if (chat) {
-      // Verify chat belongs to this session (not userId)
-      if (chat.sessionId !== sessionId && chat.userId !== session?.user?.id) {
+      // Verify chat belongs to this session or admin user
+      if (chat.sessionId !== sessionId && chat.userId !== dbUserId) {
         return new ChatSDKError("forbidden:chat").toResponse();
       }
       // Only fetch messages if chat already exists
       messagesFromDb = await getMessagesByChatId({ id });
 
       // Check session-based rate limit (20 messages per session) for non-admin users
-      if (!session?.user) {
+      if (!clerkUserId) {
         const { RATE_LIMITS, RATE_LIMIT_MESSAGES } = await import(
           "@/lib/config/rate-limits"
         );
@@ -234,7 +251,7 @@ export async function POST(request: Request) {
 
       await saveChat({
         id,
-        userId: session?.user?.id, // Optional - only for admin
+        userId: dbUserId, // Optional - only for admin
         sessionId, // Always set for anonymous tracking
         title,
         visibility: selectedVisibilityType,
@@ -355,12 +372,18 @@ ${uniqueUrls.map((url) => `- ${url}`).join("\n")}
           tools: {
             searchKnowledge: searchKnowledgeTool,
             // Document tools only available for authenticated users
-            ...(session
+            ...(toolSession
               ? {
-                  createDocument: createDocument({ session, dataStream }),
-                  updateDocument: updateDocument({ session, dataStream }),
+                  createDocument: createDocument({
+                    session: toolSession,
+                    dataStream,
+                  }),
+                  updateDocument: updateDocument({
+                    session: toolSession,
+                    dataStream,
+                  }),
                   requestSuggestions: requestSuggestions({
-                    session,
+                    session: toolSession,
                     dataStream,
                   }),
                 }
@@ -550,15 +573,31 @@ export async function DELETE(request: Request) {
     return new ChatSDKError("bad_request:api").toResponse();
   }
 
-  const session = await auth();
+  // Check Clerk auth for admin delete, or sessionId for anonymous delete
+  const { userId: clerkUserId } = await auth();
+  const sessionId = await getOrCreateSessionId();
 
-  if (!session?.user) {
-    return new ChatSDKError("unauthorized:chat").toResponse();
+  let dbUserId: string | undefined;
+  if (clerkUserId) {
+    const clerkUser = await currentUser();
+    const email = clerkUser?.primaryEmailAddress?.emailAddress;
+    if (email) {
+      dbUserId = (await getDbUserId(email)) ?? undefined;
+    }
   }
 
   const chat = await getChatById({ id });
 
-  if (chat?.userId !== session.user.id) {
+  if (!chat) {
+    return new ChatSDKError("not_found:chat").toResponse();
+  }
+
+  // Must own the chat (by userId or sessionId)
+  const isOwner =
+    (dbUserId && chat.userId === dbUserId) ||
+    (chat.sessionId && chat.sessionId === sessionId);
+
+  if (!isOwner) {
     return new ChatSDKError("forbidden:chat").toResponse();
   }
 

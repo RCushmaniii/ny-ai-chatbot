@@ -2,18 +2,12 @@ import { embed } from "ai";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { extractText } from "unpdf";
-import { auth } from "@/app/(auth)/auth";
+import { requireAdmin } from "@/lib/auth/admin";
 import { openai } from "@/lib/ai/openai";
 import { documents } from "@/lib/db/schema";
 
 // Force Node.js runtime so pdf-parse and Buffer work correctly.
 export const runtime = "nodejs";
-
-function getAdminEmail() {
-  const email = process.env.ADMIN_EMAIL;
-  if (!email) throw new Error("ADMIN_EMAIL environment variable is required");
-  return email;
-}
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
@@ -41,14 +35,9 @@ function chunkText(text: string, maxLength = 1500) {
 }
 
 export async function POST(request: Request) {
-  const session = await auth();
-
-  if (!session || !session.user) {
+  const adminId = await requireAdmin();
+  if (!adminId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  if (session.user.email !== getAdminEmail()) {
-    return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const postgresUrl = process.env.POSTGRES_URL;

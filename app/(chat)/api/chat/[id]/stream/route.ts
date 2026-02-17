@@ -1,6 +1,7 @@
 import { createUIMessageStream, JsonToSseTransformStream } from "ai";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { differenceInSeconds } from "date-fns";
-import { auth } from "@/app/(auth)/auth";
+import { getDbUserId } from "@/lib/auth/admin";
 import {
   getChatById,
   getMessagesByChatId,
@@ -8,6 +9,7 @@ import {
 } from "@/lib/db/queries";
 import type { Chat } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
+import { getOrCreateSessionId } from "@/lib/session";
 import type { ChatMessage } from "@/lib/types";
 import { getStreamContext } from "../../route";
 
@@ -28,10 +30,17 @@ export async function GET(
     return new ChatSDKError("bad_request:api").toResponse();
   }
 
-  const session = await auth();
+  // Resolve identity: Clerk admin or anonymous session
+  const { userId: clerkUserId } = await auth();
+  const sessionId = await getOrCreateSessionId();
 
-  if (!session?.user) {
-    return new ChatSDKError("unauthorized:chat").toResponse();
+  let dbUserId: string | undefined;
+  if (clerkUserId) {
+    const clerkUser = await currentUser();
+    const email = clerkUser?.primaryEmailAddress?.emailAddress;
+    if (email) {
+      dbUserId = (await getDbUserId(email)) ?? undefined;
+    }
   }
 
   let chat: Chat | null;
@@ -46,8 +55,14 @@ export async function GET(
     return new ChatSDKError("not_found:chat").toResponse();
   }
 
-  if (chat.visibility === "private" && chat.userId !== session.user.id) {
-    return new ChatSDKError("forbidden:chat").toResponse();
+  if (chat.visibility === "private") {
+    const isOwner =
+      (dbUserId && chat.userId === dbUserId) ||
+      (chat.sessionId && chat.sessionId === sessionId);
+
+    if (!isOwner) {
+      return new ChatSDKError("forbidden:chat").toResponse();
+    }
   }
 
   const streamIds = await getStreamIdsByChatId({ chatId });

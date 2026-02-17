@@ -1,8 +1,12 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { auth } from "@/app/(auth)/auth";
-import { guestRegex } from "./lib/constants";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-export async function middleware(request: NextRequest) {
+const isProtectedRoute = createRouteMatcher([
+  "/admin(.*)",
+  "/api/admin(.*)",
+]);
+
+export default clerkMiddleware(async (auth, request) => {
   const { pathname } = request.nextUrl;
 
   // Playwright test endpoint
@@ -10,21 +14,22 @@ export async function middleware(request: NextRequest) {
     return new Response("pong", { status: 200 });
   }
 
-  // Skip auth routes, cron jobs, and embed endpoints (no auth needed)
-  if (
-    pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/api/cron") ||
-    pathname.startsWith("/api/embed") ||
-    pathname.startsWith("/embed")
-  ) {
-    const response = NextResponse.next();
+  // Protect admin routes — redirects to Clerk sign-in if not authenticated
+  if (isProtectedRoute(request)) {
+    await auth.protect();
+  }
 
-    // Add CORS headers for local development
-    const origin = request.headers.get("origin");
+  // Add CORS headers for local development on embed routes
+  const origin = request.headers.get("origin");
+  if (
+    origin &&
+    (origin.includes("localhost") || origin.includes("127.0.0.1"))
+  ) {
     if (
-      origin &&
-      (origin.includes("localhost") || origin.includes("127.0.0.1"))
+      pathname.startsWith("/api/embed") ||
+      pathname.startsWith("/embed")
     ) {
+      const response = NextResponse.next();
       response.headers.set("Access-Control-Allow-Origin", origin);
       response.headers.set(
         "Access-Control-Allow-Methods",
@@ -35,33 +40,16 @@ export async function middleware(request: NextRequest) {
         "Content-Type, Authorization",
       );
       response.headers.set("Access-Control-Allow-Credentials", "true");
+      return response;
     }
-
-    return response;
   }
-
-  // Get the session using the new `auth()` helper
-  const session = await auth();
-
-  // Not logged in → redirect to guest login
-  if (!session) {
-    const redirectUrl = encodeURIComponent(request.url);
-    return NextResponse.redirect(
-      new URL(`/api/auth/guest?redirectUrl=${redirectUrl}`, request.url),
-    );
-  }
-
-  const userEmail = session.user?.email ?? "";
-  const isGuest = guestRegex.test(userEmail);
-
-  // If authenticated and not a guest, block login/register
-  if (!isGuest && ["/login", "/register"].includes(pathname)) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
-
-  return NextResponse.next();
-}
+});
 
 export const config = {
-  matcher: ["/", "/chat/:id", "/api/:path*", "/login", "/register"],
+  matcher: [
+    // Skip Next.js internals and all static files, unless found in search params
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    // Always run for API routes
+    "/(api|trpc)(.*)",
+  ],
 };

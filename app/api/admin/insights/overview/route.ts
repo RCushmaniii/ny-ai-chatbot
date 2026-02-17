@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/app/(auth)/auth";
+import { requireAdmin } from "@/lib/auth/admin";
 import {
   getMissingKnowledge,
   getRagHitRatio,
@@ -32,23 +32,11 @@ function emptyOverviewResponse() {
   };
 }
 
-function getAdminEmail() {
-  const email = process.env.ADMIN_EMAIL;
-  if (!email) throw new Error("ADMIN_EMAIL environment variable is required");
-  return email;
-}
-
 export async function GET(req: Request) {
   try {
-    const session = await auth();
-
-    if (!session?.user) {
+    const adminId = await requireAdmin();
+    if (!adminId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Single-tenant: Only admin can access
-    if (session.user.email !== getAdminEmail()) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { searchParams } = new URL(req.url);

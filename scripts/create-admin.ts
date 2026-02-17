@@ -1,9 +1,11 @@
 /**
- * Script to create an admin user for single-tenant chatbot
+ * Script to ensure admin user row exists in the database.
+ * With Clerk (Google OAuth), this just creates the DB row for the admin email.
+ * Authentication is handled entirely by Clerk — no password needed.
+ *
  * Usage: npx tsx scripts/create-admin.ts
  */
 
-import { hash } from "bcrypt-ts";
 import { config as dotenvConfig } from "dotenv";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -25,15 +27,14 @@ const user = pgTable("User", {
 
 async function createAdminUser() {
   const email = process.env.ADMIN_EMAIL || "admin@example.com";
-  const password = process.env.ADMIN_PASSWORD || "changeme123";
   const dbUrl = process.env.POSTGRES_URL;
 
   if (!dbUrl) {
-    console.error("❌ POSTGRES_URL not found in environment variables");
+    console.error("POSTGRES_URL not found in environment variables");
     process.exit(1);
   }
 
-  console.log("🔧 Creating admin user...");
+  console.log("Creating admin user row...");
   console.log(`Email: ${email}`);
 
   const client = postgres(dbUrl);
@@ -47,31 +48,26 @@ async function createAdminUser() {
       .where(eq(user.email, email));
 
     if (existingUsers.length > 0) {
-      console.log("⚠️  Admin user already exists!");
-      console.log("✅ You can login with this email at /login");
+      console.log("Admin user already exists in database.");
+      console.log(`User ID: ${existingUsers[0].id}`);
       await client.end();
       return;
     }
 
-    // Hash password
-    const hashedPassword = await hash(password, 10);
+    // Create new admin user (no password — Clerk handles auth)
+    const [created] = await db
+      .insert(user)
+      .values({ email, password: null })
+      .returning();
 
-    // Create new admin user
-    await db.insert(user).values({
-      email,
-      password: hashedPassword,
-    });
-
-    console.log("✅ Admin user created successfully!");
-    console.log("\n📋 Login credentials:");
-    console.log(`   Email: ${email}`);
-    console.log(`   Password: ${password}`);
-    console.log("\n🔗 Login at: http://localhost:3000/login");
-    console.log("\n⚠️  IMPORTANT: Change your password after first login!");
+    console.log("Admin user created successfully!");
+    console.log(`User ID: ${created.id}`);
+    console.log(`Email: ${created.email}`);
+    console.log("\nSign in via Clerk (Google OAuth) at /sign-in");
 
     await client.end();
   } catch (error) {
-    console.error("❌ Failed to create admin user:", error);
+    console.error("Failed to create admin user:", error);
     await client.end();
     process.exit(1);
   }

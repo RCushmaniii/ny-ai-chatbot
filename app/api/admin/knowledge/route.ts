@@ -1,26 +1,16 @@
 import { embed } from "ai";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { auth } from "@/app/(auth)/auth";
+import { requireAdmin } from "@/lib/auth/admin";
 import { openai } from "@/lib/ai/openai";
 import { documents } from "@/lib/db/schema";
-
-function getAdminEmail() {
-  const email = process.env.ADMIN_EMAIL;
-  if (!email) throw new Error("ADMIN_EMAIL environment variable is required");
-  return email;
-}
 
 export async function POST(request: Request) {
   try {
     // Check authentication
-    const session = await auth();
-    if (!session?.user) {
+    const adminId = await requireAdmin();
+    if (!adminId) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    if (session.user.email !== getAdminEmail()) {
-      return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const postgresUrl = process.env.POSTGRES_URL;
@@ -33,11 +23,6 @@ export async function POST(request: Request) {
 
     const client = postgres(postgresUrl);
     const db = drizzle(client);
-
-    // Optional: Add admin role check here
-    // if (session.user.role !== 'admin') {
-    //   return Response.json({ error: "Forbidden" }, { status: 403 });
-    // }
 
     const body = await request.json();
     const { content, url, metadata } = body;
@@ -70,13 +55,9 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   try {
     // Check authentication
-    const session = await auth();
-    if (!session?.user) {
+    const adminId = await requireAdmin();
+    if (!adminId) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    if (session.user.email !== getAdminEmail()) {
-      return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const postgresUrl = process.env.POSTGRES_URL;
@@ -135,13 +116,9 @@ export async function GET(request: Request) {
 export async function DELETE(request: Request) {
   try {
     // Check authentication
-    const session = await auth();
-    if (!session?.user) {
+    const adminId = await requireAdmin();
+    if (!adminId) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    if (session.user.email !== getAdminEmail()) {
-      return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const postgresUrl = process.env.POSTGRES_URL;

@@ -23,14 +23,19 @@ const REQUIRED_ENV_VARS: EnvVar[] = [
     description: "OpenAI API key for chat and embeddings",
   },
   {
-    name: "AUTH_SECRET",
+    name: "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
     required: true,
-    description: "NextAuth secret (generate: openssl rand -base64 32)",
+    description: "Clerk publishable key for client-side auth",
+  },
+  {
+    name: "CLERK_SECRET_KEY",
+    required: true,
+    description: "Clerk secret key for server-side auth",
   },
   {
     name: "ADMIN_EMAIL",
     required: true,
-    description: "Admin user email for dashboard access (required for auth)",
+    description: "Admin user email for dashboard access (must match Clerk allowlist)",
   },
   {
     name: "CRON_SECRET",
@@ -40,11 +45,6 @@ const REQUIRED_ENV_VARS: EnvVar[] = [
 ];
 
 const OPTIONAL_ENV_VARS: EnvVar[] = [
-  {
-    name: "ADMIN_PASSWORD",
-    required: false,
-    description: "Admin user password",
-  },
   {
     name: "NEXT_PUBLIC_APP_URL",
     required: false,
@@ -60,7 +60,6 @@ const OPTIONAL_ENV_VARS: EnvVar[] = [
     required: false,
     description: "Redis URL for resumable streams",
   },
-  // Upstash Redis for rate limiting
   {
     name: "UPSTASH_REDIS_REST_URL",
     required: false,
@@ -71,7 +70,6 @@ const OPTIONAL_ENV_VARS: EnvVar[] = [
     required: false,
     description: "Upstash Redis REST token for rate limiting",
   },
-  // Sentry error monitoring
   {
     name: "SENTRY_DSN",
     required: false,
@@ -152,7 +150,9 @@ export function getEnvSummary(): Record<string, boolean> {
   return {
     POSTGRES_URL: !!process.env.POSTGRES_URL,
     OPENAI_API_KEY: !!process.env.OPENAI_API_KEY,
-    AUTH_SECRET: !!process.env.AUTH_SECRET,
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
+      !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+    CLERK_SECRET_KEY: !!process.env.CLERK_SECRET_KEY,
     ADMIN_EMAIL: !!process.env.ADMIN_EMAIL,
     REDIS_URL: !!process.env.REDIS_URL,
     ALLOWED_ORIGINS: !!process.env.ALLOWED_ORIGINS,

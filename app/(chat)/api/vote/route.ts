@@ -1,6 +1,8 @@
-import { auth } from "@/app/(auth)/auth";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { getDbUserId } from "@/lib/auth/admin";
 import { getChatById, getVotesByChatId, voteMessage } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
+import { getOrCreateSessionId } from "@/lib/session";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -13,10 +15,16 @@ export async function GET(request: Request) {
     ).toResponse();
   }
 
-  const session = await auth();
+  const { userId: clerkUserId } = await auth();
+  const sessionId = await getOrCreateSessionId();
 
-  if (!session?.user) {
-    return new ChatSDKError("unauthorized:vote").toResponse();
+  let dbUserId: string | undefined;
+  if (clerkUserId) {
+    const clerkUser = await currentUser();
+    const email = clerkUser?.primaryEmailAddress?.emailAddress;
+    if (email) {
+      dbUserId = (await getDbUserId(email)) ?? undefined;
+    }
   }
 
   const chat = await getChatById({ id: chatId });
@@ -25,7 +33,12 @@ export async function GET(request: Request) {
     return new ChatSDKError("not_found:chat").toResponse();
   }
 
-  if (chat.userId !== session.user.id) {
+  // Must own the chat
+  const isOwner =
+    (dbUserId && chat.userId === dbUserId) ||
+    (chat.sessionId && chat.sessionId === sessionId);
+
+  if (!isOwner) {
     return new ChatSDKError("forbidden:vote").toResponse();
   }
 
@@ -49,10 +62,16 @@ export async function PATCH(request: Request) {
     ).toResponse();
   }
 
-  const session = await auth();
+  const { userId: clerkUserId } = await auth();
+  const sessionId = await getOrCreateSessionId();
 
-  if (!session?.user) {
-    return new ChatSDKError("unauthorized:vote").toResponse();
+  let dbUserId: string | undefined;
+  if (clerkUserId) {
+    const clerkUser = await currentUser();
+    const email = clerkUser?.primaryEmailAddress?.emailAddress;
+    if (email) {
+      dbUserId = (await getDbUserId(email)) ?? undefined;
+    }
   }
 
   const chat = await getChatById({ id: chatId });
@@ -61,7 +80,11 @@ export async function PATCH(request: Request) {
     return new ChatSDKError("not_found:vote").toResponse();
   }
 
-  if (chat.userId !== session.user.id) {
+  const isOwner =
+    (dbUserId && chat.userId === dbUserId) ||
+    (chat.sessionId && chat.sessionId === sessionId);
+
+  if (!isOwner) {
     return new ChatSDKError("forbidden:vote").toResponse();
   }
 

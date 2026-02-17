@@ -1,23 +1,14 @@
 import { embed } from "ai";
 import postgres from "postgres";
-import { auth } from "@/app/(auth)/auth";
+import { requireAdmin } from "@/lib/auth/admin";
 import { openai } from "@/lib/ai/openai";
-
-function getAdminEmail() {
-  const email = process.env.ADMIN_EMAIL;
-  if (!email) throw new Error("ADMIN_EMAIL environment variable is required");
-  return email;
-}
 
 export async function POST(req: Request) {
   try {
     // Require authenticated admin
-    const session = await auth();
-    if (!session?.user) {
+    const adminId = await requireAdmin();
+    if (!adminId) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    if (session.user.email !== getAdminEmail()) {
-      return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const postgresUrl = process.env.POSTGRES_URL;

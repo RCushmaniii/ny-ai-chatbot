@@ -1,9 +1,11 @@
-import { notFound, redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
+import { notFound } from "next/navigation";
 
-import { auth } from "@/app/(auth)/auth";
 import { Chat } from "@/components/chat";
 import { DataStreamHandler } from "@/components/data-stream-handler";
+import { getDbUserId } from "@/lib/auth/admin";
 import { getChatById, getMessagesByChatId } from "@/lib/db/queries";
+import { getOrCreateSessionId } from "@/lib/session";
 import { convertToUIMessages } from "@/lib/utils";
 
 export default async function Page(props: { params: Promise<{ id: string }> }) {
@@ -15,27 +17,38 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
     notFound();
   }
 
-  const session = await auth();
+  // Get Clerk user (if signed in) and anonymous sessionId
+  const { userId: clerkUserId } = await auth();
+  const sessionId = await getOrCreateSessionId();
 
-  if (!session) {
-    redirect("/api/auth/guest");
+  // Resolve DB user ID for signed-in users
+  let dbUserId: string | undefined;
+  if (clerkUserId) {
+    const { currentUser } = await import("@clerk/nextjs/server");
+    const clerkUser = await currentUser();
+    const email = clerkUser?.primaryEmailAddress?.emailAddress;
+    if (email) {
+      dbUserId = (await getDbUserId(email)) ?? undefined;
+    }
   }
 
+  // Private chats: must be the owner (by userId or sessionId)
   if (chat.visibility === "private") {
-    if (!session.user) {
-      return notFound();
-    }
+    const isOwner =
+      (dbUserId && chat.userId === dbUserId) ||
+      (chat.sessionId && chat.sessionId === sessionId);
 
-    if (session.user.id !== chat.userId) {
+    if (!isOwner) {
       return notFound();
     }
   }
 
-  const messagesFromDb = await getMessagesByChatId({
-    id,
-  });
-
+  const messagesFromDb = await getMessagesByChatId({ id });
   const uiMessages = convertToUIMessages(messagesFromDb);
+
+  const isReadonly =
+    dbUserId !== chat.userId &&
+    (!chat.sessionId || chat.sessionId !== sessionId);
 
   return (
     <>
@@ -45,7 +58,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
         initialLastContext={chat.lastContext ?? undefined}
         initialMessages={uiMessages}
         initialVisibilityType={chat.visibility}
-        isReadonly={session?.user?.id !== chat.userId}
+        isReadonly={isReadonly}
       />
       <DataStreamHandler />
     </>

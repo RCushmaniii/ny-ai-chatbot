@@ -56,3 +56,10 @@ export type Attachment = {
   url: string;
   contentType: string;
 };
+
+/** User shape passed to sidebar/header components (replaces next-auth User) */
+export type SidebarUser = {
+  email?: string;
+  name?: string;
+  imageUrl?: string;
+};

@@ -1,31 +1,22 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/app/(auth)/auth";
+import { requireAdmin } from "@/lib/auth/admin";
 
 /**
  * Server-side admin access control
- * This layout runs on the server and checks admin access before rendering
+ * Clerk middleware already protects /admin routes (requires sign-in),
+ * but this layout additionally verifies the signed-in user is the admin.
  */
-
-// Admin email is only checked server-side (never exposed to client)
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "info@nyenglishteacher.com";
-
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
+  const dbUserId = await requireAdmin();
 
-  // Not authenticated - redirect to login
-  if (!session?.user) {
-    redirect("/login");
-  }
-
-  // Not admin - redirect to home
-  if (session.user.email !== ADMIN_EMAIL) {
+  if (!dbUserId) {
+    // Signed in but not the admin email — send home
     redirect("/");
   }
 
-  // Admin verified - render children
   return <>{children}</>;
 }

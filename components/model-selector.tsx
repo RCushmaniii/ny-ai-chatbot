@@ -1,6 +1,5 @@
 "use client";
 
-import type { Session } from "next-auth";
 import { startTransition, useMemo, useOptimistic, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,18 +14,17 @@ import { cn } from "@/lib/utils";
 import { CheckCircleFillIcon, ChevronDownIcon } from "./icons";
 
 export function ModelSelector({
-  session,
+  userType = "guest",
   selectedModelId,
   className,
 }: {
-  session: Session;
+  userType?: "guest" | "regular";
   selectedModelId: string;
 } & React.ComponentProps<typeof Button>) {
   const [open, setOpen] = useState(false);
   const [optimisticModelId, setOptimisticModelId] =
     useOptimistic(selectedModelId);
 
-  const userType = session.user.type;
   const { availableChatModelIds } = entitlementsByUserType[userType];
 
   const availableChatModels = chatModels.filter((chatModel) =>

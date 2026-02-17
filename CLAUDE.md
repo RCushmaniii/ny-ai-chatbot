@@ -13,7 +13,7 @@ This file provides context for AI assistants working with this codebase.
 - **AI:** OpenAI GPT-4o (chat), text-embedding-3-small (embeddings)
 - **Database:** PostgreSQL with pgvector extension
 - **ORM:** Drizzle ORM
-- **Auth:** NextAuth 5 (Auth.js)
+- **Auth:** Clerk (Google OAuth for admin, sessionId cookies for anonymous users)
 - **UI:** React 19, Tailwind CSS 4, shadcn/ui, Radix UI
 - **Deployment:** Vercel
 
@@ -22,7 +22,7 @@ This file provides context for AI assistants working with this codebase.
 ```
 ny-ai-chatbot/
 ├── app/                    # Next.js App Router
-│   ├── (auth)/            # Auth routes (login, guest)
+│   ├── sign-in/           # Clerk sign-in page (Google OAuth)
 │   ├── (chat)/            # Main chat routes
 │   │   ├── admin/         # Admin dashboard
 │   │   └── api/           # Chat API endpoints
@@ -50,18 +50,19 @@ ny-ai-chatbot/
 | File | Purpose |
 |------|---------|
 | `lib/db/schema.ts` | Database schema with all tables |
+| `lib/auth/admin.ts` | Clerk admin auth helper (`requireAdmin()`, `getDbUserId()`) |
 | `lib/ai/prompts.ts` | System prompts and bot personality |
 | `lib/ai/tools/search-knowledge.ts` | RAG search implementation |
 | `lib/security/cors.ts` | CORS allowed origins |
 | `lib/security/validation.ts` | Input validation and rate limiting |
 | `app/(chat)/api/chat/route.ts` | Main chat API endpoint |
 | `app/api/embed/route.ts` | Embed widget script generator |
-| `middleware.ts` | Auth middleware and route protection |
+| `middleware.ts` | Clerk middleware and route protection |
 
 ## Database Schema
 
 ### Core Tables
-- `User` - User accounts (admin and guest)
+- `User` - User accounts (admin; mapped from Clerk identity via email)
 - `Chat` - Chat sessions with userId or sessionId
 - `Message_v2` - Chat messages with parts array
 - `Vote_v2` - Message votes/feedback
@@ -106,12 +107,15 @@ pnpm format           # Format with Biome
 Required:
 - `POSTGRES_URL` - PostgreSQL connection string
 - `OPENAI_API_KEY` - OpenAI API key
-- `AUTH_SECRET` - NextAuth secret (generate: `openssl rand -base64 32`)
-- `ADMIN_EMAIL` - Admin user email
-- `ADMIN_PASSWORD` - Admin user password
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` - Clerk publishable key
+- `CLERK_SECRET_KEY` - Clerk secret key
+- `ADMIN_EMAIL` - Admin user email (must match Clerk allowlist)
+- `CRON_SECRET` - Secret for cron job authentication
 
 Optional:
 - `NEXT_PUBLIC_APP_URL` - Public app URL for embeds
+- `NEXT_PUBLIC_CLERK_SIGN_IN_URL` - Clerk sign-in URL (default: `/sign-in`)
+- `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL` - Redirect after sign-in (default: `/admin`)
 - `REDIS_URL` - For resumable streams (disabled currently)
 
 ## Architecture Notes
@@ -124,9 +128,11 @@ Optional:
 5. Inject into system prompt with source URLs
 
 ### Authentication
-- Admin users: Credentials provider with email/password
-- Anonymous users: Guest provider, auto-created
-- Session tracking via `sessionId` for non-auth users
+- **Admin:** Clerk with Google OAuth (single admin user, enforced via Clerk allowlist)
+- **Anonymous users:** `sessionId` cookie from `lib/session.ts` — no Clerk needed
+- **Auth helper:** `lib/auth/admin.ts` — `requireAdmin()` checks Clerk identity + maps to DB UUID via email
+- **Middleware:** `clerkMiddleware()` protects `/admin(.*)` and `/api/admin(.*)` routes
+- **Sign-in:** Clerk's `<SignIn />` component at `/sign-in`
 
 ### Embed Widget
 - Script at `/api/embed` generates self-contained JS

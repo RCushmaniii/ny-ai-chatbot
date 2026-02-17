@@ -1,4 +1,5 @@
-import { auth } from "@/app/(auth)/auth";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { getDbUserId } from "@/lib/auth/admin";
 import { getSuggestionsByDocumentId } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
 
@@ -13,9 +14,19 @@ export async function GET(request: Request) {
     ).toResponse();
   }
 
-  const session = await auth();
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) {
+    return new ChatSDKError("unauthorized:suggestions").toResponse();
+  }
 
-  if (!session?.user) {
+  const clerkUser = await currentUser();
+  const email = clerkUser?.primaryEmailAddress?.emailAddress;
+  if (!email) {
+    return new ChatSDKError("unauthorized:suggestions").toResponse();
+  }
+
+  const dbUserId = await getDbUserId(email);
+  if (!dbUserId) {
     return new ChatSDKError("unauthorized:suggestions").toResponse();
   }
 
@@ -29,7 +40,7 @@ export async function GET(request: Request) {
     return Response.json([], { status: 200 });
   }
 
-  if (suggestion.userId !== session.user.id) {
+  if (suggestion.userId !== dbUserId) {
     return new ChatSDKError("forbidden:api").toResponse();
   }
 

@@ -1,8 +1,7 @@
 "use client";
 
+import { useClerk } from "@clerk/nextjs";
 import { LogOut, Settings } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,12 +19,10 @@ interface AdminHeaderProps {
 }
 
 export function AdminHeader({ userEmail, onAccountClick }: AdminHeaderProps) {
-  const router = useRouter();
+  const { signOut } = useClerk();
 
-  const handleLogout = async () => {
-    await signOut({ redirect: false });
-    router.push("/login");
-    router.refresh();
+  const handleLogout = () => {
+    signOut({ redirectUrl: "/" });
   };
 
   const handleAccountSettings = () => {
