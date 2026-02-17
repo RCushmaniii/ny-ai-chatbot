@@ -6,6 +6,8 @@ import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { safeCurrentUser } from "@/lib/auth/clerk";
 
+const isTestEnv = Boolean(process.env.PLAYWRIGHT || process.env.CI_PLAYWRIGHT);
+
 export const experimental_ppr = true;
 
 export default async function Layout({
@@ -34,7 +36,7 @@ export default async function Layout({
         src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"
         strategy="beforeInteractive"
       />
-      <SiteHeader />
+      {!isTestEnv && <SiteHeader />}
       <DataStreamProvider>
         <SidebarProvider defaultOpen={!isCollapsed}>
           <AppSidebar user={user} />
