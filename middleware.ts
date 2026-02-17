@@ -1,34 +1,17 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { type NextFetchEvent, type NextRequest, NextResponse } from "next/server";
 
-const isProtectedRoute = createRouteMatcher([
-  "/admin(.*)",
-  "/api/admin(.*)",
-]);
+const isTestEnv = Boolean(
+  process.env.PLAYWRIGHT || process.env.CI_PLAYWRIGHT,
+);
 
-export default clerkMiddleware(async (auth, request) => {
-  const { pathname } = request.nextUrl;
-
-  // Playwright test endpoint
-  if (pathname.startsWith("/ping")) {
-    return new Response("pong", { status: 200 });
-  }
-
-  // Protect admin routes — redirects to Clerk sign-in if not authenticated
-  if (isProtectedRoute(request)) {
-    await auth.protect();
-  }
-
-  // Add CORS headers for local development on embed routes
+function handleCors(request: NextRequest): NextResponse | undefined {
   const origin = request.headers.get("origin");
   if (
     origin &&
     (origin.includes("localhost") || origin.includes("127.0.0.1"))
   ) {
-    if (
-      pathname.startsWith("/api/embed") ||
-      pathname.startsWith("/embed")
-    ) {
+    const { pathname } = request.nextUrl;
+    if (pathname.startsWith("/api/embed") || pathname.startsWith("/embed")) {
       const response = NextResponse.next();
       response.headers.set("Access-Control-Allow-Origin", origin);
       response.headers.set(
@@ -43,13 +26,48 @@ export default clerkMiddleware(async (auth, request) => {
       return response;
     }
   }
-});
+}
+
+export default async function middleware(
+  request: NextRequest,
+  event: NextFetchEvent,
+) {
+  const { pathname } = request.nextUrl;
+
+  if (pathname.startsWith("/ping")) {
+    return new Response("pong", { status: 200 });
+  }
+
+  // In test/CI, skip Clerk entirely — just handle CORS and pass through
+  if (isTestEnv) {
+    return handleCors(request) ?? NextResponse.next();
+  }
+
+  // Production: dynamically import Clerk to avoid key validation at module load
+  const { clerkMiddleware, createRouteMatcher } = await import(
+    "@clerk/nextjs/server"
+  );
+
+  const isProtectedRoute = createRouteMatcher([
+    "/admin(.*)",
+    "/api/admin(.*)",
+  ]);
+
+  const clerkHandler = clerkMiddleware(async (auth, req) => {
+    const corsResponse = handleCors(req);
+    if (corsResponse) return corsResponse;
+
+    if (isProtectedRoute(req)) {
+      await auth.protect();
+    }
+  });
+
+  return clerkHandler(request, event);
+}
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
     "/(api|trpc)(.*)",
   ],
 };
