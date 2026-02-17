@@ -35,7 +35,8 @@ const REQUIRED_ENV_VARS: EnvVar[] = [
   {
     name: "ADMIN_EMAIL",
     required: true,
-    description: "Admin user email for dashboard access (must match Clerk allowlist)",
+    description:
+      "Admin user email for dashboard access (must match Clerk allowlist)",
   },
   {
     name: "CRON_SECRET",

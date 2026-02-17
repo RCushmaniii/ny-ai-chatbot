@@ -1,7 +1,7 @@
 import { embed } from "ai";
 import postgres from "postgres";
-import { requireAdmin } from "@/lib/auth/admin";
 import { openai } from "@/lib/ai/openai";
+import { requireAdmin } from "@/lib/auth/admin";
 
 export async function POST(req: Request) {
   try {

@@ -1,8 +1,8 @@
 import { embed } from "ai";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { requireAdmin } from "@/lib/auth/admin";
 import { openai } from "@/lib/ai/openai";
+import { requireAdmin } from "@/lib/auth/admin";
 import { documents } from "@/lib/db/schema";
 
 export async function POST(request: Request) {

@@ -34,10 +34,8 @@ export async function createAuthenticatedContext({
   const context = await browser.newContext();
   const page = await context.newPage();
 
-  // Navigate to home - will auto-redirect to guest auth
+  // Navigate to home — anonymous users load directly (no auth redirect)
   await page.goto("http://localhost:3000/");
-
-  // Wait for page to load (guest auth happens automatically via middleware)
   await page.waitForURL("http://localhost:3000/");
   await page.waitForLoadState("networkidle");
 

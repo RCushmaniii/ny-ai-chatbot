@@ -2,8 +2,8 @@ import { embed } from "ai";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { extractText } from "unpdf";
-import { requireAdmin } from "@/lib/auth/admin";
 import { openai } from "@/lib/ai/openai";
+import { requireAdmin } from "@/lib/auth/admin";
 import { documents } from "@/lib/db/schema";
 
 // Force Node.js runtime so pdf-parse and Buffer work correctly.

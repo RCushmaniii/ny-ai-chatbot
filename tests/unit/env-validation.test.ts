@@ -17,7 +17,10 @@ describe("validateEnv", () => {
   it("should pass when all required variables are set", () => {
     process.env.POSTGRES_URL = "postgresql://test";
     process.env.OPENAI_API_KEY = "sk-test";
-    process.env.AUTH_SECRET = "secret";
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_xxx";
+    process.env.CLERK_SECRET_KEY = "sk_test_xxx";
+    process.env.ADMIN_EMAIL = "test@example.com";
+    process.env.CRON_SECRET = "test-secret";
 
     const result = validateEnv();
     expect(result.valid).toBe(true);
@@ -27,7 +30,10 @@ describe("validateEnv", () => {
   it("should fail when POSTGRES_URL is missing", () => {
     delete process.env.POSTGRES_URL;
     process.env.OPENAI_API_KEY = "sk-test";
-    process.env.AUTH_SECRET = "secret";
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_xxx";
+    process.env.CLERK_SECRET_KEY = "sk_test_xxx";
+    process.env.ADMIN_EMAIL = "test@example.com";
+    process.env.CRON_SECRET = "test-secret";
 
     const result = validateEnv();
     expect(result.valid).toBe(false);
@@ -37,32 +43,43 @@ describe("validateEnv", () => {
   it("should fail when OPENAI_API_KEY is missing", () => {
     process.env.POSTGRES_URL = "postgresql://test";
     delete process.env.OPENAI_API_KEY;
-    process.env.AUTH_SECRET = "secret";
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_xxx";
+    process.env.CLERK_SECRET_KEY = "sk_test_xxx";
+    process.env.ADMIN_EMAIL = "test@example.com";
+    process.env.CRON_SECRET = "test-secret";
 
     const result = validateEnv();
     expect(result.valid).toBe(false);
     expect(result.missing.some((m) => m.includes("OPENAI_API_KEY"))).toBe(true);
   });
 
-  it("should fail when AUTH_SECRET is missing", () => {
+  it("should fail when CLERK_SECRET_KEY is missing", () => {
     process.env.POSTGRES_URL = "postgresql://test";
     process.env.OPENAI_API_KEY = "sk-test";
-    delete process.env.AUTH_SECRET;
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_xxx";
+    delete process.env.CLERK_SECRET_KEY;
+    process.env.ADMIN_EMAIL = "test@example.com";
+    process.env.CRON_SECRET = "test-secret";
 
     const result = validateEnv();
     expect(result.valid).toBe(false);
-    expect(result.missing.some((m) => m.includes("AUTH_SECRET"))).toBe(true);
+    expect(result.missing.some((m) => m.includes("CLERK_SECRET_KEY"))).toBe(
+      true,
+    );
   });
 
   it("should warn about missing optional variables", () => {
     process.env.POSTGRES_URL = "postgresql://test";
     process.env.OPENAI_API_KEY = "sk-test";
-    process.env.AUTH_SECRET = "secret";
-    delete process.env.ADMIN_EMAIL;
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_xxx";
+    process.env.CLERK_SECRET_KEY = "sk_test_xxx";
+    process.env.ADMIN_EMAIL = "test@example.com";
+    process.env.CRON_SECRET = "test-secret";
+    delete process.env.REDIS_URL;
 
     const result = validateEnv();
     expect(result.valid).toBe(true);
-    expect(result.warnings.some((w) => w.includes("ADMIN_EMAIL"))).toBe(true);
+    expect(result.warnings.length).toBeGreaterThan(0);
   });
 });
 

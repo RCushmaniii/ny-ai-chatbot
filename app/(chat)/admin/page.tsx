@@ -34,8 +34,7 @@ export default function AdminPage() {
     );
   }
 
-  const email =
-    user.primaryEmailAddress?.emailAddress || "";
+  const email = user.primaryEmailAddress?.emailAddress || "";
   const userId = user.id;
 
   const handleAccountClick = () => {
@@ -44,10 +43,7 @@ export default function AdminPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <AdminHeader
-        userEmail={email}
-        onAccountClick={handleAccountClick}
-      />
+      <AdminHeader userEmail={email} onAccountClick={handleAccountClick} />
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-6xl mx-auto p-6">
           <div className="mb-8">
@@ -56,11 +52,7 @@ export default function AdminPage() {
               Manage your AI chatbot's knowledge base and settings
             </p>
           </div>
-          <AdminTabs
-            userEmail={email}
-            userId={userId}
-            activeTab={activeTab}
-          />
+          <AdminTabs userEmail={email} userId={userId} activeTab={activeTab} />
         </div>
       </div>
     </div>

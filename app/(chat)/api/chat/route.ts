@@ -1,3 +1,4 @@
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { geolocation } from "@vercel/functions";
 import {
   convertToModelMessages,
@@ -16,13 +17,8 @@ import {
 import type { ModelCatalog } from "tokenlens/core";
 import { fetchModels } from "tokenlens/fetch";
 import { getUsage } from "tokenlens/helpers";
-import { auth, currentUser } from "@clerk/nextjs/server";
 import type { VisibilityType } from "@/components/visibility-selector";
-import {
-  type UserType,
-  entitlementsByUserType,
-} from "@/lib/ai/entitlements";
-import { getDbUserId } from "@/lib/auth/admin";
+import { entitlementsByUserType, type UserType } from "@/lib/ai/entitlements";
 import type { ChatModel } from "@/lib/ai/models";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
@@ -34,6 +30,7 @@ import {
   searchKnowledgeTool,
 } from "@/lib/ai/tools/search-knowledge";
 import { updateDocument } from "@/lib/ai/tools/update-document";
+import { getDbUserId } from "@/lib/auth/admin";
 import { isProductionEnvironment } from "@/lib/constants";
 import {
   createStreamId,
