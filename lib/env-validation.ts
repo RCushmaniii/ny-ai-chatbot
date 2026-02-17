@@ -27,14 +27,19 @@ const REQUIRED_ENV_VARS: EnvVar[] = [
     required: true,
     description: "NextAuth secret (generate: openssl rand -base64 32)",
   },
+  {
+    name: "ADMIN_EMAIL",
+    required: true,
+    description: "Admin user email for dashboard access (required for auth)",
+  },
+  {
+    name: "CRON_SECRET",
+    required: true,
+    description: "Secret token to authenticate cron job requests",
+  },
 ];
 
 const OPTIONAL_ENV_VARS: EnvVar[] = [
-  {
-    name: "ADMIN_EMAIL",
-    required: false,
-    description: "Admin user email for dashboard access",
-  },
   {
     name: "ADMIN_PASSWORD",
     required: false,

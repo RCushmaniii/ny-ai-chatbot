@@ -471,7 +471,7 @@ ${uniqueUrls.map((url) => `- ${url}`).join("\n")}
           normalized.includes("activate_gateway")
         ) {
           streamErrorMessage =
-            "AI Gateway needs billing enabled (credit card) to serve requests. Please add a card in Vercel → AI Gateway, then try again.";
+            "The chatbot service is temporarily unavailable. Please try again later or contact the site administrator.";
         } else if (
           normalized.includes("openai_api_key") ||
           normalized.includes("api key") ||
@@ -479,25 +479,25 @@ ${uniqueUrls.map((url) => `- ${url}`).join("\n")}
           normalized.includes("missing api key")
         ) {
           streamErrorMessage =
-            "The chatbot model isn’t configured in production (missing OpenAI API key). Add OPENAI_API_KEY in Vercel Environment Variables, then redeploy.";
+            "The chatbot is not configured correctly. Please contact the site administrator.";
         } else if (
           normalized.includes("401") ||
           normalized.includes("unauthorized")
         ) {
           streamErrorMessage =
-            "The chatbot model credentials were rejected (401). Double-check your OPENAI_API_KEY (or AI Gateway config) in Vercel, then redeploy.";
+            "The chatbot service credentials are invalid. Please contact the site administrator.";
         } else if (
           normalized.includes("429") ||
           normalized.includes("rate limit")
         ) {
           streamErrorMessage =
-            "The chatbot is temporarily rate-limited by the model provider. Please wait a minute and try again.";
+            "The chatbot is temporarily rate-limited. Please wait a minute and try again.";
         } else if (
           normalized.includes("timeout") ||
           normalized.includes("timed out")
         ) {
           streamErrorMessage =
-            "The model provider timed out generating a response. Please try again.";
+            "The response took too long to generate. Please try again.";
         } else {
           streamErrorMessage =
             "I ran into a technical issue generating a response. Please try again in a moment.";

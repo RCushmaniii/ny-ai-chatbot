@@ -5,12 +5,22 @@ import {
   getTopQuestions,
 } from "@/lib/db/queries";
 
+function getAdminEmail() {
+  const email = process.env.ADMIN_EMAIL;
+  if (!email) throw new Error("ADMIN_EMAIL environment variable is required");
+  return email;
+}
+
 export async function GET(request: Request) {
   try {
     const session = await auth();
 
     if (!session?.user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (session.user.email !== getAdminEmail()) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);

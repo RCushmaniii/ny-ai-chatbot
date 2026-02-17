@@ -5,6 +5,12 @@ import postgres from "postgres";
 import { auth } from "@/app/(auth)/auth";
 import { user } from "@/lib/db/schema";
 
+function getAdminEmail() {
+  const email = process.env.ADMIN_EMAIL;
+  if (!email) throw new Error("ADMIN_EMAIL environment variable is required");
+  return email;
+}
+
 export async function POST(request: Request) {
   try {
     const postgresUrl = process.env.POSTGRES_URL;
@@ -24,6 +30,10 @@ export async function POST(request: Request) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    if (session.user.email !== getAdminEmail()) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const { currentPassword, newPassword } = await request.json();
 
     if (!currentPassword || !newPassword) {
@@ -33,9 +43,9 @@ export async function POST(request: Request) {
       );
     }
 
-    if (newPassword.length < 6) {
+    if (newPassword.length < 12) {
       return Response.json(
-        { error: "New password must be at least 6 characters" },
+        { error: "New password must be at least 12 characters" },
         { status: 400 },
       );
     }

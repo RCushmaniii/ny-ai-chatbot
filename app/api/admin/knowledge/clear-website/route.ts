@@ -1,6 +1,12 @@
 import postgres from "postgres";
 import { auth } from "@/app/(auth)/auth";
 
+function getAdminEmail() {
+  const email = process.env.ADMIN_EMAIL;
+  if (!email) throw new Error("ADMIN_EMAIL environment variable is required");
+  return email;
+}
+
 export async function DELETE() {
   try {
     const postgresUrl = process.env.POSTGRES_URL;
@@ -16,6 +22,10 @@ export async function DELETE() {
     const session = await auth();
     if (!session?.user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (session.user.email !== getAdminEmail()) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Clear the website_content table

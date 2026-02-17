@@ -38,8 +38,8 @@ export function AdminAccount({
       return;
     }
 
-    if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters");
+    if (newPassword.length < 12) {
+      toast.error("Password must be at least 12 characters");
       return;
     }
 
@@ -149,11 +149,11 @@ export function AdminAccount({
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
-                minLength={6}
+                minLength={12}
                 disabled={isChangingPassword}
               />
               <p className="text-xs text-muted-foreground">
-                Must be at least 6 characters
+                Must be at least 12 characters
               </p>
             </div>
 
@@ -165,7 +165,7 @@ export function AdminAccount({
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                minLength={6}
+                minLength={12}
                 disabled={isChangingPassword}
               />
             </div>

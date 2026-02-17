@@ -23,17 +23,19 @@ export async function GET(request: Request) {
     const authHeader = request.headers.get("authorization");
     const cronSecret = process.env.CRON_SECRET;
 
-    // Only check auth if CRON_SECRET is set
-    if (cronSecret) {
-      if (!authHeader || authHeader !== `Bearer ${cronSecret}`) {
-        console.warn(
-          "⚠️  Unauthorized cron request - missing or invalid auth header",
-        );
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-    } else {
-      // No CRON_SECRET set - allow requests (useful for testing)
-      console.log("⚠️  CRON_SECRET not set - allowing unauthenticated requests");
+    if (!cronSecret) {
+      console.error("CRON_SECRET environment variable is not set");
+      return NextResponse.json(
+        { error: "Server misconfigured" },
+        { status: 500 },
+      );
+    }
+
+    if (!authHeader || authHeader !== `Bearer ${cronSecret}`) {
+      console.warn(
+        "Unauthorized cron request - missing or invalid auth header",
+      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     console.log("🕐 Running daily usage report cron job...");

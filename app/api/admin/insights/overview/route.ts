@@ -33,11 +33,9 @@ function emptyOverviewResponse() {
 }
 
 function getAdminEmail() {
-  return (
-    process.env.ADMIN_EMAIL ||
-    process.env.NEXT_PUBLIC_ADMIN_EMAIL ||
-    "info@nyenglishteacher.com"
-  );
+  const email = process.env.ADMIN_EMAIL;
+  if (!email) throw new Error("ADMIN_EMAIL environment variable is required");
+  return email;
 }
 
 export async function GET(req: Request) {

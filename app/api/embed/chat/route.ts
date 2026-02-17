@@ -4,6 +4,11 @@ import { regularPrompt } from "@/lib/ai/prompts";
 import { myProvider } from "@/lib/ai/providers";
 import { searchKnowledgeDirect } from "@/lib/ai/tools/search-knowledge";
 import {
+  checkRateLimitRedis,
+  getClientIdentifier,
+  validateMessage,
+} from "@/lib/security/validation";
+import {
   detectLanguage,
   getLearnMoreText,
   translateUrl,
@@ -11,10 +16,32 @@ import {
 
 export async function POST(request: Request) {
   try {
+    // Rate limiting
+    const clientId = getClientIdentifier(request);
+    const rateLimitResult = await checkRateLimitRedis(clientId);
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { error: rateLimitResult.error },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(rateLimitResult.retryAfter || 60),
+          },
+        },
+      );
+    }
+
     const { message } = await request.json();
 
     if (!message || typeof message !== "string") {
       return NextResponse.json({ error: "Invalid message" }, { status: 400 });
+    }
+
+    // Validate message content
+    const validation = validateMessage(message);
+    if (!validation.valid) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
     // Search knowledge base

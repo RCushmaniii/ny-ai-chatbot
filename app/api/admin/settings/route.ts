@@ -4,11 +4,21 @@ import {
   updateGlobalBotSettings,
 } from "@/lib/db/queries";
 
+function getAdminEmail() {
+  const email = process.env.ADMIN_EMAIL;
+  if (!email) throw new Error("ADMIN_EMAIL environment variable is required");
+  return email;
+}
+
 export async function GET() {
   try {
     const session = await auth();
     if (!session?.user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (session.user.email !== getAdminEmail()) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // SINGLE-TENANT: Get global bot settings (no userId filtering)
@@ -33,6 +43,10 @@ export async function POST(request: Request) {
     const session = await auth();
     if (!session?.user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (session.user.email !== getAdminEmail()) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const body = await request.json();

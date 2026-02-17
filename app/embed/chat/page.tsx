@@ -166,7 +166,9 @@ function EmbedChatContent() {
   }, [messages, scrollToBottom]);
 
   const handleClose = () => {
-    window.parent.postMessage("close-chat", "*");
+    const targetOrigin =
+      process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+    window.parent.postMessage("close-chat", targetOrigin);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

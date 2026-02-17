@@ -1,9 +1,25 @@
 import { embed } from "ai";
 import postgres from "postgres";
+import { auth } from "@/app/(auth)/auth";
 import { openai } from "@/lib/ai/openai";
+
+function getAdminEmail() {
+  const email = process.env.ADMIN_EMAIL;
+  if (!email) throw new Error("ADMIN_EMAIL environment variable is required");
+  return email;
+}
 
 export async function POST(req: Request) {
   try {
+    // Require authenticated admin
+    const session = await auth();
+    if (!session?.user) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (session.user.email !== getAdminEmail()) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const postgresUrl = process.env.POSTGRES_URL;
     if (!postgresUrl) {
       return Response.json(
@@ -12,9 +28,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // Create a singleton pool for serverless environments
     const client = postgres(postgresUrl, {
-      max: 1, // Limit connections in serverless
+      max: 1,
     });
 
     const { query, limit = 4 } = await req.json();
@@ -23,23 +38,27 @@ export async function POST(req: Request) {
       return Response.json({ error: "Query is required" }, { status: 400 });
     }
 
+    // Clamp limit to prevent abuse
+    const safeLimit = Math.min(Math.max(1, Number(limit) || 4), 20);
+
     // Create embedding for the query
     const { embedding } = await embed({
       model: openai.embedding("text-embedding-3-small"),
       value: query,
     });
 
-    // SQL: Cosine similarity search using pgvector
+    // SQL: Cosine similarity search using pgvector (parameterized)
+    const embeddingStr = JSON.stringify(embedding);
     const results = await client`
-      SELECT 
-        content, 
+      SELECT
+        content,
         metadata,
         url,
-        1 - (embedding <=> ${JSON.stringify(embedding)}) as similarity
+        1 - (embedding <=> ${embeddingStr}::vector) as similarity
       FROM website_content
-      WHERE 1 - (embedding <=> ${JSON.stringify(embedding)}) > 0.5
+      WHERE 1 - (embedding <=> ${embeddingStr}::vector) > 0.5
       ORDER BY similarity DESC
-      LIMIT ${limit}
+      LIMIT ${safeLimit}
     `;
 
     // Format context for the LLM

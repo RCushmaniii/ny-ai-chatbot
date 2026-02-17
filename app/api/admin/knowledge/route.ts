@@ -6,11 +6,9 @@ import { openai } from "@/lib/ai/openai";
 import { documents } from "@/lib/db/schema";
 
 function getAdminEmail() {
-  return (
-    process.env.ADMIN_EMAIL ||
-    process.env.NEXT_PUBLIC_ADMIN_EMAIL ||
-    "info@nyenglishteacher.com"
-  );
+  const email = process.env.ADMIN_EMAIL;
+  if (!email) throw new Error("ADMIN_EMAIL environment variable is required");
+  return email;
 }
 
 export async function POST(request: Request) {
@@ -120,12 +118,12 @@ export async function GET(request: Request) {
     }
 
     // Get all documents
-    const allDocuments = await client.unsafe(`
+    const allDocuments = await client`
       SELECT id, content, url, metadata, "createdAt"
       FROM "Document_Knowledge"
       ORDER BY "createdAt" DESC
       LIMIT ${limit}
-    `);
+    `;
 
     return Response.json({ documents: allDocuments }, { status: 200 });
   } catch (error) {
@@ -168,10 +166,10 @@ export async function DELETE(request: Request) {
       return Response.json({ error: "Invalid ID" }, { status: 400 });
     }
 
-    await client.unsafe(`
+    await client`
       DELETE FROM "Document_Knowledge"
       WHERE id = ${parsedId}
-    `);
+    `;
 
     return Response.json({ success: true }, { status: 200 });
   } catch (error) {

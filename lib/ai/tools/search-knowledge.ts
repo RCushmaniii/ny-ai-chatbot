@@ -97,25 +97,27 @@ export async function searchKnowledgeDirect(
     }
 
     // 2. Search BOTH knowledge sources and merge results
+    const embeddingStr = JSON.stringify(embedding);
+
     // Search website_content (scraped from nyenglishteacher.com)
-    const websiteResults = await client.unsafe(`
+    const websiteResults = await client`
       SELECT content, url, metadata,
-        1 - (embedding <=> '${JSON.stringify(embedding)}'::vector) as similarity
+        1 - (embedding <=> ${embeddingStr}::vector) as similarity
       FROM website_content
-      WHERE 1 - (embedding <=> '${JSON.stringify(embedding)}'::vector) > 0.5
+      WHERE 1 - (embedding <=> ${embeddingStr}::vector) > 0.5
       ORDER BY similarity DESC
       LIMIT 5
-    `);
+    `;
 
     // Search Document_Knowledge (manually added content from admin)
-    const manualResults = await client.unsafe(`
+    const manualResults = await client`
       SELECT id, content, url, metadata,
-        1 - (embedding <=> '${JSON.stringify(embedding)}'::vector) as similarity
+        1 - (embedding <=> ${embeddingStr}::vector) as similarity
       FROM "Document_Knowledge"
       WHERE embedding IS NOT NULL
       ORDER BY similarity DESC
       LIMIT ${MANUAL_TOP_K}
-    `);
+    `;
 
     const websiteMapped: KnowledgeSearchResult[] = websiteResults.map(
       (row: any) => {
