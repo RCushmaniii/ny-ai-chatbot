@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
-import { safeAuth } from "@/lib/auth/clerk";
 import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { safeAuth } from "@/lib/auth/clerk";
 
 // Use Blob instead of File since File is not available in Node.js environment
 const FileSchema = z.object({

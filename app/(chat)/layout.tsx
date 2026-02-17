@@ -1,10 +1,10 @@
-import { safeCurrentUser } from "@/lib/auth/clerk";
 import { cookies } from "next/headers";
 import Script from "next/script";
 import { AppSidebar } from "@/components/app-sidebar";
 import { DataStreamProvider } from "@/components/data-stream-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { safeCurrentUser } from "@/lib/auth/clerk";
 
 export const experimental_ppr = true;
 

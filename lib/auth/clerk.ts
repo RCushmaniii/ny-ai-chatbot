@@ -6,9 +6,7 @@ import "server-only";
  * instead of calling Clerk (which requires valid keys and middleware).
  */
 
-const isTestEnv = Boolean(
-  process.env.PLAYWRIGHT || process.env.CI_PLAYWRIGHT,
-);
+const isTestEnv = Boolean(process.env.PLAYWRIGHT || process.env.CI_PLAYWRIGHT);
 
 type AuthResult = { userId: string | null };
 type ClerkUser = {

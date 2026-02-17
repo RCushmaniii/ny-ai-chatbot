@@ -1,6 +1,6 @@
-import { safeAuth, safeCurrentUser } from "@/lib/auth/clerk";
 import type { ArtifactKind } from "@/components/artifact";
 import { getDbUserId } from "@/lib/auth/admin";
+import { safeAuth, safeCurrentUser } from "@/lib/auth/clerk";
 import {
   deleteDocumentsByIdAfterTimestamp,
   getDocumentsById,

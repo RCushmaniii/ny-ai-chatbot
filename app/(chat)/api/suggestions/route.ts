@@ -1,5 +1,5 @@
-import { safeAuth, safeCurrentUser } from "@/lib/auth/clerk";
 import { getDbUserId } from "@/lib/auth/admin";
+import { safeAuth, safeCurrentUser } from "@/lib/auth/clerk";
 import { getSuggestionsByDocumentId } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
 

@@ -1,7 +1,7 @@
-import { safeAuth, safeCurrentUser } from "@/lib/auth/clerk";
 import { createUIMessageStream, JsonToSseTransformStream } from "ai";
 import { differenceInSeconds } from "date-fns";
 import { getDbUserId } from "@/lib/auth/admin";
+import { safeAuth, safeCurrentUser } from "@/lib/auth/clerk";
 import {
   getChatById,
   getMessagesByChatId,

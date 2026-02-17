@@ -1,9 +1,8 @@
-import { safeAuth, safeCurrentUser } from "@/lib/auth/clerk";
 import { notFound } from "next/navigation";
-
 import { Chat } from "@/components/chat";
 import { DataStreamHandler } from "@/components/data-stream-handler";
 import { getDbUserId } from "@/lib/auth/admin";
+import { safeAuth, safeCurrentUser } from "@/lib/auth/clerk";
 import { getChatById, getMessagesByChatId } from "@/lib/db/queries";
 import { getOrCreateSessionId } from "@/lib/session";
 import { convertToUIMessages } from "@/lib/utils";

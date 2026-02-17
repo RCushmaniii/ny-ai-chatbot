@@ -1,8 +1,10 @@
-import { type NextFetchEvent, type NextRequest, NextResponse } from "next/server";
+import {
+  type NextFetchEvent,
+  type NextRequest,
+  NextResponse,
+} from "next/server";
 
-const isTestEnv = Boolean(
-  process.env.PLAYWRIGHT || process.env.CI_PLAYWRIGHT,
-);
+const isTestEnv = Boolean(process.env.PLAYWRIGHT || process.env.CI_PLAYWRIGHT);
 
 function handleCors(request: NextRequest): NextResponse | undefined {
   const origin = request.headers.get("origin");
@@ -48,10 +50,7 @@ export default async function middleware(
     "@clerk/nextjs/server"
   );
 
-  const isProtectedRoute = createRouteMatcher([
-    "/admin(.*)",
-    "/api/admin(.*)",
-  ]);
+  const isProtectedRoute = createRouteMatcher(["/admin(.*)", "/api/admin(.*)"]);
 
   const clerkHandler = clerkMiddleware(async (auth, req) => {
     const corsResponse = handleCors(req);

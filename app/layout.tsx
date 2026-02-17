@@ -6,6 +6,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 
+const isTestEnv = Boolean(process.env.PLAYWRIGHT || process.env.CI_PLAYWRIGHT);
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://chat.vercel.ai"),
   title: "Next.js Chatbot Template",
@@ -79,7 +81,11 @@ export default function RootLayout({
           enableSystem
         >
           <Toaster position="top-center" />
-          <ClerkProvider dynamic>{children}</ClerkProvider>
+          {isTestEnv ? (
+            children
+          ) : (
+            <ClerkProvider dynamic>{children}</ClerkProvider>
+          )}
         </ThemeProvider>
       </body>
     </html>

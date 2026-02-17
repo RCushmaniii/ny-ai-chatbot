@@ -1,4 +1,3 @@
-import { safeAuth, safeCurrentUser } from "@/lib/auth/clerk";
 import { geolocation } from "@vercel/functions";
 import {
   convertToModelMessages,
@@ -31,6 +30,7 @@ import {
 } from "@/lib/ai/tools/search-knowledge";
 import { updateDocument } from "@/lib/ai/tools/update-document";
 import { getDbUserId } from "@/lib/auth/admin";
+import { safeAuth, safeCurrentUser } from "@/lib/auth/clerk";
 import { isProductionEnvironment } from "@/lib/constants";
 import {
   createStreamId,
