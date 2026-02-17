@@ -1,4 +1,4 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { safeAuth, safeCurrentUser } from "@/lib/auth/clerk";
 import { getDbUserId } from "@/lib/auth/admin";
 import { getSuggestionsByDocumentId } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
@@ -14,12 +14,12 @@ export async function GET(request: Request) {
     ).toResponse();
   }
 
-  const { userId: clerkUserId } = await auth();
+  const { userId: clerkUserId } = await safeAuth();
   if (!clerkUserId) {
     return new ChatSDKError("unauthorized:suggestions").toResponse();
   }
 
-  const clerkUser = await currentUser();
+  const clerkUser = await safeCurrentUser();
   const email = clerkUser?.primaryEmailAddress?.emailAddress;
   if (!email) {
     return new ChatSDKError("unauthorized:suggestions").toResponse();

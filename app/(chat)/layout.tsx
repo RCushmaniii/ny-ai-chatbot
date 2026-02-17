@@ -1,4 +1,4 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { safeCurrentUser } from "@/lib/auth/clerk";
 import { cookies } from "next/headers";
 import Script from "next/script";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -14,7 +14,7 @@ export default async function Layout({
   children: React.ReactNode;
 }) {
   const [clerkUser, cookieStore] = await Promise.all([
-    currentUser(),
+    safeCurrentUser(),
     cookies(),
   ]);
   const isCollapsed = cookieStore.get("sidebar_state")?.value !== "true";

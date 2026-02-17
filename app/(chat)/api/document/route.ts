@@ -1,4 +1,4 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { safeAuth, safeCurrentUser } from "@/lib/auth/clerk";
 import type { ArtifactKind } from "@/components/artifact";
 import { getDbUserId } from "@/lib/auth/admin";
 import {
@@ -9,9 +9,9 @@ import {
 import { ChatSDKError } from "@/lib/errors";
 
 async function resolveDbUserId(): Promise<string | null> {
-  const { userId: clerkUserId } = await auth();
+  const { userId: clerkUserId } = await safeAuth();
   if (!clerkUserId) return null;
-  const clerkUser = await currentUser();
+  const clerkUser = await safeCurrentUser();
   const email = clerkUser?.primaryEmailAddress?.emailAddress;
   if (!email) return null;
   return getDbUserId(email);

@@ -1,4 +1,4 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { safeAuth, safeCurrentUser } from "@/lib/auth/clerk";
 import { getDbUserId } from "@/lib/auth/admin";
 import { getChatById, getVotesByChatId, voteMessage } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
@@ -15,12 +15,12 @@ export async function GET(request: Request) {
     ).toResponse();
   }
 
-  const { userId: clerkUserId } = await auth();
+  const { userId: clerkUserId } = await safeAuth();
   const sessionId = await getOrCreateSessionId();
 
   let dbUserId: string | undefined;
   if (clerkUserId) {
-    const clerkUser = await currentUser();
+    const clerkUser = await safeCurrentUser();
     const email = clerkUser?.primaryEmailAddress?.emailAddress;
     if (email) {
       dbUserId = (await getDbUserId(email)) ?? undefined;
@@ -62,12 +62,12 @@ export async function PATCH(request: Request) {
     ).toResponse();
   }
 
-  const { userId: clerkUserId } = await auth();
+  const { userId: clerkUserId } = await safeAuth();
   const sessionId = await getOrCreateSessionId();
 
   let dbUserId: string | undefined;
   if (clerkUserId) {
-    const clerkUser = await currentUser();
+    const clerkUser = await safeCurrentUser();
     const email = clerkUser?.primaryEmailAddress?.emailAddress;
     if (email) {
       dbUserId = (await getDbUserId(email)) ?? undefined;

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { auth } from "@clerk/nextjs/server";
+import { safeAuth } from "@/lib/auth/clerk";
 import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -18,7 +18,7 @@ const FileSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const { userId } = await auth();
+  const { userId } = await safeAuth();
 
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

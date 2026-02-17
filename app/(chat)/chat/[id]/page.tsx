@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { safeAuth, safeCurrentUser } from "@/lib/auth/clerk";
 import { notFound } from "next/navigation";
 
 import { Chat } from "@/components/chat";
@@ -18,14 +18,13 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   }
 
   // Get Clerk user (if signed in) and anonymous sessionId
-  const { userId: clerkUserId } = await auth();
+  const { userId: clerkUserId } = await safeAuth();
   const sessionId = await getOrCreateSessionId();
 
   // Resolve DB user ID for signed-in users
   let dbUserId: string | undefined;
   if (clerkUserId) {
-    const { currentUser } = await import("@clerk/nextjs/server");
-    const clerkUser = await currentUser();
+    const clerkUser = await safeCurrentUser();
     const email = clerkUser?.primaryEmailAddress?.emailAddress;
     if (email) {
       dbUserId = (await getDbUserId(email)) ?? undefined;

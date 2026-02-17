@@ -1,4 +1,4 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { safeAuth, safeCurrentUser } from "@/lib/auth/clerk";
 import { createUIMessageStream, JsonToSseTransformStream } from "ai";
 import { differenceInSeconds } from "date-fns";
 import { getDbUserId } from "@/lib/auth/admin";
@@ -31,12 +31,12 @@ export async function GET(
   }
 
   // Resolve identity: Clerk admin or anonymous session
-  const { userId: clerkUserId } = await auth();
+  const { userId: clerkUserId } = await safeAuth();
   const sessionId = await getOrCreateSessionId();
 
   let dbUserId: string | undefined;
   if (clerkUserId) {
-    const clerkUser = await currentUser();
+    const clerkUser = await safeCurrentUser();
     const email = clerkUser?.primaryEmailAddress?.emailAddress;
     if (email) {
       dbUserId = (await getDbUserId(email)) ?? undefined;

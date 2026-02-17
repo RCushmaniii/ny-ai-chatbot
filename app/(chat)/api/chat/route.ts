@@ -1,4 +1,4 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { safeAuth, safeCurrentUser } from "@/lib/auth/clerk";
 import { geolocation } from "@vercel/functions";
 import {
   convertToModelMessages,
@@ -148,13 +148,13 @@ export async function POST(request: Request) {
     const effectiveChatModel: ChatModel["id"] = DEFAULT_CHAT_MODEL;
 
     // SINGLE-TENANT: Support both authenticated admin and anonymous sessions
-    const { userId: clerkUserId } = await auth();
+    const { userId: clerkUserId } = await safeAuth();
     const sessionId = await getOrCreateSessionId();
 
     // Resolve DB user ID for signed-in Clerk users
     let dbUserId: string | undefined;
     if (clerkUserId) {
-      const clerkUser = await currentUser();
+      const clerkUser = await safeCurrentUser();
       const email = clerkUser?.primaryEmailAddress?.emailAddress;
       if (email) {
         dbUserId = (await getDbUserId(email)) ?? undefined;
@@ -571,12 +571,12 @@ export async function DELETE(request: Request) {
   }
 
   // Check Clerk auth for admin delete, or sessionId for anonymous delete
-  const { userId: clerkUserId } = await auth();
+  const { userId: clerkUserId } = await safeAuth();
   const sessionId = await getOrCreateSessionId();
 
   let dbUserId: string | undefined;
   if (clerkUserId) {
-    const clerkUser = await currentUser();
+    const clerkUser = await safeCurrentUser();
     const email = clerkUser?.primaryEmailAddress?.emailAddress;
     if (email) {
       dbUserId = (await getDbUserId(email)) ?? undefined;
