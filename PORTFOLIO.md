@@ -20,7 +20,7 @@ tech_stack:
   - "Tailwind CSS 4"
   - "shadcn/ui"
   - "Vercel AI SDK"
-thumbnail: "/images/portfolio/ny-eng-chatbot-01.png"
+thumbnail: "/images/portfolio/ny-eng-chatbot-thumbnail.jpg"
 status: "Production"
 
 # === DETAIL PAGE ===
