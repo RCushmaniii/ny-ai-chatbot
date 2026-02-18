@@ -36,7 +36,7 @@ export function SiteHeader() {
               </Link>
             ))}
           </nav>
-          <UserButton afterSignOutUrl="/" />
+          <UserButton signInUrl="/sign-in" />
         </div>
       </header>
     </SignedIn>
