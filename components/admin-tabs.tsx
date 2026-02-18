@@ -31,53 +31,46 @@ interface AdminTabsProps {
 export function AdminTabs({ userEmail, userId, activeTab }: AdminTabsProps) {
   return (
     <Tabs defaultValue={activeTab || "manual"} className="w-full">
-      <TabsList className="grid w-full grid-cols-9">
-        <TabsTrigger value="manual" className="flex items-center gap-2">
-          <Database className="h-4 w-4" />
-          <span className="hidden sm:inline">Manual Content</span>
-          <span className="sm:hidden">Manual</span>
-        </TabsTrigger>
-        <TabsTrigger value="website" className="flex items-center gap-2">
-          <Globe className="h-4 w-4" />
-          <span className="hidden sm:inline">Website Scraping</span>
-          <span className="sm:hidden">Website</span>
-        </TabsTrigger>
-        <TabsTrigger value="settings" className="flex items-center gap-2">
-          <Settings className="h-4 w-4" />
-          <span className="hidden sm:inline">Bot Settings</span>
-          <span className="sm:hidden">Settings</span>
-        </TabsTrigger>
-        <TabsTrigger value="prompts" className="flex items-center gap-2">
-          <MessageSquare className="h-4 w-4" />
-          <span className="hidden sm:inline">Instructions</span>
-          <span className="sm:hidden">Prompts</span>
-        </TabsTrigger>
-        <TabsTrigger value="embed" className="flex items-center gap-2">
-          <Code className="h-4 w-4" />
-          <span className="hidden sm:inline">Embed Code</span>
-          <span className="sm:hidden">Embed</span>
-        </TabsTrigger>
-        <TabsTrigger value="analytics" className="flex items-center gap-2">
-          <BarChart3 className="h-4 w-4" />
-          <span className="hidden sm:inline">Analytics</span>
-          <span className="sm:hidden">Analytics</span>
-        </TabsTrigger>
-        <TabsTrigger value="logs" className="flex items-center gap-2">
-          <ScrollText className="h-4 w-4" />
-          <span className="hidden sm:inline">Chat Logs</span>
-          <span className="sm:hidden">Logs</span>
-        </TabsTrigger>
-        <TabsTrigger value="insights" className="flex items-center gap-2">
-          <Lightbulb className="h-4 w-4" />
-          <span className="hidden sm:inline">Insights</span>
-          <span className="sm:hidden">Insights</span>
-        </TabsTrigger>
-        <TabsTrigger value="account" className="flex items-center gap-2">
-          <User className="h-4 w-4" />
-          <span className="hidden sm:inline">Account</span>
-          <span className="sm:hidden">Account</span>
-        </TabsTrigger>
-      </TabsList>
+      <div className="-mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6">
+        <TabsList className="inline-flex w-auto min-w-full gap-1">
+          <TabsTrigger value="manual" className="flex items-center gap-1.5 px-3">
+            <Database className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Manual</span>
+          </TabsTrigger>
+          <TabsTrigger value="website" className="flex items-center gap-1.5 px-3">
+            <Globe className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Website</span>
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center gap-1.5 px-3">
+            <Settings className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Settings</span>
+          </TabsTrigger>
+          <TabsTrigger value="prompts" className="flex items-center gap-1.5 px-3">
+            <MessageSquare className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Instructions</span>
+          </TabsTrigger>
+          <TabsTrigger value="embed" className="flex items-center gap-1.5 px-3">
+            <Code className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Embed</span>
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-1.5 px-3">
+            <BarChart3 className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Analytics</span>
+          </TabsTrigger>
+          <TabsTrigger value="logs" className="flex items-center gap-1.5 px-3">
+            <ScrollText className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Logs</span>
+          </TabsTrigger>
+          <TabsTrigger value="insights" className="flex items-center gap-1.5 px-3">
+            <Lightbulb className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Insights</span>
+          </TabsTrigger>
+          <TabsTrigger value="account" className="flex items-center gap-1.5 px-3">
+            <User className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Account</span>
+          </TabsTrigger>
+        </TabsList>
+      </div>
 
       <TabsContent value="manual" className="mt-6">
         <AdminKnowledgeBase />

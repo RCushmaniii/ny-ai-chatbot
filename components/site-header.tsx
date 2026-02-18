@@ -1,6 +1,6 @@
 "use client";
 
-import { SignedIn, UserButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -16,9 +16,9 @@ export function SiteHeader() {
   const pathname = usePathname();
 
   return (
-    <SignedIn>
-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex h-12 items-center justify-between px-4">
+    <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="mx-auto flex h-12 max-w-7xl items-center justify-between px-4 sm:px-6">
+        <SignedIn>
           <nav className="flex items-center gap-6">
             {navLinks.map((link) => (
               <Link
@@ -37,8 +37,19 @@ export function SiteHeader() {
             ))}
           </nav>
           <UserButton signInUrl="/sign-in" />
-        </div>
-      </header>
-    </SignedIn>
+        </SignedIn>
+        <SignedOut>
+          <span className="text-sm font-semibold text-foreground">
+            NY English Teacher
+          </span>
+          <Link
+            href="/sign-in"
+            className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+          >
+            Sign in
+          </Link>
+        </SignedOut>
+      </div>
+    </header>
   );
 }

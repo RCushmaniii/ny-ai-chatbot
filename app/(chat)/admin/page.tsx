@@ -4,7 +4,6 @@ import { useUser } from "@clerk/nextjs";
 import { Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { AdminHeader } from "@/components/admin-header";
 import { AdminTabs } from "@/components/admin-tabs";
 
 /**
@@ -37,23 +36,10 @@ export default function AdminPage() {
   const email = user.primaryEmailAddress?.emailAddress || "";
   const userId = user.id;
 
-  const handleAccountClick = () => {
-    setActiveTab("account");
-  };
-
   return (
-    <div className="flex flex-col min-h-screen">
-      <AdminHeader userEmail={email} onAccountClick={handleAccountClick} />
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-6xl mx-auto p-6">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-            <p className="text-muted-foreground">
-              Manage your AI chatbot's knowledge base and settings
-            </p>
-          </div>
-          <AdminTabs userEmail={email} userId={userId} activeTab={activeTab} />
-        </div>
+    <div className="flex-1 overflow-y-auto">
+      <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
+        <AdminTabs userEmail={email} userId={userId} activeTab={activeTab} />
       </div>
     </div>
   );

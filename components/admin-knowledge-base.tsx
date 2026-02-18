@@ -285,7 +285,7 @@ export function AdminKnowledgeBase() {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="shadow-sm">
         <CardHeader>
           <CardTitle>Add New Content</CardTitle>
           <CardDescription>
@@ -301,8 +301,8 @@ export function AdminKnowledgeBase() {
                 placeholder="Enter the information you want to add to the knowledge base..."
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                rows={8}
-                className="resize-none"
+                rows={4}
+                className="resize-y"
               />
               <p className="text-sm text-muted-foreground">
                 Write clear, detailed information. The AI will use this to
@@ -358,14 +358,14 @@ export function AdminKnowledgeBase() {
               />
             </div>
 
-            <Button type="submit" disabled={isLoading} className="w-full">
+            <Button type="submit" disabled={isLoading} className="w-full max-w-xs">
               {isLoading ? "Adding..." : "Add to Knowledge Base"}
             </Button>
           </form>
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="shadow-sm">
         <CardHeader>
           <CardTitle>Upload Files</CardTitle>
           <CardDescription>
@@ -531,7 +531,7 @@ export function AdminKnowledgeBase() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="shadow-sm">
         <CardHeader>
           <CardTitle>Quick Tips</CardTitle>
         </CardHeader>

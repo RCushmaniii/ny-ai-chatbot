@@ -43,8 +43,8 @@ function PureChatHeader({
       {!isAuthenticated && (
         <Button
           asChild
-          className="order-3 ml-auto h-8 px-2 md:h-fit md:px-2"
-          variant="outline"
+          className="order-3 ml-auto h-8 px-3 md:h-fit md:px-4"
+          variant="default"
         >
           <Link href="/sign-in">Sign in</Link>
         </Button>
