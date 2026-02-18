@@ -21,21 +21,11 @@ test.describe("Anonymous Session", () => {
     });
   });
 
-  test("Sign out option is available in user menu", async ({ page }) => {
+  test("Sign in link is visible for anonymous users", async ({ page }) => {
     await page.goto("/");
-
-    const sidebarToggleButton = page.getByTestId("sidebar-toggle-button");
-    await sidebarToggleButton.click();
-
-    const userNavButton = page.getByTestId("user-nav-button");
-    await expect(userNavButton).toBeVisible();
-
-    await userNavButton.click();
-    const userNavMenu = page.getByTestId("user-nav-menu");
-    await expect(userNavMenu).toBeVisible();
-
-    const authMenuItem = page.getByTestId("user-nav-item-auth");
-    await expect(authMenuItem).toContainText("Sign out");
+    const signInLink = page.getByRole("link", { name: "Sign in" });
+    await expect(signInLink).toBeVisible({ timeout: 15000 });
+    await expect(signInLink).toHaveAttribute("href", "/sign-in");
   });
 });
 

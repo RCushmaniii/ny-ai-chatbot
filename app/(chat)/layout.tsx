@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import Script from "next/script";
 import { AppSidebar } from "@/components/app-sidebar";
+import { ChatLayoutProvider } from "@/components/chat-layout-provider";
 import { DataStreamProvider } from "@/components/data-stream-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -37,12 +38,14 @@ export default async function Layout({
         strategy="beforeInteractive"
       />
       {!isTestEnv && <SiteHeader />}
-      <DataStreamProvider>
-        <SidebarProvider defaultOpen={!isCollapsed}>
-          <AppSidebar user={user} />
-          <SidebarInset>{children}</SidebarInset>
-        </SidebarProvider>
-      </DataStreamProvider>
+      <ChatLayoutProvider isAuthenticated={!!user}>
+        <DataStreamProvider>
+          <SidebarProvider defaultOpen={!isCollapsed}>
+            {user && <AppSidebar user={user} />}
+            <SidebarInset>{children}</SidebarInset>
+          </SidebarProvider>
+        </DataStreamProvider>
+      </ChatLayoutProvider>
     </>
   );
 }

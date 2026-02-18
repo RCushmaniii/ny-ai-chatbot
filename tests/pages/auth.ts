@@ -16,8 +16,4 @@ export class AuthPage {
     await expect(this.page.getByTestId("toast")).toContainText(text);
   }
 
-  async openSidebar() {
-    const sidebarToggleButton = this.page.getByTestId("sidebar-toggle-button");
-    await sidebarToggleButton.click();
-  }
 }
