@@ -8,7 +8,7 @@ portfolio_featured: true
 title: "NY AI Chatbot"
 tagline: "Revenue-first RAG chatbot that converts visitors into booked strategy sessions"
 slug: "ny-ai-chatbot"
-category: "AI / Chatbots"
+category: "AI Automation"
 tech_stack:
   - "Next.js 15"
   - "TypeScript"
@@ -34,18 +34,9 @@ key_features:
   - "Full EN/ES bilingual support with locale-aware personality and benefit-driven language"
   - "Embeddable widget (iframe + script tag) deployable on any client domain with CORS configuration"
   - "Admin dashboard with chat analytics, knowledge management, and bot settings"
-metrics:
-  - "5-layer revenue engine: System Prompts, Error CTAs, Localization, Rate Limits as Strategy, Source Citations"
-  - "2 RAG knowledge sources merged by cosine similarity with configurable thresholds"
-  - "Sub-second streaming responses via Vercel AI SDK with OpenAI GPT-4o"
-  - "Zero-auth guest experience via sessionId cookies — no signup friction before conversion"
 
-# === LINKS ===
-demo_url: "https://ny-ai-chatbot.vercel.app"
-live_url: "https://ny-ai-chatbot.vercel.app"
-
-# === OPTIONAL ===
-hero_images:
+# === MEDIA: PORTFOLIO SLIDES ===
+slides:
   - src: "/images/portfolio/ny-eng-chatbot-01.png"
     alt_en: "Conversational Conversion — The Architecture of a Revenue-First Chatbot"
     alt_es: "Conversion Conversacional — La Arquitectura de un Chatbot Orientado a Ingresos"
@@ -67,8 +58,21 @@ hero_images:
   - src: "/images/portfolio/ny-eng-chatbot-07.png"
     alt_en: "Not a Support Tool — An Automated Sales Agent that books strategy sessions"
     alt_es: "No es una Herramienta de Soporte — Un Agente de Ventas Automatizado que agenda sesiones de estrategia"
+
+# === MEDIA: VIDEO ===
 video_url: "/video/ny-eng-chatbot-brief.mp4"
 video_poster: "/video/ny-eng-chatbot-brief-poster.jpg"
+
+# === LINKS ===
+demo_url: "https://ny-ai-chatbot.vercel.app"
+live_url: "https://ny-ai-chatbot.vercel.app"
+
+# === OPTIONAL ===
+metrics:
+  - "5-layer revenue engine: System Prompts, Error CTAs, Localization, Rate Limits as Strategy, Source Citations"
+  - "2 RAG knowledge sources merged by cosine similarity with configurable thresholds"
+  - "Sub-second streaming responses via Vercel AI SDK with OpenAI GPT-4o"
+  - "Zero-auth guest experience via sessionId cookies — no signup friction before conversion"
 tags:
   - "nextjs"
   - "typescript"
